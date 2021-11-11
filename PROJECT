@@ -1,0 +1,6 @@
+domain: giantswarm
+layout:
+- go.kubebuilder.io/v3
+projectName: starboard-exporter
+repo: github.com/giantswarm/starboard-exporter
+version: "3"
