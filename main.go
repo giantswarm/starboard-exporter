@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
+
 	"github.com/giantswarm/starboard-exporter/controllers"
 	//+kubebuilder:scaffold:imports
 )
