@@ -1,14 +1,28 @@
 version: 2.1
-
 orbs:
   architect: giantswarm/architect@4.8.0
 
 workflows:
-  test:
+  package-and-push-chart-on-tag:
     jobs:
-      - architect/go-test:
-          name: go-test
+      - architect/push-to-app-catalog:
+          context: "architect"
+          name: push-starboard-exporter-to-control-plane-catalog
+          app_catalog: "control-plane-catalog"
+          app_catalog_test: "control-plane-test-catalog"
+          chart: "starboard-exporter"
+          # Trigger job on git tag.
           filters:
-            # Trigger job also on git tag.
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-catalog:
+          context: "architect"
+          name: push-starboard-exporter-to-giantswarm-catalog
+          app_catalog: "giantswarm-catalog"
+          app_catalog_test: "giantswarm-test-catalog"
+          chart: "starboard-exporter"
+          # Trigger job on git tag.
+          filters:
             tags:
               only: /^v.*/
