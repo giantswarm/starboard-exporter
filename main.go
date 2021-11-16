@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -45,7 +46,10 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	aqua.AddToScheme(scheme)
+	err := aqua.AddToScheme(scheme)
+	if err != nil {
+		setupLog.Error(err, fmt.Sprintf("error registering scheme: %s", err))
+	}
 
 	//+kubebuilder:scaffold:scheme
 }
