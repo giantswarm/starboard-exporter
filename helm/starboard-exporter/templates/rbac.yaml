@@ -46,6 +46,13 @@ rules:
       - customresourcedefinitions
     verbs:
       - "*"
+  - apiGroups:
+      - aquasecurity.github.io
+    resources:
+      - vulnerabilityreports
+    verbs:
+      - get
+      - list
   - nonResourceURLs:
       - "/"
       - "/healthz"
