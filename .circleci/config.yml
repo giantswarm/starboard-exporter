@@ -58,8 +58,8 @@ workflows:
           app_catalog_test: "control-plane-test-catalog"
           chart: "starboard-exporter"
           requires:
-            - push-upgrade-schedule-operator-to-docker
-            - push-upgrade-schedule-operator-to-quay
+            - push-starboard-exporter-to-docker
+            - push-starboard-exporter-to-quay
           # Trigger job on git tag.
           filters:
             tags:
@@ -72,8 +72,8 @@ workflows:
           app_catalog_test: "giantswarm-test-catalog"
           chart: "starboard-exporter"
           requires:
-            - push-upgrade-schedule-operator-to-docker
-            - push-upgrade-schedule-operator-to-quay
+            - push-starboard-exporter-to-docker
+            - push-starboard-exporter-to-quay
           # Trigger job on git tag.
           filters:
             tags:
