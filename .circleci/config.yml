@@ -1,14 +1,80 @@
 version: 2.1
-
 orbs:
   architect: giantswarm/architect@4.8.0
 
 workflows:
-  test:
+  package-and-push-chart-on-tag:
     jobs:
-      - architect/go-test:
-          name: go-test
+      - architect/go-build:
+          name: go-build
+          binary: starboard-exporter
           filters:
-            # Trigger job also on git tag.
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-docker:
+          context: "architect"
+          name: push-starboard-exporter-to-docker
+          image: "docker.io/giantswarm/starboard-exporter"
+          username_envar: "DOCKER_USERNAME"
+          password_envar: "DOCKER_PASSWORD"
+          requires:
+            - go-build
+          # Needed to trigger job also on git tag.
+          filters:
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-docker:
+          context: "architect"
+          name: push-starboard-exporter-to-quay
+          image: "quay.io/giantswarm/starboard-exporter"
+          username_envar: "QUAY_USERNAME"
+          password_envar: "QUAY_PASSWORD"
+          requires:
+            - go-build
+          # Needed to trigger job also on git tag.
+          filters:
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-docker:
+          context: "architect"
+          name: push-starboard-exporter-to-aliyun
+          image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/starboard-exporter"
+          username_envar: "ALIYUN_USERNAME"
+          password_envar: "ALIYUN_PASSWORD"
+          requires:
+            - go-build
+          # Needed to trigger job also on git tag.
+          filters:
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-catalog:
+          context: "architect"
+          name: push-starboard-exporter-to-control-plane-catalog
+          app_catalog: "control-plane-catalog"
+          app_catalog_test: "control-plane-test-catalog"
+          chart: "starboard-exporter"
+          requires:
+            - push-starboard-exporter-to-docker
+            - push-starboard-exporter-to-quay
+          # Trigger job on git tag.
+          filters:
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-catalog:
+          context: "architect"
+          name: push-starboard-exporter-to-giantswarm-catalog
+          app_catalog: "giantswarm-catalog"
+          app_catalog_test: "giantswarm-test-catalog"
+          chart: "starboard-exporter"
+          requires:
+            - push-starboard-exporter-to-docker
+            - push-starboard-exporter-to-quay
+          # Trigger job on git tag.
+          filters:
             tags:
               only: /^v.*/
