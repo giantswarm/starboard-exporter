@@ -9,6 +9,6 @@ metadata:
     prometheus.io/scrape: "true"
 spec:
   ports:
-  - port: 8000
+  - port: 8080
   selector:
     {{- include "labels.selector" . | nindent 4 }}
