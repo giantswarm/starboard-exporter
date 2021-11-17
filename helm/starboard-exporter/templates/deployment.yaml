@@ -57,10 +57,14 @@ spec:
           mountPath: /var/run/{{ include "name" . }}/configmap/
         - name: {{ include "name" . }}-secret
           mountPath: /var/run/{{ include "name" . }}/secret/
+        ports:
+        - containerPort: 8080
+          name: metrics
+          protocol: TCP
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8000
+            port: 8081
           initialDelaySeconds: 30
           timeoutSeconds: 1
         resources:
