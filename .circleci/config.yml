@@ -38,18 +38,18 @@ workflows:
             tags:
               only: /^v.*/
 
-      - architect/push-to-docker:
-          context: "architect"
-          name: push-starboard-exporter-to-aliyun
-          image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/starboard-exporter"
-          username_envar: "ALIYUN_USERNAME"
-          password_envar: "ALIYUN_PASSWORD"
-          requires:
-            - go-build
-          # Needed to trigger job also on git tag.
-          filters:
-            tags:
-              only: /^v.*/
+      # - architect/push-to-docker:
+      #     context: "architect"
+      #     name: push-starboard-exporter-to-aliyun
+      #     image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/starboard-exporter"
+      #     username_envar: "ALIYUN_USERNAME"
+      #     password_envar: "ALIYUN_PASSWORD"
+      #     requires:
+      #       - go-build
+      #     # Needed to trigger job also on git tag.
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
 
       - architect/push-to-app-catalog:
           context: "architect"
@@ -59,7 +59,7 @@ workflows:
           chart: "starboard-exporter"
           requires:
             - push-starboard-exporter-to-docker
-            - push-starboard-exporter-to-quay
+            # - push-starboard-exporter-to-quay
           # Trigger job on git tag.
           filters:
             tags:
@@ -73,7 +73,7 @@ workflows:
           chart: "starboard-exporter"
           requires:
             - push-starboard-exporter-to-docker
-            - push-starboard-exporter-to-quay
+            # - push-starboard-exporter-to-quay
           # Trigger job on git tag.
           filters:
             tags:
