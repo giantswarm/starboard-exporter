@@ -1,0 +1,17 @@
+{{ if .Values.serviceMonitor.enabled }}
+# Prometheus Monitor Service (Metrics)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "resource.default.name"  . }}
+  namespace: {{ include "resource.default.namespace"  . }}
+  labels:
+  {{- include "labels.common" . | nindent 4 }}
+spec:
+  endpoints:
+    - path: /metrics
+      port: metrics
+  selector:
+    matchLabels:
+  {{- include "labels.selector" . | nindent 6 }}
+{{- end }}
