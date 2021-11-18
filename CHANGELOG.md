@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1] - 2021-11-18
+
 ### Added
 
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/tree/master
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/giantswarm/starboard-exporter/releases/tag/v0.0.1
