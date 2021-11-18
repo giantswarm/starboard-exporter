@@ -7,4 +7,4 @@ home: https://github.com/giantswarm/starboard-exporter
 version: [[ .Version ]]
 annotations:
   application.giantswarm.io/team: "security"
-  config.giantswarm.io/version: "master"
+  config.giantswarm.io/version: "main"
