@@ -11,3 +11,6 @@ pod:
 project:
   branch: "[[ .Branch ]]"
   commit: "[[ .SHA ]]"
+
+serviceMonitor:
+  enabled: true
