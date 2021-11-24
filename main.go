@@ -68,10 +68,17 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 
 	// Read and parse target-labels into known VulnerabilityLabels.
-	flag.Func("target-labels", "A comma-separated list of labels to be exposed per-vulnerability. Alias 'all' is supported.",
+	flag.Func("target-labels",
+		"A comma-separated list of labels to be exposed per-vulnerability. Alias 'all' is supported.",
 		func(input string) error {
 			items := strings.Split(input, ",")
 			for _, i := range items {
+				if i == controllers.LabelGroupAll {
+					// Special case for "all".
+					targetLabels = append(targetLabels, controllers.LabelsForGroup(controllers.LabelGroupAll)...)
+					continue
+				}
+
 				label, ok := controllers.LabelWithName(i)
 				if !ok {
 					err := errors.New("invalidConfigError")
