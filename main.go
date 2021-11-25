@@ -73,6 +73,7 @@ func main() {
 		func(input string) error {
 			items := strings.Split(input, ",")
 			for _, i := range items {
+				setupLog.Info("parsing user-defined target labels")
 				if i == controllers.LabelGroupAll {
 					// Special case for "all".
 					targetLabels = append(targetLabels, controllers.LabelsForGroup(controllers.LabelGroupAll)...)
@@ -87,6 +88,7 @@ func main() {
 				}
 				targetLabels = append(targetLabels, label)
 			}
+			setupLog.Info(fmt.Sprintf("Using target labels: %v", targetLabels))
 			return nil
 		})
 
