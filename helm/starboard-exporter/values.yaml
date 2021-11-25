@@ -12,5 +12,9 @@ project:
   branch: "[[ .Branch ]]"
   commit: "[[ .SHA ]]"
 
-serviceMonitor:
-  enabled: true
+monitoring:
+  serviceMonitor:
+    enabled: true
+
+  grafanaDashboard:
+    enabled: true
