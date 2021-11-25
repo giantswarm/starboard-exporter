@@ -57,6 +57,7 @@ func init() {
 }
 
 func main() {
+	fmt.Printf("printf main")
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
@@ -71,6 +72,8 @@ func main() {
 	flag.Func("target-labels",
 		"A comma-separated list of labels to be exposed per-vulnerability. Alias 'all' is supported.",
 		func(input string) error {
+			setupLog.Info(fmt.Sprintf("Got target labels: %s", input))
+			fmt.Printf("printf Got target labels: %s", input)
 			items := strings.Split(input, ",")
 			for _, i := range items {
 				setupLog.Info("parsing user-defined target labels")
