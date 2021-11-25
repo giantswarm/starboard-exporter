@@ -5,8 +5,8 @@ metadata:
   labels:
     grafana_dashboard: "1"
   name: grafana-starboard
-  {{- if .Values.grafanaDashboard.namespace }}
-  namespace: {{ .Values.grafanaDashboard.namespace }}
+  {{- if .Values.monitoring.grafanaDashboard.namespace }}
+  namespace: {{ .Values.monitoring.grafanaDashboard.namespace }}
   {{- else }}
   namespace: {{ .Release.Namespace }}
   {{- end}}
