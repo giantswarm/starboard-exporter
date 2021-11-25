@@ -5,6 +5,7 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "resource.default.name"  . }}
   namespace: {{ include "resource.default.namespace"  . }}
+  # TODO: Pass in custom labels
   labels:
   {{- include "labels.common" . | nindent 4 }}
 spec:

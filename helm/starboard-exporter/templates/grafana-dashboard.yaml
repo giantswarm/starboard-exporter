@@ -83,7 +83,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerabilities_count{severity=\"CRITICAL\"})",
+              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=\"CRITICAL\"})",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -143,7 +143,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerabilities_count{severity=\"HIGH\"})",
+              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=\"HIGH\"})",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -203,7 +203,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerabilities_count{severity=\"MEDIUM\"})",
+              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=\"MEDIUM\"})",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -263,7 +263,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerabilities_count{severity=\"LOW\"})",
+              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=\"LOW\"})",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -323,7 +323,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerabilities_count{severity=\"NONE\"})",
+              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=\"NONE\"})",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -383,7 +383,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerabilities_count{severity=\"UNKNOWN\"})",
+              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=\"UNKNOWN\"})",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -465,7 +465,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerabilities_count) by (image_namespace)",
+              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count) by (image_namespace)",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -546,7 +546,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerabilities_count) by (severity)",
+              "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count) by (severity)",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -597,7 +597,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "topk(10, sum(starboard_exporter_vulnerabilityreport_image_vulnerabilities{severity=~\"CRITICAL|HIGH\"}) by (image_repository, image_tag))",
+              "expr": "topk(10, sum(starboard_exporter_vulnerabilityreport_image_vulnerability{severity=~\"CRITICAL|HIGH\"}) by (image_repository, image_tag))",
               "format": "table",
               "instant": true,
               "interval": "",
