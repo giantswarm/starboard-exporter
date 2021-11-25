@@ -8,6 +8,9 @@ metadata:
   # TODO: Pass in custom labels
   labels:
   {{- include "labels.common" . | nindent 4 }}
+  {{- with .Values.monitoring.serviceMonitor.labels }}
+      {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   endpoints:
     - path: /metrics
