@@ -66,7 +66,7 @@ func main() {
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
-
+	setupLog.Info("Pre-flag.Func()")
 	// Read and parse target-labels into known VulnerabilityLabels.
 	flag.Func("target-labels",
 		"A comma-separated list of labels to be exposed per-vulnerability. Alias 'all' is supported.",
@@ -91,14 +91,16 @@ func main() {
 			setupLog.Info(fmt.Sprintf("Using target labels: %v", targetLabels))
 			return nil
 		})
-
+	setupLog.Info("Post-flag.Func()")
 	opts := zap.Options{
 		Development: true,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
-
+	setupLog.Info("Post-flag.Parse()")
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	setupLog.Info(fmt.Sprintf("Using target labels: %v", targetLabels))
+	fmt.Printf("printf Using target labels: %v", targetLabels)
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
