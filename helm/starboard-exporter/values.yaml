@@ -15,7 +15,10 @@ project:
 exporter:
   vulnerabilityReports:
     targetLabels:
-
+      # - image_namespace
+      # - image_repository
+      # - image_repository
+      # - vulnerability_id
 
 monitoring:
   serviceMonitor:

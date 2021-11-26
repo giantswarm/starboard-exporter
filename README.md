@@ -67,4 +67,17 @@ To enable an additional detail series *per Vulnerability*, use the `--target-lab
 --target-labels=all
 ```
 
+Target labels can also be set via Helm values:
+
+```yaml
+exporter:
+  vulnerabilityReports:
+    targetLabels:
+      - image_namespace
+      - image_repository
+      - image_repository
+      - vulnerability_id
+      - ...
+```
+
 [starboard-upstream]: https://github.com/aquasecurity/starboard
