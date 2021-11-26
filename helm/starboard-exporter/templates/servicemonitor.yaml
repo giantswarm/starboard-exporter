@@ -1,4 +1,4 @@
-{{ if .Values.serviceMonitor.enabled }}
+{{ if and (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") .Values.monitoring.serviceMonitor.enabled }}
 # Prometheus Monitor Service (Metrics)
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -7,6 +7,9 @@ metadata:
   namespace: {{ include "resource.default.namespace"  . }}
   labels:
   {{- include "labels.common" . | nindent 4 }}
+  {{- with .Values.monitoring.serviceMonitor.labels }}
+      {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   endpoints:
     - path: /metrics

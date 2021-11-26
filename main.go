@@ -17,9 +17,11 @@ limitations under the License.
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -58,11 +60,37 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	targetLabels := []controllers.VulnerabilityLabel{}
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+
+	// Read and parse target-labels into known VulnerabilityLabels.
+	flag.Func("target-labels",
+		"A comma-separated list of labels to be exposed per-vulnerability. Alias 'all' is supported.",
+		func(input string) error {
+			items := strings.Split(input, ",")
+			for _, i := range items {
+				if i == controllers.LabelGroupAll {
+					// Special case for "all".
+					targetLabels = append(targetLabels, controllers.LabelsForGroup(controllers.LabelGroupAll)...)
+					continue
+				}
+
+				label, ok := controllers.LabelWithName(i)
+				if !ok {
+					err := errors.New("invalidConfigError")
+					setupLog.Error(err, fmt.Sprintf("unknown target label %s", i))
+					return err
+				}
+				targetLabels = append(targetLabels, label)
+			}
+			setupLog.Info(fmt.Sprintf("Using target labels: %v", targetLabels))
+			return nil
+		})
+
 	opts := zap.Options{
 		Development: true,
 	}
@@ -85,9 +113,10 @@ func main() {
 	}
 
 	if err = (&controllers.VulnerabilityReportReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
-		Scheme: mgr.GetScheme(),
+		Client:       mgr.GetClient(),
+		Log:          ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
+		Scheme:       mgr.GetScheme(),
+		TargetLabels: targetLabels,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
 		os.Exit(1)

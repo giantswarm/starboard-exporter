@@ -54,6 +54,8 @@ rules:
       - get
       - list
       - watch
+      - update
+      - patch
   - nonResourceURLs:
       - "/"
       - "/healthz"
