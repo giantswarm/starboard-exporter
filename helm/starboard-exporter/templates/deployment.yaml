@@ -37,10 +37,10 @@ spec:
         image: "{{ .Values.registry.domain }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
         command:
           - /manager
+        {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
         args:
-          {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
-          {{- end }}
+        {{- end }}
         ports:
         - containerPort: 8080
           name: metrics
