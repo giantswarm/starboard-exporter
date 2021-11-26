@@ -12,6 +12,11 @@ project:
   branch: "[[ .Branch ]]"
   commit: "[[ .SHA ]]"
 
+exporter:
+  vulnerabilityReports:
+    targetLabels:
+
+
 monitoring:
   serviceMonitor:
     enabled: true

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Make target labels more easily configurable in `values.yaml`.
+
+### Added
+
 - Add configurable target labels.
 - Add Grafana dashboard.
 - Support custom labels for ServiceMonitor.
