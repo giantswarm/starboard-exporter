@@ -12,6 +12,14 @@ project:
   branch: "[[ .Branch ]]"
   commit: "[[ .SHA ]]"
 
+exporter:
+  vulnerabilityReports:
+    targetLabels:
+      # - image_namespace
+      # - image_repository
+      # - image_tag
+      # - vulnerability_id
+
 monitoring:
   serviceMonitor:
     enabled: true

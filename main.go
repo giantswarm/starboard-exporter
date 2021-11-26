@@ -75,7 +75,7 @@ func main() {
 			for _, i := range items {
 				if i == controllers.LabelGroupAll {
 					// Special case for "all".
-					targetLabels = append(targetLabels, controllers.LabelsForGroup(controllers.LabelGroupAll)...)
+					targetLabels = appendIfNotExists(targetLabels, controllers.LabelsForGroup(controllers.LabelGroupAll))
 					continue
 				}
 
@@ -85,9 +85,10 @@ func main() {
 					setupLog.Error(err, fmt.Sprintf("unknown target label %s", i))
 					return err
 				}
-				targetLabels = append(targetLabels, label)
+				targetLabels = appendIfNotExists(targetLabels, []controllers.VulnerabilityLabel{label})
 			}
-			setupLog.Info(fmt.Sprintf("Using target labels: %v", targetLabels))
+
+			setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(targetLabels), targetLabels))
 			return nil
 		})
 
@@ -137,4 +138,22 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func appendIfNotExists(base []controllers.VulnerabilityLabel, items []controllers.VulnerabilityLabel) []controllers.VulnerabilityLabel {
+	result := base
+	contained := make(map[string]bool)
+
+	for _, existingLabelName := range controllers.LabelNamesForList(base) {
+		contained[existingLabelName] = true
+	}
+
+	for _, newItem := range items {
+		if !contained[newItem.Name] {
+			result = append(result, newItem)
+			contained[newItem.Name] = true
+		}
+	}
+
+	return result
 }

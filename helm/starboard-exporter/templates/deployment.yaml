@@ -28,19 +28,6 @@ spec:
                   {{- include "labels.selector" . | nindent 18 }}
               topologyKey: kubernetes.io/hostname
             weight: 100
-      volumes:
-      - name: {{ include "name" . }}-configmap
-        configMap:
-          name: {{ include "resource.default.name"  . }}
-          items:
-          - key: config.yaml
-            path: config.yaml
-      - name: {{ include "name" . }}-secret
-        secret:
-          secretName: {{ include "resource.default.name"  . }}
-          items:
-          - key: secret.yaml
-            path: secret.yaml
       serviceAccountName: {{ include "resource.default.name"  . }}
       securityContext:
         runAsUser: {{ .Values.pod.user.id }}
@@ -48,15 +35,12 @@ spec:
       containers:
       - name: {{ include "name" . }}
         image: "{{ .Values.registry.domain }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        command:
+          - /manager
+        {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
         args:
-        - daemon
-        - --config.dirs=/var/run/{{ include "name" . }}/configmap/,/var/run/{{ include "name" . }}/secret/
-        - --config.files=config,secret
-        volumeMounts:
-        - name: {{ include "name" . }}-configmap
-          mountPath: /var/run/{{ include "name" . }}/configmap/
-        - name: {{ include "name" . }}-secret
-          mountPath: /var/run/{{ include "name" . }}/secret/
+          - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
+        {{- end }}
         ports:
         - containerPort: 8080
           name: metrics

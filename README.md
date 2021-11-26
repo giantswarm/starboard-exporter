@@ -23,6 +23,8 @@ starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{
     } 4
 ```
 
+This indicates that the `giantswarm/starboard-operator` image in the `demo` namespace contains 4 medium-severity vulnerabilities.
+
 ### Detail / Vulnerability
 
 A detail or vulnerability series exposes fields from each instance of an Aqua `Vulnerability`. The value of the metric is the `Score` for the vulnerability. For example:
@@ -34,13 +36,18 @@ starboard_exporter_vulnerabilityreport_image_vulnerability{
     image_namespace="demo",
     image_repository="giantswarm/starboard-operator",
     image_tag="0.11.0",
-    installed_resource_version="1.1.1k-r0",report_name="replicaset-starboard-app-6894945788-starboard-app",
+    installed_resource_version="1.1.1k-r0",
+    report_name="replicaset-starboard-app-6894945788-starboard-app",
     severity="HIGH",
     vulnerability_id="CVE-2021-3712",
     vulnerability_link="https://avd.aquasec.com/nvd/cve-2021-3712",
     vulnerability_title="openssl: Read buffer overruns processing ASN.1 strings",vulnerable_resource_name="libssl1.1"
     } 7.4
 ```
+
+This indicates that the vulnerability with the id `CVE-2021-3712` was found in the `giantswarm/starboard-operator` image in the `demo` namespace, and it has a CVSS 3.x score of 7.4.
+
+An additional series would be exposed for every combination of those labels.
 
 #### A Note on Cardinality
 
@@ -58,6 +65,19 @@ To enable an additional detail series *per Vulnerability*, use the `--target-lab
 
 # Run with (almost) all fields exposed as labels, if you're feeling really wild.
 --target-labels=all
+```
+
+Target labels can also be set via Helm values:
+
+```yaml
+exporter:
+  vulnerabilityReports:
+    targetLabels:
+      - image_namespace
+      - image_repository
+      - image_tag
+      - vulnerability_id
+      - ...
 ```
 
 [starboard-upstream]: https://github.com/aquasecurity/starboard
