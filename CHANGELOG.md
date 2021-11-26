@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Consolidate label behavior - use reflected field getters.
+
 ## [0.1.1] - 2021-11-26
 
 ### Added
