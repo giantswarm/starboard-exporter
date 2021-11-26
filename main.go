@@ -150,7 +150,7 @@ func appendIfNotExists(base []controllers.VulnerabilityLabel, items []controller
 
 	for _, newItem := range items {
 		if !contained[newItem.Name] {
-			result = append(base, newItem)
+			result = append(result, newItem)
 			contained[newItem.Name] = true
 		}
 	}
