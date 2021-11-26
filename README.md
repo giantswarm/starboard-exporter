@@ -75,7 +75,7 @@ exporter:
     targetLabels:
       - image_namespace
       - image_repository
-      - image_repository
+      - image_tag
       - vulnerability_id
       - ...
 ```
