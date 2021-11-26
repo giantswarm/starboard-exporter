@@ -12,7 +12,7 @@ This exporter exposes two types of metrics:
 
 A summary series exposes the count of CVEs of each severity reported in a given `VulnerabilityReport`. For example:
 
-```json
+```shell
 starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{
     image_digest="",
     image_namespace="demo",
@@ -27,7 +27,7 @@ starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{
 
 A detail or vulnerability series exposes fields from each instance of an Aqua `Vulnerability`. The value of the metric is the `Score` for the vulnerability. For example:
 
-```json
+```shell
 starboard_exporter_vulnerabilityreport_image_vulnerability{
     fixed_resource_version="1.1.1l-r0",
     image_digest="",
