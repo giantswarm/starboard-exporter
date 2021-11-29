@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Push images to Aliyun.
+- Add `starboard-exporter` to AWS and Azure app collections.
+
 ## [0.1.1] - 2021-11-26
 
 ### Added
