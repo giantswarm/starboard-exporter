@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2021-11-29
+
 ### Changed
 
 - Push images to Aliyun.
@@ -33,7 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/giantswarm/starboard-exporter/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/giantswarm/starboard-exporter/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/giantswarm/starboard-exporter/releases/tag/v0.0.1
