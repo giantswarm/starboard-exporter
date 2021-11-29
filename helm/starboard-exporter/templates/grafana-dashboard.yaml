@@ -468,7 +468,7 @@ data:
               "exemplar": true,
               "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count) by (image_namespace)",
               "interval": "",
-              "legendFormat": "{{image_namespace}}",
+              "legendFormat": "{{"{{image_namespace}}"}}",
               "refId": "A"
             }
           ],
@@ -549,7 +549,7 @@ data:
               "exemplar": true,
               "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count) by (severity)",
               "interval": "",
-              "legendFormat": "{{severity}}",
+              "legendFormat": "{{"{{severity}}"}}",
               "refId": "A"
             }
           ],
