@@ -29,11 +29,12 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "id": 66,
+      "id": 56,
+      "iteration": 1638185708499,
       "links": [],
       "panels": [
         {
-          "datasource": null,
+          "datasource": "$datasource",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -93,7 +94,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": null,
+          "datasource": "$datasource",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -153,7 +154,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": null,
+          "datasource": "$datasource",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -213,7 +214,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": null,
+          "datasource": "$datasource",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -273,7 +274,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": null,
+          "datasource": "$datasource",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -333,7 +334,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": null,
+          "datasource": "$datasource",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -393,7 +394,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": null,
+          "datasource": "$datasource",
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -467,7 +468,7 @@ data:
               "exemplar": true,
               "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count) by (image_namespace)",
               "interval": "",
-              "legendFormat": "",
+              "legendFormat": "{{"{{image_namespace}}"}}",
               "refId": "A"
             }
           ],
@@ -475,7 +476,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": null,
+          "datasource": "$datasource",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -548,7 +549,7 @@ data:
               "exemplar": true,
               "expr": "sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count) by (severity)",
               "interval": "",
-              "legendFormat": "",
+              "legendFormat": "{{"{{severity}}"}}",
               "refId": "A"
             }
           ],
@@ -556,7 +557,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": null,
+          "datasource": "$datasource",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -609,12 +610,33 @@ data:
           "type": "table"
         }
       ],
-      "refresh": "",
+      "refresh": "10s",
       "schemaVersion": 30,
       "style": "dark",
-      "tags": [],
       "templating": {
-        "list": []
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "default",
+              "value": "default"
+            },
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "prometheus",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "type": "datasource"
+          }
+        ]
       },
       "time": {
         "from": "now-1h",
@@ -622,8 +644,8 @@ data:
       },
       "timepicker": {},
       "timezone": "",
-      "title": "Starboard Dashboard",
+      "title": "Security: Starboard Dashboard",
       "uid": "CK_Th9c7k",
-      "version": 4
+      "version": 1
     }
 {{- end -}}

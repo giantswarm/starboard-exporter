@@ -59,7 +59,7 @@ workflows:
           chart: "starboard-exporter"
           requires:
             - push-starboard-exporter-to-docker
-            # - push-starboard-exporter-to-quay
+            - push-starboard-exporter-to-quay
           # Trigger job on git tag.
           filters:
             tags:
@@ -73,8 +73,37 @@ workflows:
           chart: "starboard-exporter"
           requires:
             - push-starboard-exporter-to-docker
-            # - push-starboard-exporter-to-quay
+            - push-starboard-exporter-to-quay
           # Trigger job on git tag.
           filters:
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: "architect"
+          name: push-starboard-exporter-to-aws-app-collection
+          app_name: "starboard-exporter"
+          app_collection_repo: "aws-app-collection"
+          requires:
+            - push-starboard-exporter-to-control-plane-catalog
+            - push-starboard-exporter-to-aliyun
+          filters:
+            # Only do this when a new tag is created.
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: "architect"
+          name: push-starboard-exporter-to-azure-app-collection
+          app_name: "starboard-exporter"
+          app_collection_repo: "azure-app-collection"
+          requires:
+            - push-starboard-exporter-to-control-plane-catalog
+          filters:
+            # Only do this when a new tag is created.
+            branches:
+              ignore: /.*/
             tags:
               only: /^v.*/
