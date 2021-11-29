@@ -59,7 +59,7 @@ workflows:
           chart: "starboard-exporter"
           requires:
             - push-starboard-exporter-to-docker
-            # - push-starboard-exporter-to-quay
+            - push-starboard-exporter-to-quay
           # Trigger job on git tag.
           filters:
             tags:
@@ -73,7 +73,7 @@ workflows:
           chart: "starboard-exporter"
           requires:
             - push-starboard-exporter-to-docker
-            # - push-starboard-exporter-to-quay
+            - push-starboard-exporter-to-quay
           # Trigger job on git tag.
           filters:
             tags:
