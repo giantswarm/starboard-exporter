@@ -35,3 +35,9 @@ monitoring:
 
   grafanaDashboard:
     enabled: true
+
+psp:
+  enabled: true
+
+networkpolicy:
+  enabled: true
