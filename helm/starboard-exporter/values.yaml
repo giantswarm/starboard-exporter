@@ -8,6 +8,15 @@ pod:
     id: 1000
   group:
     id: 1000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 220Mi
+  limits:
+    cpu: 100m
+    memory: 220Mi
+
 project:
   branch: "[[ .Branch ]]"
   commit: "[[ .SHA ]]"

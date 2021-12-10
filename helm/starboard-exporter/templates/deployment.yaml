@@ -51,12 +51,6 @@ spec:
             port: 8081
           initialDelaySeconds: 30
           timeoutSeconds: 1
-        resources:
-          requests:
-            cpu: 100m
-            memory: 220Mi
-          limits:
-            cpu: 100m
-            memory: 220Mi
+{{ toYaml .Values.resources | indent 8 }}
       imagePullSecrets:
       - name: {{ include "resource.pullSecret.name" . }}
