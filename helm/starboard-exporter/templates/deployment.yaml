@@ -51,6 +51,7 @@ spec:
             port: 8081
           initialDelaySeconds: 30
           timeoutSeconds: 1
+        resources:
 {{ toYaml .Values.resources | indent 10 }}
       imagePullSecrets:
       - name: {{ include "resource.pullSecret.name" . }}
