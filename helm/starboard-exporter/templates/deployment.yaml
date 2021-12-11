@@ -53,5 +53,7 @@ spec:
           timeoutSeconds: 1
         resources:
 {{ toYaml .Values.resources | indent 10 }}
+      {{- if .Values.image.pull_secret_enabled }}
       imagePullSecrets:
       - name: {{ include "resource.pullSecret.name" . }}
+      {{- end }}

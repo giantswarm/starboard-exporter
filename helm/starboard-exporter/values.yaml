@@ -3,6 +3,7 @@ registry:
 image:
   name: "giantswarm/starboard-exporter"
   tag: "[[ .Version ]]"
+  pull_secret_enabled: true
 pod:
   user:
     id: 1000
