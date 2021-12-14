@@ -81,3 +81,13 @@ exporter:
 ```
 
 [starboard-upstream]: https://github.com/aquasecurity/starboard
+
+## Helm
+
+How to install the starboard-exporter using helm:
+
+```shell
+helm repo add giantswarm https://giantswarm.github.io/giantswarm-catalog
+helm repo update
+helm upgrade -i starboard-exporter --namespace <starboard namespace> giantswarm/starboard-exporter
+```
