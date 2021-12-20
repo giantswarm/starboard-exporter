@@ -3,7 +3,7 @@ module github.com/giantswarm/starboard-exporter
 go 1.16
 
 require (
-	github.com/aquasecurity/starboard v0.13.1
+	github.com/aquasecurity/starboard v0.13.2
 	github.com/go-logr/logr v0.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
