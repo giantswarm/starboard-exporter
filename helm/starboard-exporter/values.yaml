@@ -9,6 +9,15 @@ pod:
   group:
     id: 1000
 
+# container securityContext
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  privileged: false
+  readOnlyRootFilesystem: true
+
 resources:
   requests:
     cpu: 100m
