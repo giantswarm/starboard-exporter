@@ -598,7 +598,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "topk(10, sum(starboard_exporter_vulnerabilityreport_image_vulnerability{severity=~\"CRITICAL|HIGH\"}) by (image_repository, image_tag))",
+              "expr": "topk(10, sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=~\"CRITICAL|HIGH\"}) by (image_repository, image_tag))",
               "format": "table",
               "instant": true,
               "interval": "",
