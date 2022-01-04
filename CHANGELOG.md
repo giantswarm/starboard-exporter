@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Bump `starboard`, `logr`, and `controller-runtime` dependency versions.
+- Remove unneeded `releaseRevision` annotation from deployment.
+
 ## [0.1.4] - 2021-12-14
 
 ### Changed
