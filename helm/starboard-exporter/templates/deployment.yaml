@@ -16,8 +16,6 @@ spec:
     metadata:
       labels:
         {{- include "labels.common" . | nindent 8 }}
-      # annotations:
-      #   app.giantswarm.io/config-checksum: {{ include (print .Template.BasePath "/configmap.yaml") . | sha256sum | quote }}
     spec:
       affinity:
         podAntiAffinity:
