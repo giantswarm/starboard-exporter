@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2022-01-05
+
 ### Added
 
 - Helm, add configurable container securityContext with secure defaults.
@@ -60,7 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.1.4...v0.2.0
 [0.1.4]: https://github.com/giantswarm/starboard-exporter/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/giantswarm/starboard-exporter/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/giantswarm/starboard-exporter/compare/v0.1.1...v0.1.2
