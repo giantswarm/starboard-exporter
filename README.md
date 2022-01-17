@@ -53,6 +53,15 @@ An additional series would be exposed for every combination of those labels.
 
 For some use cases, it is helpful to export additional fields from `VulnerabilityReport` CRs. However, because many fields contain unbounded arbitrary data, including them in Prometheus metrics can lead to extremely high cardinality. This can drastically impact Prometheus performance. For this reason, we only expose summary data by default and allow users to opt-in to higher-cardinality fields.
 
+### One vulnerabilityreport per deployment
+
+By default, Starboard generates a `VulnerabilityReport` per ReplicaSet in a Deployment.
+This can cause confusion because vulnerabilities are still reported for Pods which no longer exist, i.e. you fix a CVE in your latest Deployment but the number of CVEs per Deployment stays the same in your metrics.
+
+As of Starboard v0.14.0, the environment variable `OPERATOR_VULNERABILITY_SCANNER_SCAN_ONLY_CURRENT_REVISIONS` can be enabled to only generate a `VulnerabilityReport` from the latest ReplicaSet in the Deployment.
+
+Check the [Starboard configuration docs][starboard-config] for more information.
+
 ## Customization
 
 Summary metrics of the format described above are always enabled.
@@ -81,6 +90,7 @@ exporter:
 ```
 
 [starboard-upstream]: https://github.com/aquasecurity/starboard
+[starboard-config]: https://github.com/aquasecurity/starboard/blob/main/docs/operator/configuration.md
 
 ## Helm
 
