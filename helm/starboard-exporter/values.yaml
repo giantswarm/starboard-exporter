@@ -50,3 +50,5 @@ psp:
 
 networkpolicy:
   enabled: true
+
+podAnnotations: {}
