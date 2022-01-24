@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Make pod annotations configurable.
+- Bump `golang`, `prometheus`, and `starboard` versions.
+
 ## [0.2.0] - 2022-01-05
 
 ### Added
@@ -26,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Helm, remove unused rbac config and add if for psp and networkpolicy yaml.
+- Helm, remove unused RBAC config and add if for PSP and NetworkPolicy yaml.
 
 ## [0.1.3] - 2021-12-10
 
