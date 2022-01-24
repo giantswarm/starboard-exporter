@@ -6,7 +6,7 @@ require (
 	github.com/aquasecurity/starboard v0.14.0
 	github.com/go-logr/logr v1.2.2
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.12.0
 	k8s.io/apimachinery v0.23.0
 	k8s.io/client-go v0.23.0
 	sigs.k8s.io/controller-runtime v0.11.0
