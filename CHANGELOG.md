@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Include the registry server in `image_repository` labels.
 - Bump `golang`, `prometheus`, and `starboard` dependency versions.
+- Update Grafana dashboard to use plugin version 8.3.2.
 
 ## [0.2.1] - 2022-01-24
 
