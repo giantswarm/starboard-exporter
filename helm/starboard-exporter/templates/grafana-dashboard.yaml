@@ -13,6 +13,39 @@ metadata:
 data:
   grafana-starboard.json: |-
     {
+      "__elements": [],
+      "__requires": [
+        {
+          "type": "grafana",
+          "id": "grafana",
+          "name": "Grafana",
+          "version": "8.3.2"
+        },
+        {
+          "type": "datasource",
+          "id": "prometheus",
+          "name": "Prometheus",
+          "version": "1.0.0"
+        },
+        {
+          "type": "panel",
+          "id": "stat",
+          "name": "Stat",
+          "version": ""
+        },
+        {
+          "type": "panel",
+          "id": "table",
+          "name": "Table",
+          "version": ""
+        },
+        {
+          "type": "panel",
+          "id": "timeseries",
+          "name": "Time series",
+          "version": ""
+        }
+      ],
       "annotations": {
         "list": [
           {
@@ -22,19 +55,28 @@ data:
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
             "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
             "type": "dashboard"
           }
         ]
       },
       "editable": true,
-      "gnetId": null,
+      "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 56,
-      "iteration": 1638185708499,
+      "id": null,
+      "iteration": 1644852715758,
       "links": [],
+      "liveNow": false,
       "panels": [
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -80,7 +122,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.2",
           "targets": [
             {
               "exemplar": true,
@@ -94,7 +136,9 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -140,7 +184,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.2",
           "targets": [
             {
               "exemplar": true,
@@ -154,7 +198,9 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -200,7 +246,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.2",
           "targets": [
             {
               "exemplar": true,
@@ -214,7 +260,9 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -260,7 +308,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.2",
           "targets": [
             {
               "exemplar": true,
@@ -274,7 +322,9 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -320,7 +370,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.2",
           "targets": [
             {
               "exemplar": true,
@@ -334,7 +384,9 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -380,7 +432,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.2",
           "targets": [
             {
               "exemplar": true,
@@ -394,7 +446,9 @@ data:
           "type": "stat"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "description": "",
           "fieldConfig": {
             "defaults": {
@@ -476,7 +530,9 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "uid": "$datasource"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -557,7 +613,10 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "$datasource",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -592,13 +651,24 @@ data:
           },
           "id": 13,
           "options": {
+            "footer": {
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
             "showHeader": true
           },
-          "pluginVersion": "8.0.3",
+          "pluginVersion": "8.3.2",
           "targets": [
             {
-              "exemplar": true,
-              "expr": "topk(10, sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=~\"CRITICAL|HIGH\"}) by (image_repository, image_tag))",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "$datasource"
+              },
+              "exemplar": false,
+              "expr": "topk(10, sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=~\"CRITICAL|HIGH\"}) by (image_registry, image_repository, image_tag))",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -607,11 +677,23 @@ data:
             }
           ],
           "title": "Pods with Critical/High CVEs",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "indexByName": {},
+                "renameByName": {}
+              }
+            }
+          ],
           "type": "table"
         }
       ],
       "refresh": "10s",
-      "schemaVersion": 30,
+      "schemaVersion": 33,
       "style": "dark",
       "templating": {
         "list": [
@@ -621,8 +703,6 @@ data:
               "text": "default",
               "value": "default"
             },
-            "description": null,
-            "error": null,
             "hide": 0,
             "includeAll": false,
             "label": "Datasource",
@@ -646,6 +726,7 @@ data:
       "timezone": "",
       "title": "Security: Starboard Dashboard",
       "uid": "CK_Th9c7k",
-      "version": 1
+      "version": 1,
+      "weekStart": ""
     }
 {{- end -}}
