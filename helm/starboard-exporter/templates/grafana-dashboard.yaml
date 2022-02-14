@@ -598,7 +598,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "topk(10, sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=~\"CRITICAL|HIGH\"}) by (image_repository, image_tag))",
+              "expr": "topk(10, sum(starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{severity=~\"CRITICAL|HIGH\"}) by (image_registry, image_repository, image_tag))",
               "format": "table",
               "instant": true,
               "interval": "",
@@ -607,6 +607,18 @@ data:
             }
           ],
           "title": "Pods with Critical/High CVEs",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "indexByName": {},
+                "renameByName": {}
+              }
+            }
+          ],
           "type": "table"
         }
       ],
