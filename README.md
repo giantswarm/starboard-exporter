@@ -34,7 +34,7 @@ starboard_exporter_vulnerabilityreport_image_vulnerability{
     fixed_resource_version="1.1.1l-r0",
     image_digest="",
     image_namespace="demo",
-    image_registry="quay.io/",
+    image_registry="quay.io",
     image_repository="giantswarm/starboard-operator",
     image_tag="0.11.0",
     installed_resource_version="1.1.1k-r0",
