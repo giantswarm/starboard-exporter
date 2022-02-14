@@ -16,6 +16,7 @@ A summary series exposes the count of CVEs of each severity reported in a given 
 starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{
     image_digest="",
     image_namespace="demo",
+    image_registry="quay.io",
     image_repository="giantswarm/starboard-operator",
     image_tag="0.11.0",
     report_name="replicaset-starboard-app-6894945788-starboard-app",
