@@ -692,7 +692,7 @@ data:
           "type": "table"
         }
       ],
-      "refresh": "",
+      "refresh": "10s",
       "schemaVersion": 33,
       "style": "dark",
       "templating": {
