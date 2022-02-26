@@ -37,6 +37,7 @@ import (
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 
 	"github.com/giantswarm/starboard-exporter/controllers"
+	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -120,6 +121,15 @@ func main() {
 		TargetLabels: targetLabels,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
+		os.Exit(1)
+	}
+
+	if err = (&configauditreport.ConfigAuditReportReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

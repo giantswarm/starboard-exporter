@@ -9,4 +9,9 @@ resources:
   group: aquasecurity.github.io
   kind: VulnerabilityReport
   version: v1alpha1
+- controller: true
+  domain: giantswarm
+  group: aquasecurity.github.io
+  kind: ConfigAuditReport
+  version: v1alpha1
 version: "3"
