@@ -21,16 +21,22 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/giantswarm/starboard-exporter/utils"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
+)
+
+const (
+	ConfigAuditReportFinalizer = "starboard-exporter.giantswarm.io/configauditreport"
 )
 
 // ConfigAuditReportReconciler reconciles a ConfigAuditReport object
@@ -58,6 +64,14 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	}
 
 	if report.DeletionTimestamp.IsZero() {
+		// Give the report our finalizer if it doesn't have one.
+		if !utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
+			ctrlutil.AddFinalizer(report, ConfigAuditReportFinalizer)
+			if err := r.Update(ctx, report); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
 		r.Log.Info(fmt.Sprintf("Reconciled %s || Found (D/W/P): %d/%d/%d",
 			req.NamespacedName,
 			report.Report.Summary.DangerCount,
@@ -68,6 +82,19 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		// Publish summary metrics for this report.
 		publishSummaryMetrics(report)
 
+	} else {
+
+		if utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
+			// Unfortunately, we can't just clear the series based on one label value,
+			// we have to reconstruct all of the label values to delete the series.
+			// That's the only reason the finalizer is needed at all.
+			r.clearImageMetrics(report)
+
+			ctrlutil.RemoveFinalizer(report, ConfigAuditReportFinalizer)
+			if err := r.Update(ctx, report); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
 	}
 
 	return defaultRequeue(), nil
@@ -83,6 +110,22 @@ func (r *ConfigAuditReportReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return nil
+}
+
+func (r *ConfigAuditReportReconciler) clearImageMetrics(report *aqua.ConfigAuditReport) {
+	// clear summary metrics
+	summaryValues := valuesForReport(report, metricLabels)
+
+	// Delete the series for each severity.
+	for severity := range getCountPerSeverity(report) {
+		v := summaryValues
+		v["severity"] = severity
+
+		// Expose the metric.
+		ConfigAuditSummary.Delete(
+			v,
+		)
+	}
 }
 
 func getCountPerSeverity(report *aqua.ConfigAuditReport) map[string]float64 {
