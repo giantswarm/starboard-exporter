@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/giantswarm/starboard-exporter/utils"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,6 +32,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
+
+	"github.com/giantswarm/starboard-exporter/utils"
 )
 
 const (
