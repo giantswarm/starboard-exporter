@@ -47,6 +47,8 @@ type ConfigAuditReportReconciler struct {
 }
 
 //+kubebuilder:rbac:groups=aquasecurity.github.io.giantswarm,resources=configauditreports,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=aquasecurity.github.io.giantswarm,resources=configauditreports/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=aquasecurity.github.io.giantswarm,resources=configauditreports/finalizers,verbs=update
 func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 	_ = r.Log.WithValues("configauditreport", req.NamespacedName)
