@@ -124,7 +124,7 @@ func (r *ConfigAuditReportReconciler) clearImageMetrics(report *aqua.ConfigAudit
 		v := summaryValues
 		v["severity"] = severity
 
-		// Expose the metric.
+		// Delete the metric.
 		ConfigAuditSummary.Delete(
 			v,
 		)
