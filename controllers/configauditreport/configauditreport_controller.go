@@ -75,11 +75,12 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			}
 		}
 
-		r.Log.Info(fmt.Sprintf("Reconciled %s || Found (D/W/P): %d/%d/%d",
+		r.Log.Info(fmt.Sprintf("Reconciled %s || Found (C/H/M/L): %d/%d/%d/%d",
 			req.NamespacedName,
-			report.Report.Summary.DangerCount,
-			report.Report.Summary.WarningCount,
-			report.Report.Summary.PassCount,
+			report.Report.Summary.CriticalCount,
+			report.Report.Summary.HighCount,
+			report.Report.Summary.MediumCount,
+			report.Report.Summary.LowCount,
 		))
 
 		// Publish summary metrics for this report.
@@ -132,11 +133,12 @@ func (r *ConfigAuditReportReconciler) clearImageMetrics(report *aqua.ConfigAudit
 }
 
 func getCountPerSeverity(report *aqua.ConfigAuditReport) map[string]float64 {
-	// Format is e.g. {danger: 10}.
+	// Format is e.g. {CRITICAL: 10}.
 	return map[string]float64{
-		string(aqua.ConfigAuditSeverityDanger):  float64(report.Report.Summary.DangerCount),
-		string(aqua.ConfigAuditSeverityWarning): float64(report.Report.Summary.WarningCount),
-		"pass":                                  float64(report.Report.Summary.PassCount),
+		string(aqua.SeverityCritical): float64(report.Report.Summary.CriticalCount),
+		string(aqua.SeverityHigh):     float64(report.Report.Summary.HighCount),
+		string(aqua.SeverityMedium):   float64(report.Report.Summary.MediumCount),
+		string(aqua.SeverityLow):      float64(report.Report.Summary.LowCount),
 	}
 }
 
