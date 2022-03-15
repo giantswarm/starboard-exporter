@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add NodeAffinity to run the exporter only on Linux Nodes with AMD64.
+
 ## [0.3.0] - 2022-02-14
 
 ### Added
