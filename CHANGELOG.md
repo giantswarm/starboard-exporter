@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Build with [`app-build-suite`](https://github.com/giantswarm/app-build-suite) instead of [`architect`](https://github.com/giantswarm/architect).
+
 ## [0.3.1] - 2022-03-15
 
 ### Added
