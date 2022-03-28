@@ -4,7 +4,7 @@ name: starboard-exporter
 description: A Helm chart for starboard-exporter
 engine: gotpl
 home: https://github.com/giantswarm/starboard-exporter
-version: [[ .Version ]]
+version: 0.3.1
 annotations:
   application.giantswarm.io/team: "security"
   config.giantswarm.io/version: 1.x.x
