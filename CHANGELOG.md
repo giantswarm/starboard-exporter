@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.2] - 2022-03-28
 
+### Added
+
+- Add configurable nodeSelector to Helm values.
+
 ### Changed
 
 - Build with [`app-build-suite`](https://github.com/giantswarm/app-build-suite) instead of [`architect`](https://github.com/giantswarm/architect).
