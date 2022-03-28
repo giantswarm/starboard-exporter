@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - publish-chart
 
 jobs:
   release:
@@ -20,18 +19,10 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      # - name: Install Helm
-      #   uses: giantswarm/install-binary-action@v1.0.0
-      #   with:
-      #     binary: "helm"
-      #     version: "3.8.1"
-      #     download_url: "https://get.helm.sh/helm-v${version}-linux-amd64.tar.gz"
-      #     tarball_binary_path: "*/linux-amd64/${binary}"
-      #     smoke_test: "${binary} --version"
-
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.3.0
         with:
           charts_dir: helm
+          skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
