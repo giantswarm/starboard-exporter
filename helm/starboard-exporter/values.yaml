@@ -9,6 +9,8 @@ pod:
   group:
     id: 1000
 
+nodeSelector: {}
+
 # container securityContext
 securityContext:
   allowPrivilegeEscalation: false
