@@ -28,10 +28,6 @@ resources:
     cpu: 100m
     memory: 220Mi
 
-project:
-  branch: "[[ .Branch ]]"
-  commit: "[[ .SHA ]]"
-
 exporter:
   vulnerabilityReports:
     targetLabels:
