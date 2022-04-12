@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Reconcile and expose metrics for `ConfigAuditReport` custom resources. **Requires Starboard v0.15.0 or above.**
+
 ## [0.3.3] - 2022-03-31
 
 ### Changed
