@@ -7,9 +7,10 @@ import (
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func JitterRequeue(defaultDuration time.Duration, maxJitterPercent int, log logr.Logger) ctrl.Result {
+func JitterRequeue(defaultDuration time.Duration, maxJitterPercent int, log logr.Logger) reconcile.Result {
 
 	after, err := Jitter(defaultDuration, maxJitterPercent)
 	if err != nil {
