@@ -33,6 +33,7 @@ project:
   commit: "[[ .SHA ]]"
 
 exporter:
+  requeueJitterEnabled: true
   vulnerabilityReports:
     targetLabels:
       # - image_namespace

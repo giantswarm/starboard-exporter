@@ -60,6 +60,7 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
+	var maxJitterPercent int
 	var probeAddr string
 	targetLabels := []controllers.VulnerabilityLabel{}
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
@@ -67,6 +68,9 @@ func main() {
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+
+	flag.IntVar(&maxJitterPercent, "max-jitter-percent", 10,
+		"Spreads out re-queue interval of reports by +/- this amount to spread load.")
 
 	// Read and parse target-labels into known VulnerabilityLabels.
 	flag.Func("target-labels",
@@ -115,19 +119,21 @@ func main() {
 	}
 
 	if err = (&controllers.VulnerabilityReportReconciler{
-		Client:       mgr.GetClient(),
-		Log:          ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
-		Scheme:       mgr.GetScheme(),
-		TargetLabels: targetLabels,
+		Client:           mgr.GetClient(),
+		Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
+		MaxJitterPercent: maxJitterPercent,
+		Scheme:           mgr.GetScheme(),
+		TargetLabels:     targetLabels,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
 		os.Exit(1)
 	}
 
 	if err = (&configauditreport.ConfigAuditReportReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
-		Scheme: mgr.GetScheme(),
+		Client:           mgr.GetClient(),
+		Log:              ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
+		MaxJitterPercent: maxJitterPercent,
+		Scheme:           mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
 		os.Exit(1)

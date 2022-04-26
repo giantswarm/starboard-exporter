@@ -45,6 +45,8 @@ type ConfigAuditReportReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
+
+	MaxJitterPercent int
 }
 
 //+kubebuilder:rbac:groups=aquasecurity.github.io.giantswarm,resources=configauditreports,verbs=get;list;watch;create;update;patch;delete
@@ -101,7 +103,7 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 	}
 
-	return defaultRequeue(), nil
+	return r.defaultRequeue(), nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -179,9 +181,17 @@ func reportValueFor(field string, report *aqua.ConfigAuditReport) string {
 	}
 }
 
-func defaultRequeue() reconcile.Result {
+func (r *ConfigAuditReportReconciler) defaultRequeue() reconcile.Result {
+	defaultAfter := (time.Minute * 5)
+
+	after, err := utils.Jitter(defaultAfter, r.MaxJitterPercent)
+	if err != nil {
+		r.Log.Error(err, "Failed to calculate jitter")
+		after = defaultAfter
+	}
+
 	return ctrl.Result{
 		Requeue:      true,
-		RequeueAfter: time.Minute * 5,
+		RequeueAfter: after,
 	}
 }
