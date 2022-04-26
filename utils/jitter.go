@@ -4,7 +4,24 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/go-logr/logr"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
+
+func JitterRequeue(defaultDuration time.Duration, maxJitterPercent int, log logr.Logger) ctrl.Result {
+
+	after, err := Jitter(defaultDuration, maxJitterPercent)
+	if err != nil {
+		log.Error(err, "Failed to calculate jitter")
+		after = defaultDuration
+	}
+
+	return ctrl.Result{
+		Requeue:      true,
+		RequeueAfter: after,
+	}
+}
 
 func Jitter(t time.Duration, maxJitterPercent int) (time.Duration, error) {
 	// Get the maximum jitter length as a duration.

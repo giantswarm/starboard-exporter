@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 
@@ -103,7 +102,7 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 	}
 
-	return r.defaultRequeue(), nil
+	return utils.JitterRequeue((time.Minute * 5), r.MaxJitterPercent, r.Log), nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -178,20 +177,5 @@ func reportValueFor(field string, report *aqua.ConfigAuditReport) string {
 	default:
 		// Error?
 		return ""
-	}
-}
-
-func (r *ConfigAuditReportReconciler) defaultRequeue() reconcile.Result {
-	defaultAfter := (time.Minute * 5)
-
-	after, err := utils.Jitter(defaultAfter, r.MaxJitterPercent)
-	if err != nil {
-		r.Log.Error(err, "Failed to calculate jitter")
-		after = defaultAfter
-	}
-
-	return ctrl.Result{
-		Requeue:      true,
-		RequeueAfter: after,
 	}
 }
