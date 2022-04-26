@@ -60,7 +60,7 @@ spec:
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
         {{- if .Values.exporter.requeueMaxJitterPercent }}
-          - --max-jitter-percent
+          - --max-jitter-percent={{ .Values.exporter.requeueMaxJitterPercent }}
         {{- end }}
         ports:
         - containerPort: 8080
