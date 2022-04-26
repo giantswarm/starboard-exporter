@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2022-04-26
+
 ### Added
 
 - Spread (jitter) re-queueing of reports by +/- 10% by default to help smooth resource utilization.
@@ -112,7 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/giantswarm/starboard-exporter/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/giantswarm/starboard-exporter/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/giantswarm/starboard-exporter/compare/v0.3.1...v0.3.2
