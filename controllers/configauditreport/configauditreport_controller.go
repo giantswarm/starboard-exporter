@@ -19,8 +19,8 @@ package configauditreport
 import (
 	"context"
 	"fmt"
-	"time"
 
+	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -30,8 +30,7 @@ import (
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
-
+	"github.com/giantswarm/starboard-exporter/controllers"
 	"github.com/giantswarm/starboard-exporter/utils"
 )
 
@@ -102,7 +101,7 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 	}
 
-	return utils.JitterRequeue((time.Minute * 5), r.MaxJitterPercent, r.Log), nil
+	return utils.JitterRequeue(controllers.DefaultRequeueDuration, r.MaxJitterPercent, r.Log), nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
