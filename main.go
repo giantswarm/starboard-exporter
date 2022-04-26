@@ -36,8 +36,8 @@ import (
 
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 
-	"github.com/giantswarm/starboard-exporter/controllers"
 	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
+	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -60,13 +60,17 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
+	var maxJitterPercent int
 	var probeAddr string
-	targetLabels := []controllers.VulnerabilityLabel{}
+	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+
+	flag.IntVar(&maxJitterPercent, "max-jitter-percent", 10,
+		"Spreads out re-queue interval of reports by +/- this amount to spread load.")
 
 	// Read and parse target-labels into known VulnerabilityLabels.
 	flag.Func("target-labels",
@@ -74,19 +78,19 @@ func main() {
 		func(input string) error {
 			items := strings.Split(input, ",")
 			for _, i := range items {
-				if i == controllers.LabelGroupAll {
+				if i == vulnerabilityreport.LabelGroupAll {
 					// Special case for "all".
-					targetLabels = appendIfNotExists(targetLabels, controllers.LabelsForGroup(controllers.LabelGroupAll))
+					targetLabels = appendIfNotExists(targetLabels, vulnerabilityreport.LabelsForGroup(vulnerabilityreport.LabelGroupAll))
 					continue
 				}
 
-				label, ok := controllers.LabelWithName(i)
+				label, ok := vulnerabilityreport.LabelWithName(i)
 				if !ok {
 					err := errors.New("invalidConfigError")
 					setupLog.Error(err, fmt.Sprintf("unknown target label %s", i))
 					return err
 				}
-				targetLabels = appendIfNotExists(targetLabels, []controllers.VulnerabilityLabel{label})
+				targetLabels = appendIfNotExists(targetLabels, []vulnerabilityreport.VulnerabilityLabel{label})
 			}
 
 			setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(targetLabels), targetLabels))
@@ -114,20 +118,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.VulnerabilityReportReconciler{
-		Client:       mgr.GetClient(),
-		Log:          ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
-		Scheme:       mgr.GetScheme(),
-		TargetLabels: targetLabels,
+	if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
+		Client:           mgr.GetClient(),
+		Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
+		MaxJitterPercent: maxJitterPercent,
+		Scheme:           mgr.GetScheme(),
+		TargetLabels:     targetLabels,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
 		os.Exit(1)
 	}
 
 	if err = (&configauditreport.ConfigAuditReportReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
-		Scheme: mgr.GetScheme(),
+		Client:           mgr.GetClient(),
+		Log:              ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
+		MaxJitterPercent: maxJitterPercent,
+		Scheme:           mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
 		os.Exit(1)
@@ -150,11 +156,11 @@ func main() {
 	}
 }
 
-func appendIfNotExists(base []controllers.VulnerabilityLabel, items []controllers.VulnerabilityLabel) []controllers.VulnerabilityLabel {
+func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {
 	result := base
 	contained := make(map[string]bool)
 
-	for _, existingLabelName := range controllers.LabelNamesForList(base) {
+	for _, existingLabelName := range vulnerabilityreport.LabelNamesForList(base) {
 		contained[existingLabelName] = true
 	}
 

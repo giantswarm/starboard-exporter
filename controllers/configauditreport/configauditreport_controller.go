@@ -19,8 +19,8 @@ package configauditreport
 import (
 	"context"
 	"fmt"
-	"time"
 
+	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -29,10 +29,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
-
+	"github.com/giantswarm/starboard-exporter/controllers"
 	"github.com/giantswarm/starboard-exporter/utils"
 )
 
@@ -45,6 +43,8 @@ type ConfigAuditReportReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
+
+	MaxJitterPercent int
 }
 
 //+kubebuilder:rbac:groups=aquasecurity.github.io.giantswarm,resources=configauditreports,verbs=get;list;watch;create;update;patch;delete
@@ -101,7 +101,7 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 	}
 
-	return defaultRequeue(), nil
+	return utils.JitterRequeue(controllers.DefaultRequeueDuration, r.MaxJitterPercent, r.Log), nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -176,12 +176,5 @@ func reportValueFor(field string, report *aqua.ConfigAuditReport) string {
 	default:
 		// Error?
 		return ""
-	}
-}
-
-func defaultRequeue() reconcile.Result {
-	return ctrl.Result{
-		Requeue:      true,
-		RequeueAfter: time.Minute * 5,
 	}
 }
