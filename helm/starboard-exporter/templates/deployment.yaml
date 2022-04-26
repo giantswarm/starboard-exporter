@@ -59,8 +59,8 @@ spec:
         {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
-        {{- if .Values.exporter.requeueJitterEnabled }}
-          - --jitter-requeues
+        {{- if .Values.exporter.requeueMaxJitterPercent }}
+          - --max-jitter-percent
         {{- end }}
         ports:
         - containerPort: 8080
