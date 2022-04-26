@@ -53,8 +53,6 @@ spec:
       containers:
       - name: {{ include "name" . }}
         image: "{{ .Values.registry.domain }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
-        # command:
-        #   - /manager
         args:
         {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
