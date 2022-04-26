@@ -8,9 +8,11 @@ import (
 
 func Jitter(t time.Duration, maxJitterPercent int) (time.Duration, error) {
 	// Get the maximum jitter length as a duration.
+	// Max = t * maxJitterPercent / 100.
 	maxJitter, err := time.ParseDuration(
 		fmt.Sprintf("%dms",
-			t.Milliseconds()*(int64(maxJitterPercent)/100)))
+			int64(
+				float64(t.Milliseconds())*float64(maxJitterPercent)/100.00)))
 	if err != nil {
 		return t, err
 	}

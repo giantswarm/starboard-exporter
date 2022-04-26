@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Spread (jitter) re-queueing of reports by +/- 10% by default to help smooth resource utilization.
+
 ## [0.4.0] - 2022-04-22
 
 ### Added
