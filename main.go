@@ -20,6 +20,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 
@@ -61,6 +62,7 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var maxJitterPercent int
+	var podIPString string
 	var probeAddr string
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
@@ -71,6 +73,8 @@ func main() {
 
 	flag.IntVar(&maxJitterPercent, "max-jitter-percent", 10,
 		"Spreads out re-queue interval of reports by +/- this amount to spread load.")
+
+	flag.StringVar(&podIPString, "pod-ip", "", "The IP address of the current Pod/instance used when sharding reports.")
 
 	// Read and parse target-labels into known VulnerabilityLabels.
 	flag.Func("target-labels",
@@ -102,6 +106,12 @@ func main() {
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
+
+	podIP := net.ParseIP(podIPString)
+	if podIP == nil {
+		setupLog.Error(nil, fmt.Sprintf("invalid pod IP %s", podIPString))
+		os.Exit(1)
+	}
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
