@@ -113,6 +113,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	setupLog.Info(fmt.Sprintf("This is exporter instance %s", podIP.String()))
+
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
