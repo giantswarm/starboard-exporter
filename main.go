@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"reflect"
 	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -147,7 +146,6 @@ func main() {
 	}
 
 	// Set up informer for our own service endpoints.
-	resourceType := "Endpoints.v1.api"
 	serviceName := "starboard-exporter"
 
 	dc, err := dynamic.NewForConfig(ctrl.GetConfigOrDie())
@@ -163,67 +161,48 @@ func main() {
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, corev1.NamespaceAll, listOptionsFunc)
 
 	sgvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}
-	gvr, g2 := schema.ParseResourceArg(resourceType)
-	setupLog.Info(fmt.Sprintf("gvr: %v / g2: %v", gvr, g2))
-	setupLog.Info("2")
-	// informer := factory.ForResource(*gvr)
+
 	informer := factory.ForResource(sgvr)
 	inf := informer.Informer()
 
 	stopper := make(chan struct{})
 	defer close(stopper)
-	setupLog.Info("3")
+
 	handlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			fmt.Println("add")
-			ep := &corev1.Endpoints{}
-			fmt.Println(fmt.Sprintf("type: %s", reflect.TypeOf(obj)))
-			fmt.Println(obj)
-
-			err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), ep)
+			ep, err := toEndpoint(obj)
 			if err != nil {
-				fmt.Println("could not convert obj to Endpoints")
-				fmt.Print(err)
+				// TODO: Make a separate logger for the informer
+				setupLog.Error(err, "could not convert obj to Endpoints")
 				return
 			}
-			fmt.Println(ep)
 
-			// endp, ok := obj.(corev1.Endpoints)
-			// if !ok {
-			// 	fmt.Println("could not convert obj to Endpoints")
-			// 	fmt.Println(err)
-			// 	return
-			// }
-			// fmt.Println(endp)
-			// try following https://erwinvaneyk.nl/kubernetes-unstructured-to-typed/
-			fmt.Println(ep.Subsets)
-			// err := runtime.DefaultUnstructuredConverter.
-			// 	FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), ep)
-			// if err != nil {
-			// 	fmt.Println("could not convert obj to Endpoints")
-			// 	fmt.Print(err)
-			// 	return
-			// }
-			fmt.Println(fmt.Sprintf("found ep: %v", ep))
+			fmt.Println("current IPs:")
+			for _, subset := range ep.Subsets {
+				for _, ip := range subset.Addresses {
+					fmt.Println(ip.IP)
+				}
+			}
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			ep := &corev1.Endpoints{}
-
-			err := runtime.DefaultUnstructuredConverter.FromUnstructured(newObj.(*unstructured.Unstructured).UnstructuredContent(), ep)
+			ep, err := toEndpoint(newObj)
 			if err != nil {
-				fmt.Println("could not convert obj to Endpoints")
-				fmt.Print(err)
+				// TODO: Make a separate logger for the informer
+				setupLog.Error(err, "could not convert obj to Endpoints")
 				return
 			}
-			fmt.Println(fmt.Sprintf("updated ep: %v", ep))
+
+			fmt.Println("current IPs:")
+			for _, subset := range ep.Subsets {
+				for _, ip := range subset.Addresses {
+					fmt.Println(ip.IP)
+				}
+			}
 		},
 	}
-	setupLog.Info("4")
+
 	inf.AddEventHandler(handlers)
-	setupLog.Info("5")
 	inf.Run(stopper)
-	setupLog.Info("6")
-	// factory := informers.NewSharedInformerFactory(mgr.GetClient(), 5*time.Minute)
 
 	// Set up consistent hashing to shard reports over all of our exporters.
 
@@ -263,6 +242,17 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func toEndpoint(obj interface{}) (*corev1.Endpoints, error) {
+	ep := &corev1.Endpoints{}
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), ep)
+	if err != nil {
+		fmt.Println("could not convert obj to Endpoints")
+		fmt.Print(err)
+		return ep, err
+	}
+	return ep, nil
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {
