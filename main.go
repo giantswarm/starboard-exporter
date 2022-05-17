@@ -22,15 +22,24 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/dynamic/dynamicinformer"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/cache"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -115,8 +124,13 @@ func main() {
 
 	setupLog.Info(fmt.Sprintf("This is exporter instance %s", podIP.String()))
 
+	// Print target labels.
 	if len(targetLabels) > 0 {
-		setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(targetLabels), targetLabels))
+		tl := []string{}
+		for _, l := range targetLabels {
+			tl = append(tl, l.Name)
+		}
+		setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(tl), tl))
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -133,8 +147,85 @@ func main() {
 	}
 
 	// Set up informer for our own service endpoints.
+	resourceType := "Endpoints.v1.api"
+	serviceName := "starboard-exporter"
 
-	// Set up consistent hashing to shard vulns over all of our exporters.
+	dc, err := dynamic.NewForConfig(ctrl.GetConfigOrDie())
+	if err != nil {
+		setupLog.Error(err, "unable to set up informer")
+		os.Exit(1)
+	}
+	setupLog.Info("1")
+	listOptionsFunc := dynamicinformer.TweakListOptionsFunc(func(options *metav1.ListOptions) {
+		options.FieldSelector = "metadata.name=" + serviceName
+	})
+	// factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, corev1.NamespaceAll, nil)
+	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, corev1.NamespaceAll, listOptionsFunc)
+
+	sgvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}
+	gvr, g2 := schema.ParseResourceArg(resourceType)
+	setupLog.Info(fmt.Sprintf("gvr: %v / g2: %v", gvr, g2))
+	setupLog.Info("2")
+	// informer := factory.ForResource(*gvr)
+	informer := factory.ForResource(sgvr)
+	inf := informer.Informer()
+
+	stopper := make(chan struct{})
+	defer close(stopper)
+	setupLog.Info("3")
+	handlers := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			fmt.Println("add")
+			ep := &corev1.Endpoints{}
+			fmt.Println(fmt.Sprintf("type: %s", reflect.TypeOf(obj)))
+			fmt.Println(obj)
+
+			err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), ep)
+			if err != nil {
+				fmt.Println("could not convert obj to Endpoints")
+				fmt.Print(err)
+				return
+			}
+			fmt.Println(ep)
+
+			// endp, ok := obj.(corev1.Endpoints)
+			// if !ok {
+			// 	fmt.Println("could not convert obj to Endpoints")
+			// 	fmt.Println(err)
+			// 	return
+			// }
+			// fmt.Println(endp)
+			// try following https://erwinvaneyk.nl/kubernetes-unstructured-to-typed/
+			fmt.Println(ep.Subsets)
+			// err := runtime.DefaultUnstructuredConverter.
+			// 	FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), ep)
+			// if err != nil {
+			// 	fmt.Println("could not convert obj to Endpoints")
+			// 	fmt.Print(err)
+			// 	return
+			// }
+			fmt.Println(fmt.Sprintf("found ep: %v", ep))
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			ep := &corev1.Endpoints{}
+
+			err := runtime.DefaultUnstructuredConverter.FromUnstructured(newObj.(*unstructured.Unstructured).UnstructuredContent(), ep)
+			if err != nil {
+				fmt.Println("could not convert obj to Endpoints")
+				fmt.Print(err)
+				return
+			}
+			fmt.Println(fmt.Sprintf("updated ep: %v", ep))
+		},
+	}
+	setupLog.Info("4")
+	inf.AddEventHandler(handlers)
+	setupLog.Info("5")
+	inf.Run(stopper)
+	setupLog.Info("6")
+	// factory := informers.NewSharedInformerFactory(mgr.GetClient(), 5*time.Minute)
+
+	// Set up consistent hashing to shard reports over all of our exporters.
 
 	if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
 		Client:           mgr.GetClient(),
