@@ -91,13 +91,11 @@ func main() {
 				label, ok := vulnerabilityreport.LabelWithName(i)
 				if !ok {
 					err := errors.New("invalidConfigError")
-					setupLog.Error(err, fmt.Sprintf("unknown target label %s", i))
 					return err
 				}
 				targetLabels = appendIfNotExists(targetLabels, []vulnerabilityreport.VulnerabilityLabel{label})
 			}
 
-			setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(targetLabels), targetLabels))
 			return nil
 		})
 
@@ -107,6 +105,8 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
 	podIP := net.ParseIP(podIPString)
 	if podIP == nil {
 		setupLog.Error(nil, fmt.Sprintf("invalid pod IP %s", podIPString))
@@ -115,7 +115,9 @@ func main() {
 
 	setupLog.Info(fmt.Sprintf("This is exporter instance %s", podIP.String()))
 
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	if len(targetLabels) > 0 {
+		setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(targetLabels), targetLabels))
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -129,6 +131,10 @@ func main() {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
+
+	// Set up informer for our own service endpoints.
+
+	// Set up consistent hashing to shard vulns over all of our exporters.
 
 	if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
 		Client:           mgr.GetClient(),
