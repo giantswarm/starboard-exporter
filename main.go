@@ -27,8 +27,8 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-
+	"github.com/buraksezer/consistent"
+	"github.com/cespare/xxhash/v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -38,6 +38,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/dynamic/dynamicinformer"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/cache"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -64,6 +65,13 @@ func init() {
 	}
 
 	//+kubebuilder:scaffold:scheme
+}
+
+// TODO: Replace hash function
+type hasher struct{}
+
+func (h hasher) Sum64(data []byte) uint64 {
+	return xxhash.Sum64(data)
 }
 
 func main() {
@@ -146,18 +154,18 @@ func main() {
 	}
 
 	// Set up informer for our own service endpoints.
-	serviceName := "starboard-exporter"
+	serviceName := "starboard-exporter" // TODO: Move this
 
 	dc, err := dynamic.NewForConfig(ctrl.GetConfigOrDie())
 	if err != nil {
 		setupLog.Error(err, "unable to set up informer")
 		os.Exit(1)
 	}
-	setupLog.Info("1")
+
 	listOptionsFunc := dynamicinformer.TweakListOptionsFunc(func(options *metav1.ListOptions) {
-		options.FieldSelector = "metadata.name=" + serviceName
+		options.FieldSelector = "metadata.name=" + serviceName // TODO: Move this
 	})
-	// factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, corev1.NamespaceAll, nil)
+
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, corev1.NamespaceAll, listOptionsFunc)
 
 	sgvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}
@@ -205,6 +213,20 @@ func main() {
 	inf.Run(stopper)
 
 	// Set up consistent hashing to shard reports over all of our exporters.
+	consistentCfg := consistent.Config{
+		PartitionCount:    97, // TODO: This is very arbitrary. Make it configurable.
+		ReplicationFactor: 20,
+		Load:              1.25,
+		Hasher:            hasher{},
+	}
+	c := consistent.New(nil, consistentCfg)
+
+	// TODO: add initial service member nodes here
+
+	setupLog.Info(fmt.Sprintf("set up hashring for sharding reports: %v", c))
+
+	// TODO: pass hashring to controllers
+	// TODO: update hashring when service endpoints change
 
 	if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
 		Client:           mgr.GetClient(),
