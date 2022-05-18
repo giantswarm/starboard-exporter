@@ -19,10 +19,9 @@ import (
 )
 
 type ShardHelper struct {
-	informer cache.SharedIndexInformer
-	PodIP    string
-	mu       *sync.RWMutex
-	ring     *consistent.Consistent
+	PodIP string
+	mu    *sync.RWMutex
+	ring  *consistent.Consistent
 }
 
 func (r *ShardHelper) MemberCount() int {
