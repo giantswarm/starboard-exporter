@@ -17,12 +17,14 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"net"
 	"os"
 	"strings"
+	"sync"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -72,6 +74,108 @@ type hasher struct{}
 
 func (h hasher) Sum64(data []byte) uint64 {
 	return xxhash.Sum64(data)
+}
+
+type PeerHashRing struct {
+	informer cache.SharedIndexInformer
+	mu       sync.RWMutex
+	ring     consistent.Consistent
+}
+
+func (r *PeerHashRing) MemberCount() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return len(r.ring.GetMembers())
+}
+
+// Helper type for members of peer ring.
+type peer string
+
+func (p peer) String() string {
+	return string(p)
+}
+
+func buildPeerHashRing(consistentCfg consistent.Config) PeerHashRing {
+	consistentHashRing := consistent.New(nil, consistentCfg)
+	peerRing := PeerHashRing{
+		mu:   sync.RWMutex{},
+		ring: *consistentHashRing,
+	}
+	return peerRing
+}
+
+func buildPeerInformer(stopper chan struct{}, peerRing *PeerHashRing, ringConfig consistent.Config) cache.SharedIndexInformer {
+
+	// Set up informer for our own service endpoints.
+	serviceName := "starboard-exporter" // TODO: Move this
+	informerLog := ctrl.Log.WithName("informer").WithName("Endpoints")
+
+	dc, err := dynamic.NewForConfig(ctrl.GetConfigOrDie())
+	if err != nil {
+		setupLog.Error(err, "unable to set up informer")
+		os.Exit(1)
+	}
+
+	listOptionsFunc := dynamicinformer.TweakListOptionsFunc(func(options *metav1.ListOptions) {
+		options.FieldSelector = "metadata.name=" + serviceName // TODO: Move this
+	})
+
+	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, corev1.NamespaceAll, listOptionsFunc)
+
+	sgvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}
+
+	informer := factory.ForResource(sgvr)
+	inf := informer.Informer()
+
+	handlers := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			ep, err := toEndpoint(obj)
+			if err != nil {
+				// TODO: Make a separate logger for the informer
+				informerLog.Error(err, "could not convert obj to Endpoints")
+				return
+			}
+			// This could modify add/remove members instead. Not sure about the tradeoffs yet.
+			peerRing.mu.Lock()
+			defer peerRing.mu.Unlock()
+			peerRing.ring = *consistent.New(nil, ringConfig)
+
+			fmt.Println("current IPs:")
+			for _, subset := range ep.Subsets {
+				for _, ip := range subset.Addresses {
+					fmt.Println(ip.IP)
+					peerRing.ring.Add(peer(ip.IP))
+				}
+			}
+			informerLog.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(peerRing.ring.GetMembers())))
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			ep, err := toEndpoint(newObj)
+			if err != nil {
+				// TODO: Make a separate logger for the informer
+				informerLog.Error(err, "could not convert obj to Endpoints")
+				return
+			}
+
+			// This could modify add/remove members instead. Not sure about the tradeoffs yet.
+			peerRing.mu.Lock()
+			defer peerRing.mu.Unlock()
+			peerRing.ring = *consistent.New(nil, ringConfig)
+
+			fmt.Println("current IPs:")
+			for _, subset := range ep.Subsets {
+				for _, ip := range subset.Addresses {
+					fmt.Println(ip.IP)
+					peerRing.ring.Add(peer(ip.IP))
+				}
+			}
+			informerLog.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(peerRing.ring.GetMembers())))
+		},
+		// TODO: Delete handler
+	}
+
+	inf.AddEventHandler(handlers)
+	return inf
 }
 
 func main() {
@@ -153,65 +257,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Set up informer for our own service endpoints.
-	serviceName := "starboard-exporter" // TODO: Move this
-
-	dc, err := dynamic.NewForConfig(ctrl.GetConfigOrDie())
-	if err != nil {
-		setupLog.Error(err, "unable to set up informer")
-		os.Exit(1)
-	}
-
-	listOptionsFunc := dynamicinformer.TweakListOptionsFunc(func(options *metav1.ListOptions) {
-		options.FieldSelector = "metadata.name=" + serviceName // TODO: Move this
-	})
-
-	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, corev1.NamespaceAll, listOptionsFunc)
-
-	sgvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}
-
-	informer := factory.ForResource(sgvr)
-	inf := informer.Informer()
-
-	stopper := make(chan struct{})
-	defer close(stopper)
-
-	handlers := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			ep, err := toEndpoint(obj)
-			if err != nil {
-				// TODO: Make a separate logger for the informer
-				setupLog.Error(err, "could not convert obj to Endpoints")
-				return
-			}
-
-			fmt.Println("current IPs:")
-			for _, subset := range ep.Subsets {
-				for _, ip := range subset.Addresses {
-					fmt.Println(ip.IP)
-				}
-			}
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			ep, err := toEndpoint(newObj)
-			if err != nil {
-				// TODO: Make a separate logger for the informer
-				setupLog.Error(err, "could not convert obj to Endpoints")
-				return
-			}
-
-			fmt.Println("current IPs:")
-			for _, subset := range ep.Subsets {
-				for _, ip := range subset.Addresses {
-					fmt.Println(ip.IP)
-				}
-			}
-		},
-	}
-
-	inf.AddEventHandler(handlers)
-	inf.Run(stopper)
-
 	// Set up consistent hashing to shard reports over all of our exporters.
 	consistentCfg := consistent.Config{
 		PartitionCount:    97, // TODO: This is very arbitrary. Make it configurable.
@@ -219,14 +264,26 @@ func main() {
 		Load:              1.25,
 		Hasher:            hasher{},
 	}
-	c := consistent.New(nil, consistentCfg)
 
-	// TODO: add initial service member nodes here
+	peerRing := buildPeerHashRing(consistentCfg)
 
-	setupLog.Info(fmt.Sprintf("set up hashring for sharding reports: %v", c))
+	// Create and start the informer which will keep the endpoints in sync in our peerRing.
+	stopper := make(chan struct{})
+	defer close(stopper)
+	inf := buildPeerInformer(stopper, &peerRing, consistentCfg)
+	go inf.Run(stopper)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	for {
+		if peerRing.MemberCount() > 0 || ctx.Err() != nil {
+			break
+		}
+	}
+
+	setupLog.Info("set up hashring for sharding reports")
 
 	// TODO: pass hashring to controllers
-	// TODO: update hashring when service endpoints change
 
 	if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
 		Client:           mgr.GetClient(),
