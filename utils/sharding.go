@@ -22,7 +22,7 @@ type ShardHelper struct {
 	informer cache.SharedIndexInformer
 	PodIP    string
 	mu       *sync.RWMutex
-	ring     consistent.Consistent
+	ring     *consistent.Consistent
 }
 
 func (r *ShardHelper) MemberCount() int {
@@ -54,7 +54,7 @@ func BuildPeerHashRing(consistentCfg consistent.Config, podIP string) *ShardHelp
 	return &ShardHelper{
 		PodIP: podIP,
 		mu:    &mutex,
-		ring:  *consistentHashRing,
+		ring:  consistentHashRing,
 	}
 }
 
@@ -107,7 +107,7 @@ func updateRingFromEndpoints(ring *ShardHelper, obj interface{}, ringConfig cons
 	// TODO: This should modify add/remove members instead of re-creating the whole ring
 	ring.mu.Lock()
 	defer ring.mu.Unlock()
-	ring.ring = *consistent.New(nil, ringConfig)
+	ring.ring = consistent.New(nil, ringConfig)
 
 	fmt.Println("current IPs:")
 	for _, subset := range ep.Subsets {
