@@ -161,7 +161,7 @@ func main() {
 	// Create and start the informer which will keep the endpoints in sync in our ring.
 	stopInformer := make(chan struct{})
 	defer close(stopInformer)
-	inf := utils.BuildPeerInformer(stopInformer, &peerRing, consistentCfg, setupLog)
+	inf := utils.BuildPeerInformer(stopInformer, peerRing, consistentCfg, setupLog)
 	go inf.Run(stopInformer)
 
 	// Wait for the ring to be synced for the first time so we can use it immediately.
@@ -182,7 +182,7 @@ func main() {
 		Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
 		MaxJitterPercent: maxJitterPercent,
 		Scheme:           mgr.GetScheme(),
-		ShardHelper:      &peerRing,
+		ShardHelper:      peerRing,
 		TargetLabels:     targetLabels,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")

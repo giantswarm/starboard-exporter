@@ -48,9 +48,9 @@ func (p peer) String() string {
 	return string(p)
 }
 
-func BuildPeerHashRing(consistentCfg consistent.Config, podIP string) ShardHelper {
+func BuildPeerHashRing(consistentCfg consistent.Config, podIP string) *ShardHelper {
 	consistentHashRing := consistent.New(nil, consistentCfg)
-	return ShardHelper{
+	return &ShardHelper{
 		PodIP: podIP,
 		mu:    sync.RWMutex{},
 		ring:  *consistentHashRing,
