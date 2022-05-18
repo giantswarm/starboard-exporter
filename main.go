@@ -24,24 +24,16 @@ import (
 	"net"
 	"os"
 	"strings"
-	"sync"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 
 	"github.com/buraksezer/consistent"
 	"github.com/cespare/xxhash/v2"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/dynamic/dynamicinformer"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/tools/cache"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -50,6 +42,7 @@ import (
 
 	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
+	"github.com/giantswarm/starboard-exporter/utils"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -57,6 +50,13 @@ var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
+
+type hasher struct{}
+
+func (h hasher) Sum64(data []byte) uint64 {
+	// TODO: Investigate hash function options.
+	return xxhash.Sum64(data)
+}
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -67,115 +67,6 @@ func init() {
 	}
 
 	//+kubebuilder:scaffold:scheme
-}
-
-// TODO: Replace hash function
-type hasher struct{}
-
-func (h hasher) Sum64(data []byte) uint64 {
-	return xxhash.Sum64(data)
-}
-
-type PeerHashRing struct {
-	informer cache.SharedIndexInformer
-	mu       sync.RWMutex
-	ring     consistent.Consistent
-}
-
-func (r *PeerHashRing) MemberCount() int {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return len(r.ring.GetMembers())
-}
-
-// Helper type for members of peer ring.
-type peer string
-
-func (p peer) String() string {
-	return string(p)
-}
-
-func buildPeerHashRing(consistentCfg consistent.Config) PeerHashRing {
-	consistentHashRing := consistent.New(nil, consistentCfg)
-	peerRing := PeerHashRing{
-		mu:   sync.RWMutex{},
-		ring: *consistentHashRing,
-	}
-	return peerRing
-}
-
-func buildPeerInformer(stopper chan struct{}, peerRing *PeerHashRing, ringConfig consistent.Config) cache.SharedIndexInformer {
-
-	// Set up informer for our own service endpoints.
-	serviceName := "starboard-exporter" // TODO: Move this
-	informerLog := ctrl.Log.WithName("informer").WithName("Endpoints")
-
-	dc, err := dynamic.NewForConfig(ctrl.GetConfigOrDie())
-	if err != nil {
-		setupLog.Error(err, "unable to set up informer")
-		os.Exit(1)
-	}
-
-	listOptionsFunc := dynamicinformer.TweakListOptionsFunc(func(options *metav1.ListOptions) {
-		options.FieldSelector = "metadata.name=" + serviceName // TODO: Move this
-	})
-
-	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, corev1.NamespaceAll, listOptionsFunc)
-
-	sgvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}
-
-	informer := factory.ForResource(sgvr)
-	inf := informer.Informer()
-
-	handlers := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			ep, err := toEndpoint(obj)
-			if err != nil {
-				// TODO: Make a separate logger for the informer
-				informerLog.Error(err, "could not convert obj to Endpoints")
-				return
-			}
-			// This could modify add/remove members instead. Not sure about the tradeoffs yet.
-			peerRing.mu.Lock()
-			defer peerRing.mu.Unlock()
-			peerRing.ring = *consistent.New(nil, ringConfig)
-
-			fmt.Println("current IPs:")
-			for _, subset := range ep.Subsets {
-				for _, ip := range subset.Addresses {
-					fmt.Println(ip.IP)
-					peerRing.ring.Add(peer(ip.IP))
-				}
-			}
-			informerLog.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(peerRing.ring.GetMembers())))
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			ep, err := toEndpoint(newObj)
-			if err != nil {
-				// TODO: Make a separate logger for the informer
-				informerLog.Error(err, "could not convert obj to Endpoints")
-				return
-			}
-
-			// This could modify add/remove members instead. Not sure about the tradeoffs yet.
-			peerRing.mu.Lock()
-			defer peerRing.mu.Unlock()
-			peerRing.ring = *consistent.New(nil, ringConfig)
-
-			fmt.Println("current IPs:")
-			for _, subset := range ep.Subsets {
-				for _, ip := range subset.Addresses {
-					fmt.Println(ip.IP)
-					peerRing.ring.Add(peer(ip.IP))
-				}
-			}
-			informerLog.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(peerRing.ring.GetMembers())))
-		},
-		// TODO: Delete handler
-	}
-
-	inf.AddEventHandler(handlers)
-	return inf
 }
 
 func main() {
@@ -265,14 +156,15 @@ func main() {
 		Hasher:            hasher{},
 	}
 
-	peerRing := buildPeerHashRing(consistentCfg)
+	peerRing := utils.BuildPeerHashRing(consistentCfg, podIP.String())
 
-	// Create and start the informer which will keep the endpoints in sync in our peerRing.
-	stopper := make(chan struct{})
-	defer close(stopper)
-	inf := buildPeerInformer(stopper, &peerRing, consistentCfg)
-	go inf.Run(stopper)
+	// Create and start the informer which will keep the endpoints in sync in our ring.
+	stopInformer := make(chan struct{})
+	defer close(stopInformer)
+	inf := utils.BuildPeerInformer(stopInformer, &peerRing, consistentCfg, setupLog)
+	go inf.Run(stopInformer)
 
+	// Wait for the ring to be synced for the first time so we can use it immediately.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for {
@@ -281,7 +173,7 @@ func main() {
 		}
 	}
 
-	setupLog.Info("set up hashring for sharding reports")
+	setupLog.Info("created hash ring for sharding reports")
 
 	// TODO: pass hashring to controllers
 
@@ -290,6 +182,7 @@ func main() {
 		Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
 		MaxJitterPercent: maxJitterPercent,
 		Scheme:           mgr.GetScheme(),
+		ShardHelper:      &peerRing,
 		TargetLabels:     targetLabels,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
@@ -321,17 +214,6 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-func toEndpoint(obj interface{}) (*corev1.Endpoints, error) {
-	ep := &corev1.Endpoints{}
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), ep)
-	if err != nil {
-		fmt.Println("could not convert obj to Endpoints")
-		fmt.Print(err)
-		return ep, err
-	}
-	return ep, nil
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {
