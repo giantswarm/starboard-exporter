@@ -21,7 +21,7 @@ import (
 type ShardHelper struct {
 	informer cache.SharedIndexInformer
 	PodIP    string
-	mu       sync.RWMutex
+	mu       *sync.RWMutex
 	ring     consistent.Consistent
 }
 
@@ -50,9 +50,10 @@ func (p peer) String() string {
 
 func BuildPeerHashRing(consistentCfg consistent.Config, podIP string) *ShardHelper {
 	consistentHashRing := consistent.New(nil, consistentCfg)
+	mutex := sync.RWMutex{}
 	return &ShardHelper{
 		PodIP: podIP,
-		mu:    sync.RWMutex{},
+		mu:    &mutex,
 		ring:  *consistentHashRing,
 	}
 }
