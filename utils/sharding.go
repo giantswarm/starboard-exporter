@@ -42,6 +42,23 @@ func (r *ShardHelper) ShouldOwn(input string) bool {
 	return r.GetShardOwner(input) == r.PodIP
 }
 
+func (r *ShardHelper) SetMembers(newMembers map[string]bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Add new members. Add returns immediately if the member already exists.
+	for newMember := range newMembers {
+		r.ring.Add(peer(newMember))
+	}
+
+	// Remove members which don't exist anymore.
+	for _, oldMember := range r.ring.GetMembers() {
+		if _, ok := newMembers[oldMember.String()]; !ok {
+			r.ring.Remove(oldMember.String())
+		}
+	}
+}
+
 // Helper type for members of peer ring.
 type peer string
 
@@ -96,34 +113,32 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 }
 
 func updateRingFromEndpoints(ring *ShardHelper, obj interface{}, ringConfig consistent.Config, log logr.Logger) {
-	ep, err := toEndpoint(obj)
+	ep, err := toEndpoint(obj, log)
 	if err != nil {
 		log.Error(err, "could not convert obj to Endpoints")
 		return
 	}
 
-	// TODO: This should modify add/remove members instead of re-creating the whole ring
-	ring.mu.Lock()
-	defer ring.mu.Unlock()
-	ring.ring = consistent.New(nil, ringConfig)
-
 	fmt.Println("current IPs:")
+	peers := make(map[string]bool)
+
 	for _, subset := range ep.Subsets {
 		for _, ip := range subset.Addresses {
+			peers[ip.IP] = true
 			fmt.Println(ip.IP)
-			ring.ring.Add(peer(ip.IP))
 		}
 	}
+
+	ring.SetMembers(peers)
 
 	log.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(ring.ring.GetMembers())))
 }
 
-func toEndpoint(obj interface{}) (*corev1.Endpoints, error) {
+func toEndpoint(obj interface{}, log logr.Logger) (*corev1.Endpoints, error) {
 	ep := &corev1.Endpoints{}
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), ep)
 	if err != nil {
-		fmt.Println("could not convert obj to Endpoints")
-		fmt.Print(err)
+		log.Error(err, "could not convert obj to Endpoints")
 		return ep, err
 	}
 	return ep, nil
