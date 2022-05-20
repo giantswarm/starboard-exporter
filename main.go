@@ -40,6 +40,7 @@ import (
 
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 
+	"github.com/giantswarm/starboard-exporter/controllers"
 	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
 	"github.com/giantswarm/starboard-exporter/utils"
@@ -75,6 +76,8 @@ func main() {
 	var maxJitterPercent int
 	var podIPString string
 	var probeAddr string
+	var serviceName string
+	var serviceNamespace string
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -86,6 +89,9 @@ func main() {
 		"Spreads out re-queue interval of reports by +/- this amount to spread load.")
 
 	flag.StringVar(&podIPString, "pod-ip", "", "The IP address of the current Pod/instance used when sharding reports.")
+
+	flag.StringVar(&serviceName, "service-name", controllers.DefaultServiceName, "When sharding reports, the service endpoints for this service will be used to find peers.")
+	flag.StringVar(&serviceNamespace, "service-namespace", "", "When sharding reports, the service endpoints in this namespace will be used to find peers.")
 
 	// Read and parse target-labels into known VulnerabilityLabels.
 	flag.Func("target-labels",
@@ -124,6 +130,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if serviceNamespace == "" {
+		setupLog.Error(nil, "service namespace must not be empty")
+		os.Exit(1)
+	}
+
 	setupLog.Info(fmt.Sprintf("This is exporter instance %s", podIP.String()))
 
 	// Print target labels.
@@ -156,12 +167,14 @@ func main() {
 		Hasher:            hasher{},
 	}
 
-	peerRing := utils.BuildPeerHashRing(consistentCfg, podIP.String())
+	peerRing := utils.BuildPeerHashRing(consistentCfg, podIP.String(), serviceName, serviceNamespace)
 
 	// Create and start the informer which will keep the endpoints in sync in our ring.
 	stopInformer := make(chan struct{})
 	defer close(stopInformer)
-	inf := utils.BuildPeerInformer(stopInformer, peerRing, consistentCfg, setupLog)
+
+	informerLog := ctrl.Log.WithName("informer").WithName("Endpoints")
+	inf := utils.BuildPeerInformer(stopInformer, peerRing, consistentCfg, informerLog)
 	go inf.Run(stopInformer)
 
 	// Wait for the ring to be synced for the first time so we can use it immediately.

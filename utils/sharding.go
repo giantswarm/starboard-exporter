@@ -19,9 +19,11 @@ import (
 )
 
 type ShardHelper struct {
-	PodIP string
-	mu    *sync.RWMutex
-	ring  *consistent.Consistent
+	PodIP            string
+	ServiceName      string
+	ServiceNamespace string
+	mu               *sync.RWMutex
+	ring             *consistent.Consistent
 }
 
 func (r *ShardHelper) MemberCount() int {
@@ -47,21 +49,19 @@ func (p peer) String() string {
 	return string(p)
 }
 
-func BuildPeerHashRing(consistentCfg consistent.Config, podIP string) *ShardHelper {
+func BuildPeerHashRing(consistentCfg consistent.Config, podIP string, serviceName string, serviceNamespace string) *ShardHelper {
 	consistentHashRing := consistent.New(nil, consistentCfg)
 	mutex := sync.RWMutex{}
 	return &ShardHelper{
-		PodIP: podIP,
-		mu:    &mutex,
-		ring:  consistentHashRing,
+		PodIP:            podIP,
+		ServiceName:      serviceName,
+		ServiceNamespace: serviceNamespace,
+		mu:               &mutex,
+		ring:             consistentHashRing,
 	}
 }
 
 func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig consistent.Config, log logr.Logger) cache.SharedIndexInformer {
-
-	// Set up informer for our own service endpoints.
-	serviceName := "starboard-exporter" // TODO: Move this
-	informerLog := ctrl.Log.WithName("informer").WithName("Endpoints")
 
 	dc, err := dynamic.NewForConfig(ctrl.GetConfigOrDie())
 	if err != nil {
@@ -70,30 +70,29 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	}
 
 	listOptionsFunc := dynamicinformer.TweakListOptionsFunc(func(options *metav1.ListOptions) {
-		options.FieldSelector = "metadata.name=" + serviceName // TODO: Move this
+		options.FieldSelector = "metadata.name=" + peerRing.ServiceName
 	})
 
-	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, corev1.NamespaceAll, listOptionsFunc)
+	// Use our namespace and expected endpoints name in our future informer.
+	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, peerRing.ServiceNamespace, listOptionsFunc)
 
-	sgvr := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}
+	// Construct an informer for the endpoints.
+	informer := factory.ForResource(schema.GroupVersionResource{
+		Group: "", Version: "v1", Resource: "endpoints"}).Informer()
 
-	informer := factory.ForResource(sgvr)
-	inf := informer.Informer()
-
+	// Set handlers for new/updated endpoints.
 	handlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			updateRingFromEndpoints(peerRing, obj, ringConfig, informerLog)
-			informerLog.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(peerRing.ring.GetMembers())))
+			updateRingFromEndpoints(peerRing, obj, ringConfig, log)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			updateRingFromEndpoints(peerRing, newObj, ringConfig, informerLog)
-			informerLog.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(peerRing.ring.GetMembers())))
+			updateRingFromEndpoints(peerRing, newObj, ringConfig, log)
 		},
 		// TODO: Delete handler
 	}
 
-	inf.AddEventHandler(handlers)
-	return inf
+	informer.AddEventHandler(handlers)
+	return informer
 }
 
 func updateRingFromEndpoints(ring *ShardHelper, obj interface{}, ringConfig consistent.Config, log logr.Logger) {
@@ -115,6 +114,8 @@ func updateRingFromEndpoints(ring *ShardHelper, obj interface{}, ringConfig cons
 			ring.ring.Add(peer(ip.IP))
 		}
 	}
+
+	log.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(ring.ring.GetMembers())))
 }
 
 func toEndpoint(obj interface{}) (*corev1.Endpoints, error) {

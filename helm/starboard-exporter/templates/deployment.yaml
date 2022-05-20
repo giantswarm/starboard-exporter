@@ -55,6 +55,8 @@ spec:
         image: "{{ .Values.registry.domain }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
         args:
           - --pod-ip=$(MY_POD_IP)
+          - --service-name={{ include "resource.default.name"  . }}
+          - --service-namespace={{ include "resource.default.namespace"  . }}
         {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
