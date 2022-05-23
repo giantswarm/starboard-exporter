@@ -226,6 +226,7 @@ func main() {
 	}
 
 	shutdownLog := ctrl.Log.WithName("shutdownHook")
+	stopInformer <- struct{}{}
 	defer shutdownRequeue(mgr.GetClient(), shutdownLog, podIP.String())
 
 	setupLog.Info("starting manager")
@@ -233,8 +234,6 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-
-	fmt.Printf("manager stopped\n")
 }
 
 func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
@@ -250,8 +249,6 @@ func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 	if err != nil {
 		log.Error(err, "unable to fetch vulnerabilityreport")
 	}
-
-	fmt.Printf("found %d reports", len(vulnList.Items))
 
 	for _, r := range vulnList.Items {
 		// Retrieve the individual report.
@@ -271,7 +268,6 @@ func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 			}
 		}
 	}
-	fmt.Printf("shutdown hook complete\n")
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {
