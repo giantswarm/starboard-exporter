@@ -161,7 +161,7 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 			currentEndpointsMap[ip.IP] = struct{}{}
 			addedEndpointsMap[ip.IP] = struct{}{}
 			// TODO: Add instead directly to added map?
-			fmt.Printf(fmt.Sprintf("added %s to list and map\n", ip.IP))
+			fmt.Printf("added %s to list and map\n", ip.IP)
 		}
 	}
 
@@ -191,12 +191,12 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 			if _, found := currentEndpointsMap[ip.IP]; !found {
 				// Endpoint has been removed in current state.
 				removed = append(removed, ip.IP)
-				fmt.Printf(fmt.Sprintf("added %s to removed list\n", ip.IP))
+				fmt.Printf("added %s to removed list\n", ip.IP)
 			} else {
 				// Item existed before, so it has been kept and not added.
 				kept = append(kept, ip.IP)
 				delete(currentEndpointsMap, ip.IP)
-				fmt.Printf(fmt.Sprintf("added %s to kept list and removed from added map\n", ip.IP))
+				fmt.Printf("added %s to kept list and removed from added map\n", ip.IP)
 			}
 		}
 	}
@@ -210,27 +210,27 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 
 }
 
-func updateRingFromEndpoints(ring *ShardHelper, obj interface{}, ringConfig consistent.Config, log logr.Logger) {
-	ep, err := toEndpoint(obj, log)
-	if err != nil {
-		log.Error(err, "could not convert obj to Endpoints")
-		return
-	}
+// func updateRingFromEndpoints(ring *ShardHelper, obj interface{}, ringConfig consistent.Config, log logr.Logger) {
+// 	ep, err := toEndpoint(obj, log)
+// 	if err != nil {
+// 		log.Error(err, "could not convert obj to Endpoints")
+// 		return
+// 	}
 
-	fmt.Println("current IPs:")
-	peers := make(map[string]bool)
+// 	fmt.Println("current IPs:")
+// 	peers := make(map[string]bool)
 
-	for _, subset := range ep.Subsets {
-		for _, ip := range subset.Addresses {
-			peers[ip.IP] = true
-			fmt.Println(ip.IP)
-		}
-	}
+// 	for _, subset := range ep.Subsets {
+// 		for _, ip := range subset.Addresses {
+// 			peers[ip.IP] = true
+// 			fmt.Println(ip.IP)
+// 		}
+// 	}
 
-	ring.SetMembers(peers)
+// 	ring.SetMembers(peers)
 
-	log.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(ring.ring.GetMembers())))
-}
+// 	log.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(ring.ring.GetMembers())))
+// }
 
 func toEndpoint(obj interface{}, log logr.Logger) (*corev1.Endpoints, error) {
 	ep := &corev1.Endpoints{}
