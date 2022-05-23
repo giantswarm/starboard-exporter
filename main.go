@@ -30,11 +30,13 @@ import (
 
 	"github.com/buraksezer/consistent"
 	"github.com/cespare/xxhash/v2"
+	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -223,11 +225,37 @@ func main() {
 		os.Exit(1)
 	}
 
+	shutdownLog := ctrl.Log.WithName("shutdownHook")
+	defer shutdownRequeue(mgr.GetClient(), shutdownLog, podIP.String())
+
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+
+	fmt.Printf("manager stopped\n")
+}
+
+func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
+	fmt.Printf("shutdown hook running\n")
+	log.Info("attempting to re-queue reports for instance %s", podIP)
+
+	// resourceId := schema.GroupVersionResource{
+	// 	Group:    "aquasecurity.github.io",
+	// 	Version:  "v1alpha1",
+	// 	Resource: "vulnerabilityreport",
+	// }
+	// list, err := dynamic.Resource(resourceId).Namespace(namespace).
+	// 	List(ctx, metav1.ListOptions{})
+	vulnList := &aqua.VulnerabilityReportList{}
+	opts := []client.ListOption{
+		// client.InNamespace(request.NamespacedName.Namespace),
+		client.MatchingLabels{controllers.ShardOwnerLabel: podIP},
+	}
+	c.List(context.TODO(), vulnList, opts...)
+	fmt.Printf("shutdown hook complete\n")
+
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {
