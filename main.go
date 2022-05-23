@@ -238,39 +238,40 @@ func main() {
 }
 
 func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
-	fmt.Printf("shutdown hook running\n")
 	log.Info(fmt.Sprintf("attempting to re-queue reports for instance %s", podIP))
 
-	// resourceId := schema.GroupVersionResource{
-	// 	Group:    "aquasecurity.github.io",
-	// 	Version:  "v1alpha1",
-	// 	Resource: "vulnerabilityreport",
-	// }
-	// list, err := dynamic.Resource(resourceId).Namespace(namespace).
-	// 	List(ctx, metav1.ListOptions{})
 	vulnList := &aqua.VulnerabilityReportList{}
 	opts := []client.ListOption{
-		// client.InNamespace(request.NamespacedName.Namespace),
 		client.MatchingLabels{controllers.ShardOwnerLabel: podIP},
 	}
-	c.List(context.TODO(), vulnList, opts...)
+
+	// Get the list of reports with our label.
+	err := c.List(context.Background(), vulnList, opts...)
+	if err != nil {
+		log.Error(err, "unable to fetch vulnerabilityreport")
+	}
+
 	fmt.Printf("found %d reports", len(vulnList.Items))
 
 	for _, r := range vulnList.Items {
+		// Retrieve the individual report.
 		log.Info(fmt.Sprintf("re-queueing %s/%s", r.Namespace, r.Name))
 		report := &aqua.VulnerabilityReport{}
-		err := c.Get(context.TODO(), client.ObjectKey{Name: r.Name, Namespace: r.Namespace}, report)
+		err := c.Get(context.Background(), client.ObjectKey{Name: r.Name, Namespace: r.Namespace}, report)
 		if err != nil {
 			log.Error(err, "unable to fetch vulnerabilityreport")
 		}
-		r.Labels[controllers.ShardOwnerLabel] = ""
-		err = c.Update(context.TODO(), report, &client.UpdateOptions{})
-		if err != nil {
-			log.Error(err, fmt.Sprintf("unable to remove %s label", controllers.ShardOwnerLabel))
+
+		// Clear the shard-owner label if it still has our label
+		if r.Labels[controllers.ShardOwnerLabel] == podIP {
+			r.Labels[controllers.ShardOwnerLabel] = ""
+			err = c.Update(context.Background(), report, &client.UpdateOptions{})
+			if err != nil {
+				log.Error(err, fmt.Sprintf("unable to remove %s label", controllers.ShardOwnerLabel))
+			}
 		}
 	}
 	fmt.Printf("shutdown hook complete\n")
-
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {
