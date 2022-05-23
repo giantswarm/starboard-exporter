@@ -161,8 +161,10 @@ func main() {
 	}
 
 	// Set up consistent hashing to shard reports over all of our exporters.
+	// This is arbitrarily based on the assumption that 97 exporters is a reasonable maximum for now.
+	// This could be made configurable in the future if actual usage requires it.
 	consistentCfg := consistent.Config{
-		PartitionCount:    97, // TODO: This is very arbitrary. Make it configurable.
+		PartitionCount:    97,
 		ReplicationFactor: 20,
 		Load:              1.25,
 		Hasher:            hasher{},
