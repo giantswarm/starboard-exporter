@@ -189,8 +189,6 @@ func main() {
 
 	setupLog.Info("created hash ring for sharding reports")
 
-	// TODO: pass hashring to controllers
-
 	if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
 		Client:           mgr.GetClient(),
 		Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),

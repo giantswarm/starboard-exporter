@@ -26,22 +26,26 @@ type ShardHelper struct {
 	ring             *consistent.Consistent
 }
 
+// Returns the number of members/peers currently in the hash ring.
 func (r *ShardHelper) MemberCount() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return len(r.ring.GetMembers())
 }
 
+// Returns the name (IP) of the shard which should own a provided object name.
 func (r *ShardHelper) GetShardOwner(input string) string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.ring.LocateKey([]byte(input)).String()
 }
 
+// Returns whether the current shard should own the object with the provided name.
 func (r *ShardHelper) ShouldOwn(input string) bool {
 	return r.GetShardOwner(input) == r.PodIP
 }
 
+// SetMembers accepts a map where the keys are member IPs and uses those IPs as the members for sharding.
 func (r *ShardHelper) SetMembers(newMembers map[string]bool) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -57,6 +61,17 @@ func (r *ShardHelper) SetMembers(newMembers map[string]bool) {
 			r.ring.Remove(oldMember.String())
 		}
 	}
+}
+
+// SetMembersFromLists is a wrapper around SetMember which accepts slices instead of a map.
+func (r *ShardHelper) SetMembersFromLists(lists ...[]string) {
+	members := make(map[string]struct{})
+	for _, l := range lists {
+		for _, m := range l {
+			members[m] = struct{}{}
+		}
+	}
+	r.SetMembers(make(map[string]bool))
 }
 
 // Helper type for members of peer ring.
@@ -100,14 +115,24 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	// Set handlers for new/updated endpoints.
 	handlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			updateRingFromEndpoints(peerRing, obj, ringConfig, log)
+			// updateRingFromEndpoints(peerRing, obj, ringConfig, log)
+			added, kept, _, ok := getEndpointChanges(obj, nil, log)
+			if !ok {
+				return
+			}
+			peerRing.SetMembersFromLists(added, kept)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			// TODO: Diff old and new and re-queue reports for removed peers?
 			// diff() --> added, same, removed
 			// updateRing(added+same)
 			// for removed, re-queue somehow
-			updateRingFromEndpoints(peerRing, newObj, ringConfig, log)
+			// updateRingFromEndpoints(peerRing, newObj, ringConfig, log)
+			added, kept, _, ok := getEndpointChanges(newObj, oldObj, log)
+			if !ok {
+				return
+			}
+			peerRing.SetMembersFromLists(added, kept)
 		},
 		// TODO: Delete handler
 	}
@@ -115,6 +140,8 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	informer.AddEventHandler(handlers)
 	return informer
 }
+
+func getCurrentEndpoints()
 
 // getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
 func getEndpointChanges(currentObj interface{}, previousObj interface{}, log logr.Logger) ([]string, []string, []string, bool) {
