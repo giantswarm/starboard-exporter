@@ -141,8 +141,6 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	return informer
 }
 
-func getCurrentEndpoints()
-
 // getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
 func getEndpointChanges(currentObj interface{}, previousObj interface{}, log logr.Logger) ([]string, []string, []string, bool) {
 	current, err := toEndpoint(currentObj, log)
@@ -163,7 +161,7 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 			currentEndpointsMap[ip.IP] = struct{}{}
 			addedEndpointsMap[ip.IP] = struct{}{}
 			// TODO: Add instead directly to added map?
-			fmt.Println(fmt.Sprintf("added %s to list and map", ip.IP))
+			fmt.Printf(fmt.Sprintf("added %s to list and map\n", ip.IP))
 		}
 	}
 
@@ -193,18 +191,18 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 			if _, found := currentEndpointsMap[ip.IP]; !found {
 				// Endpoint has been removed in current state.
 				removed = append(removed, ip.IP)
-				fmt.Println(fmt.Sprintf("added %s to removed list", ip.IP))
+				fmt.Printf(fmt.Sprintf("added %s to removed list\n", ip.IP))
 			} else {
 				// Item existed before, so it has been kept and not added.
 				kept = append(kept, ip.IP)
 				delete(currentEndpointsMap, ip.IP)
-				fmt.Println(fmt.Sprintf("added %s to kept list and removed from added map", ip.IP))
+				fmt.Printf(fmt.Sprintf("added %s to kept list and removed from added map\n", ip.IP))
 			}
 		}
 	}
 
 	// Any remaining items in the added endpoints map were actually new. Return them as a list.
-	for ip, _ := range currentEndpointsMap {
+	for ip := range currentEndpointsMap {
 		added = append(added, ip)
 	}
 
