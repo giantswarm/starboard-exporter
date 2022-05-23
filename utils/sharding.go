@@ -46,7 +46,7 @@ func (r *ShardHelper) ShouldOwn(input string) bool {
 }
 
 // SetMembers accepts a map where the keys are member IPs and uses those IPs as the members for sharding.
-func (r *ShardHelper) SetMembers(newMembers map[string]bool) {
+func (r *ShardHelper) SetMembers(newMembers map[string]struct{}) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -71,7 +71,7 @@ func (r *ShardHelper) SetMembersFromLists(lists ...[]string) {
 			members[m] = struct{}{}
 		}
 	}
-	r.SetMembers(make(map[string]bool))
+	r.SetMembers(members)
 }
 
 // Helper type for members of peer ring.
@@ -115,7 +115,6 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	// Set handlers for new/updated endpoints.
 	handlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			// updateRingFromEndpoints(peerRing, obj, ringConfig, log)
 			added, kept, _, ok := getEndpointChanges(obj, nil, log)
 			if !ok {
 				return
@@ -123,18 +122,16 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 			peerRing.SetMembersFromLists(added, kept)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			// TODO: Diff old and new and re-queue reports for removed peers?
-			// diff() --> added, same, removed
-			// updateRing(added+same)
-			// for removed, re-queue somehow
-			// updateRingFromEndpoints(peerRing, newObj, ringConfig, log)
+			// In the future, we might need to re-queue objects which belong to deleted peers.
+			// When scaling down, it is possible that metrics will be double reported for up to the reconciliation period.
+			// For now, we'll just set the desired peers.
 			added, kept, _, ok := getEndpointChanges(newObj, oldObj, log)
 			if !ok {
 				return
 			}
 			peerRing.SetMembersFromLists(added, kept)
 		},
-		// TODO: Delete handler
+		// We can add a delete handler here. Not sure yet what it should do.
 	}
 
 	informer.AddEventHandler(handlers)
@@ -151,7 +148,6 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 
 	currentEndpoints := []string{}                   // Stores current endpoints to return directly if we don't have a previous state.
 	currentEndpointsMap := make(map[string]struct{}) // Stores the endpoints as a map for quicker comparisons to previous state.
-	addedEndpointsMap := make(map[string]struct{})   // Stores the endpoints as a map for quicker comparisons to previous state.
 
 	for _, subset := range current.Subsets {
 		for _, ip := range subset.Addresses {
@@ -159,9 +155,6 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 			// but it saves cycles to not loop over the endpoints multiple times. We don't expect tons of endpoints.
 			currentEndpoints = append(currentEndpoints, ip.IP)
 			currentEndpointsMap[ip.IP] = struct{}{}
-			addedEndpointsMap[ip.IP] = struct{}{}
-			// TODO: Add instead directly to added map?
-			fmt.Printf("added %s to list and map\n", ip.IP)
 		}
 	}
 
@@ -209,28 +202,6 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 	return added, kept, removed, true
 
 }
-
-// func updateRingFromEndpoints(ring *ShardHelper, obj interface{}, ringConfig consistent.Config, log logr.Logger) {
-// 	ep, err := toEndpoint(obj, log)
-// 	if err != nil {
-// 		log.Error(err, "could not convert obj to Endpoints")
-// 		return
-// 	}
-
-// 	fmt.Println("current IPs:")
-// 	peers := make(map[string]bool)
-
-// 	for _, subset := range ep.Subsets {
-// 		for _, ip := range subset.Addresses {
-// 			peers[ip.IP] = true
-// 			fmt.Println(ip.IP)
-// 		}
-// 	}
-
-// 	ring.SetMembers(peers)
-
-// 	log.Info(fmt.Sprintf("synchronized peer ring with %d peers", len(ring.ring.GetMembers())))
-// }
 
 func toEndpoint(obj interface{}, log logr.Logger) (*corev1.Endpoints, error) {
 	ep := &corev1.Endpoints{}
