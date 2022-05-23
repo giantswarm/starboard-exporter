@@ -103,6 +103,10 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 			updateRingFromEndpoints(peerRing, obj, ringConfig, log)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
+			// TODO: Diff old and new and re-queue reports for removed peers?
+			// diff() --> added, same, removed
+			// updateRing(added+same)
+			// for removed, re-queue somehow
 			updateRingFromEndpoints(peerRing, newObj, ringConfig, log)
 		},
 		// TODO: Delete handler
@@ -110,6 +114,75 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 
 	informer.AddEventHandler(handlers)
 	return informer
+}
+
+// getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
+func getEndpointChanges(currentObj interface{}, previousObj interface{}, log logr.Logger) ([]string, []string, []string, bool) {
+	current, err := toEndpoint(currentObj, log)
+	if err != nil {
+		log.Error(err, "could not convert obj to Endpoints")
+		return nil, nil, nil, false
+	}
+
+	currentEndpoints := []string{}                   // Stores current endpoints to return directly if we don't have a previous state.
+	currentEndpointsMap := make(map[string]struct{}) // Stores the endpoints as a map for quicker comparisons to previous state.
+	addedEndpointsMap := make(map[string]struct{})   // Stores the endpoints as a map for quicker comparisons to previous state.
+
+	for _, subset := range current.Subsets {
+		for _, ip := range subset.Addresses {
+			// We add to both the list and the map. This wastes a little memory because we only ever need one or the other,
+			// but it saves cycles to not loop over the endpoints multiple times. We don't expect tons of endpoints.
+			currentEndpoints = append(currentEndpoints, ip.IP)
+			currentEndpointsMap[ip.IP] = struct{}{}
+			addedEndpointsMap[ip.IP] = struct{}{}
+			// TODO: Add instead directly to added map?
+			fmt.Println(fmt.Sprintf("added %s to list and map", ip.IP))
+		}
+	}
+
+	if previousObj == nil {
+		// If there is no previous object, we're only adding new (initial) endpoints.
+		// Just return the list from the object.
+		return currentEndpoints, nil, nil, true
+	}
+
+	previous, err := toEndpoint(previousObj, log)
+	if err != nil {
+		log.Error(err, "could not convert obj to Endpoints")
+		return nil, nil, nil, false
+	}
+
+	added := []string{}
+	kept := []string{}
+	removed := []string{}
+
+	for _, subset := range previous.Subsets {
+		for _, ip := range subset.Addresses {
+			// Each address was either:
+			// - added   (exists in current, not previous)
+			// - kept    (exists in current and previous)
+			// - removed (not in current, exists in previous)
+
+			if _, found := currentEndpointsMap[ip.IP]; !found {
+				// Endpoint has been removed in current state.
+				removed = append(removed, ip.IP)
+				fmt.Println(fmt.Sprintf("added %s to removed list", ip.IP))
+			} else {
+				// Item existed before, so it has been kept and not added.
+				kept = append(kept, ip.IP)
+				delete(currentEndpointsMap, ip.IP)
+				fmt.Println(fmt.Sprintf("added %s to kept list and removed from added map", ip.IP))
+			}
+		}
+	}
+
+	// Any remaining items in the added endpoints map were actually new. Return them as a list.
+	for ip, _ := range currentEndpointsMap {
+		added = append(added, ip)
+	}
+
+	return added, kept, removed, true
+
 }
 
 func updateRingFromEndpoints(ring *ShardHelper, obj interface{}, ringConfig consistent.Config, log logr.Logger) {
