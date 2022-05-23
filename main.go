@@ -227,7 +227,6 @@ func main() {
 	}
 
 	shutdownLog := ctrl.Log.WithName("shutdownHook")
-	stopInformer <- struct{}{}
 	defer shutdownRequeue(mgr.GetClient(), shutdownLog, podIP.String())
 
 	setupLog.Info("starting manager")
