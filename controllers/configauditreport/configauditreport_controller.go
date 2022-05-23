@@ -75,7 +75,7 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 	shouldOwn := r.ShardHelper.ShouldOwn(req.NamespacedName.String())
 
-	if report.DeletionTimestamp.IsZero() {
+	if report.DeletionTimestamp.IsZero() && shouldOwn {
 		// Give the report our finalizer if it doesn't have one.
 		if !utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
 			ctrlutil.AddFinalizer(report, ConfigAuditReportFinalizer)
