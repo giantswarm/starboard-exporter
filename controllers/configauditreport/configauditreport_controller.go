@@ -152,6 +152,38 @@ func (r *ConfigAuditReportReconciler) clearImageMetrics(report *aqua.ConfigAudit
 	}
 }
 
+func RequeueReportsForPod(c client.Client, log logr.Logger, podIP string) {
+	reportList := &aqua.ConfigAuditReportList{}
+	opts := []client.ListOption{
+		client.MatchingLabels{controllers.ShardOwnerLabel: podIP},
+	}
+
+	// Get the list of reports with our label.
+	err := c.List(context.Background(), reportList, opts...)
+	if err != nil {
+		log.Error(err, "unable to fetch configauditreport")
+	}
+
+	for _, r := range reportList.Items {
+		// Retrieve the individual report.
+		log.Info(fmt.Sprintf("re-queueing configauditreport %s", r.Name))
+		report := &aqua.ConfigAuditReport{}
+		err := c.Get(context.Background(), client.ObjectKey{Name: r.Name, Namespace: r.Namespace}, report)
+		if err != nil {
+			log.Error(err, "unable to fetch configauditreport")
+		}
+
+		// Clear the shard-owner label if it still has our label
+		if r.Labels[controllers.ShardOwnerLabel] == podIP {
+			r.Labels[controllers.ShardOwnerLabel] = ""
+			err = c.Update(context.Background(), report, &client.UpdateOptions{})
+			if err != nil {
+				log.Error(err, fmt.Sprintf("unable to remove %s label", controllers.ShardOwnerLabel))
+			}
+		}
+	}
+}
+
 func getCountPerSeverity(report *aqua.ConfigAuditReport) map[string]float64 {
 	// Format is e.g. {CRITICAL: 10}.
 	return map[string]float64{

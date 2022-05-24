@@ -138,7 +138,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	setupLog.Info(fmt.Sprintf("This is exporter instance %s", podIP.String()))
+	setupLog.Info(fmt.Sprintf("this is exporter instance %s", podIP.String()))
 
 	// Print target labels.
 	if len(targetLabels) > 0 {
@@ -191,7 +191,7 @@ func main() {
 		}
 	}
 
-	setupLog.Info("created hash ring for sharding reports")
+	setupLog.Info(fmt.Sprintf("found %d exporters in %s service", peerRing.MemberCount(), peerRing.ServiceName))
 
 	if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
 		Client:           mgr.GetClient(),
@@ -239,35 +239,9 @@ func main() {
 func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 	log.Info(fmt.Sprintf("attempting to re-queue reports for instance %s", podIP))
 
-	vulnList := &aqua.VulnerabilityReportList{}
-	opts := []client.ListOption{
-		client.MatchingLabels{controllers.ShardOwnerLabel: podIP},
-	}
+	vulnerabilityreport.RequeueReportsForPod(c, log, podIP)
 
-	// Get the list of reports with our label.
-	err := c.List(context.Background(), vulnList, opts...)
-	if err != nil {
-		log.Error(err, "unable to fetch vulnerabilityreport")
-	}
-
-	for _, r := range vulnList.Items {
-		// Retrieve the individual report.
-		log.Info(fmt.Sprintf("re-queueing %s/%s", r.Namespace, r.Name))
-		report := &aqua.VulnerabilityReport{}
-		err := c.Get(context.Background(), client.ObjectKey{Name: r.Name, Namespace: r.Namespace}, report)
-		if err != nil {
-			log.Error(err, "unable to fetch vulnerabilityreport")
-		}
-
-		// Clear the shard-owner label if it still has our label
-		if r.Labels[controllers.ShardOwnerLabel] == podIP {
-			r.Labels[controllers.ShardOwnerLabel] = ""
-			err = c.Update(context.Background(), report, &client.UpdateOptions{})
-			if err != nil {
-				log.Error(err, fmt.Sprintf("unable to remove %s label", controllers.ShardOwnerLabel))
-			}
-		}
-	}
+	configauditreport.RequeueReportsForPod(c, log, podIP)
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {

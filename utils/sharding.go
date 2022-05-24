@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"os"
 	"sync"
 
@@ -149,9 +148,9 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 	currentEndpoints := []string{}                   // Stores current endpoints to return directly if we don't have a previous state.
 	currentEndpointsMap := make(map[string]struct{}) // Stores the endpoints as a map for quicker comparisons to previous state.
 
+	// Store all the current endpoints for us to use later.
 	for _, subset := range current.Subsets {
 		for _, ip := range subset.Addresses {
-			fmt.Printf("found current IP %s \n", ip.IP)
 			// We add to both the list and the map. This wastes a little memory because we only ever need one or the other,
 			// but it saves cycles to not loop over the endpoints multiple times. We don't expect tons of endpoints.
 			currentEndpoints = append(currentEndpoints, ip.IP)
@@ -161,7 +160,7 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 
 	if previousObj == nil {
 		// If there is no previous object, we're only adding new (initial) endpoints.
-		// Just return the list from the object.
+		// Just return the current endpoint list.
 		return currentEndpoints, nil, nil, true
 	}
 
@@ -177,7 +176,6 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 
 	for _, subset := range previous.Subsets {
 		for _, ip := range subset.Addresses {
-			fmt.Printf("found previous IP %s \n", ip.IP)
 			// Each address was either:
 			// - added   (exists in current, not previous)
 			// - kept    (exists in current and previous)
@@ -186,19 +184,16 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 			if _, found := currentEndpointsMap[ip.IP]; !found {
 				// Endpoint has been removed in current state.
 				removed = append(removed, ip.IP)
-				fmt.Printf("added %s to removed list\n", ip.IP)
 			} else {
-				// Item existed before, so it has been kept and not added.
+				// Item existed before, so it has been "kept" and not "added".
 				kept = append(kept, ip.IP)
 				delete(currentEndpointsMap, ip.IP)
-				fmt.Printf("added %s to kept list and removed from added map\n", ip.IP)
 			}
 		}
 	}
 
 	// Any remaining items in the added endpoints map were actually new. Return them as a list.
 	for ip := range currentEndpointsMap {
-		fmt.Printf("added %s to added list\n", ip)
 		added = append(added, ip)
 	}
 
