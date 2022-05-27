@@ -44,9 +44,11 @@ exporter:
 monitoring:
   serviceMonitor:
     enabled: true
+    labels: {}
 
   grafanaDashboard:
     enabled: true
+    # namespace: ""
 
 psp:
   enabled: true
