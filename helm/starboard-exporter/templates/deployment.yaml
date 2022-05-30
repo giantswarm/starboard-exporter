@@ -48,6 +48,8 @@ spec:
                       - amd64
       serviceAccountName: {{ include "resource.default.name"  . }}
       securityContext:
+        seccompProfile:
+          type: RuntimeDefault
         runAsUser: {{ .Values.pod.user.id }}
         runAsGroup: {{ .Values.pod.group.id }}
         runAsNonRoot: true
