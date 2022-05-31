@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added missing monitoring options in the Helm chart values.yaml
+- Set `runAsNonRoot` and use `RuntimeDefault` seccomp profile.
 
 ## [0.4.1] - 2022-04-26
 
