@@ -2,7 +2,7 @@
 
 # starboard-exporter
 
-Exposes Prometheus metrics from [Starboard][starboard-upstream]'s `VulnerabilityReport` custom resources (CRs).
+Exposes Prometheus metrics from [Starboard][starboard-upstream]'s `VulnerabilityReport`, `ConfigAuditReport`, and other custom resources (CRs).
 
 ## Metrics
 
@@ -54,6 +54,10 @@ An additional series would be exposed for every combination of those labels.
 #### A Note on Cardinality
 
 For some use cases, it is helpful to export additional fields from `VulnerabilityReport` CRs. However, because many fields contain unbounded arbitrary data, including them in Prometheus metrics can lead to extremely high cardinality. This can drastically impact Prometheus performance. For this reason, we only expose summary data by default and allow users to opt-in to higher-cardinality fields.
+
+### Sharding Reports
+
+In large clusters or environments with many reports and/or vulnerabilities, a single exporter can consume a large amount of memory, and Prometheus may need a long time to scrape the exporter, leading to scrape timeouts. To help spread resource consumption and scrape effort, `starboard-exporter` watches its own service endpoints and will shard metrics for all report types across the available endpoints. In other words, if there are 3 exporter instances, each instance will serve roughly 1/3 of the metrics. This behavior is enabled by default and does not require any additional configuration. To use it, simply change the number of replicas in the Deployment. However, you should read the section on cardinality and be aware that consuming large amounts of high-cardinality data can have performance impacts on Prometheus.
 
 ### One vulnerabilityreport per deployment
 

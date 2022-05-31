@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Announcements
+
+- **Important: the `latest` tag alias is being removed.** Some users have reported issues using the `latest` tag on our hosted registries (Docker Hub, Quay, etc.). We advise against using `latest` tags and don't use them ourselves, so this tag is not kept up to date. Please switch to using a tagged version. We will be removing the `latest` tag from our public registries in the near future to avoid confusion.
+
 ### Added
 
 - Add missing monitoring options in the Helm chart values.yaml.
