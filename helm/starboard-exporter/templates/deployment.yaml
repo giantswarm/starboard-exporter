@@ -54,12 +54,20 @@ spec:
       - name: {{ include "name" . }}
         image: "{{ .Values.registry.domain }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
         args:
+          - --pod-ip=$(MY_POD_IP)
+          - --service-name={{ include "resource.default.name"  . }}
+          - --service-namespace={{ include "resource.default.namespace"  . }}
         {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
         {{- if .Values.exporter.requeueMaxJitterPercent }}
           - --max-jitter-percent={{ .Values.exporter.requeueMaxJitterPercent }}
         {{- end }}
+        env:
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
         ports:
         - containerPort: 8080
           name: metrics

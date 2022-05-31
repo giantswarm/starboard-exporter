@@ -45,6 +45,7 @@ type ConfigAuditReportReconciler struct {
 	Scheme *runtime.Scheme
 
 	MaxJitterPercent int
+	ShardHelper      *utils.ShardHelper
 }
 
 //+kubebuilder:rbac:groups=aquasecurity.github.io.giantswarm,resources=configauditreports,verbs=get;list;watch;create;update;patch;delete
@@ -66,7 +67,15 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	if report.DeletionTimestamp.IsZero() {
+	// We have fetched the report and have four possibilities:
+	// - Not deleting + belongs to our shard 			--> give it our label (to trigger reconciliation by any previous owner) and expose the metric.
+	// - Not deleting + does not belong to our shard 	--> remove it from our metrics. Keep the finalizer.
+	// - Deleting + belongs to our shard				--> remove it from our metrics. Remove the finalizer.
+	// - Deleting + does not belong to our shard		--> remove it from our metrics. Keep the finalizer.
+
+	shouldOwn := r.ShardHelper.ShouldOwn(req.NamespacedName.String())
+
+	if report.DeletionTimestamp.IsZero() && shouldOwn {
 		// Give the report our finalizer if it doesn't have one.
 		if !utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
 			ctrlutil.AddFinalizer(report, ConfigAuditReportFinalizer)
@@ -86,14 +95,25 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		// Publish summary metrics for this report.
 		publishSummaryMetrics(report)
 
+		// Add a label to this report so any previous owners will reconcile and drop the metric.
+		report.Labels[controllers.ShardOwnerLabel] = r.ShardHelper.PodIP
+		err := r.Client.Update(ctx, report, &client.UpdateOptions{})
+		if err != nil {
+			r.Log.Error(err, "unable to add shard owner label")
+		}
+
 	} else {
+		// Unfortunately, we can't yet clear the series based on one label value,
+		// we have to reconstruct all of the label values to delete the series.
+		// That's the only reason the finalizer is needed at all.
+		// So we first clear our metrics for the report, and then remove the finalizer
+		// if we're the shard which owns this report.
 
-		if utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
-			// Unfortunately, we can't just clear the series based on one label value,
-			// we have to reconstruct all of the label values to delete the series.
-			// That's the only reason the finalizer is needed at all.
-			r.clearImageMetrics(report)
+		// Drop the report from our metrics.
+		r.clearImageMetrics(report)
 
+		if shouldOwn && utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
+			// Remove the finalizer if we're the shard owner.
 			ctrlutil.RemoveFinalizer(report, ConfigAuditReportFinalizer)
 			if err := r.Update(ctx, report); err != nil {
 				return ctrl.Result{}, err
@@ -129,6 +149,38 @@ func (r *ConfigAuditReportReconciler) clearImageMetrics(report *aqua.ConfigAudit
 		ConfigAuditSummary.Delete(
 			v,
 		)
+	}
+}
+
+func RequeueReportsForPod(c client.Client, log logr.Logger, podIP string) {
+	reportList := &aqua.ConfigAuditReportList{}
+	opts := []client.ListOption{
+		client.MatchingLabels{controllers.ShardOwnerLabel: podIP},
+	}
+
+	// Get the list of reports with our label.
+	err := c.List(context.Background(), reportList, opts...)
+	if err != nil {
+		log.Error(err, "unable to fetch configauditreport")
+	}
+
+	for _, r := range reportList.Items {
+		// Retrieve the individual report.
+		log.Info(fmt.Sprintf("re-queueing configauditreport %s", r.Name))
+		report := &aqua.ConfigAuditReport{}
+		err := c.Get(context.Background(), client.ObjectKey{Name: r.Name, Namespace: r.Namespace}, report)
+		if err != nil {
+			log.Error(err, "unable to fetch configauditreport")
+		}
+
+		// Clear the shard-owner label if it still has our label
+		if r.Labels[controllers.ShardOwnerLabel] == podIP {
+			r.Labels[controllers.ShardOwnerLabel] = ""
+			err = c.Update(context.Background(), report, &client.UpdateOptions{})
+			if err != nil {
+				log.Error(err, fmt.Sprintf("unable to remove %s label", controllers.ShardOwnerLabel))
+			}
+		}
 	}
 }
 

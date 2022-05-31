@@ -37,6 +37,38 @@ roleRef:
   name: {{ include "resource.default.name"  . }}
   apiGroup: rbac.authorization.k8s.io
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "resource.default.name"  . }}
+  namespace: {{ include "resource.default.namespace"  . }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "resource.default.name"  . }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "resource.default.name"  . }}
+    namespace: {{ include "resource.default.namespace"  . }}
+roleRef:
+  kind: Role
+  name: {{ include "resource.default.name"  . }}
+  apiGroup: rbac.authorization.k8s.io
+---
 {{ if .Values.psp.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

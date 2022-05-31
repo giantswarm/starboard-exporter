@@ -17,27 +17,35 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/buraksezer/consistent"
+	"github.com/cespare/xxhash/v2"
+	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 
+	"github.com/giantswarm/starboard-exporter/controllers"
 	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
+	"github.com/giantswarm/starboard-exporter/utils"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -45,6 +53,13 @@ var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
+
+type hasher struct{}
+
+func (h hasher) Sum64(data []byte) uint64 {
+	// TODO: Investigate hash function options.
+	return xxhash.Sum64(data)
+}
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -61,8 +76,12 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var maxJitterPercent int
+	var podIPString string
 	var probeAddr string
+	var serviceName string
+	var serviceNamespace string
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
+
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -71,6 +90,11 @@ func main() {
 
 	flag.IntVar(&maxJitterPercent, "max-jitter-percent", 10,
 		"Spreads out re-queue interval of reports by +/- this amount to spread load.")
+
+	flag.StringVar(&podIPString, "pod-ip", "", "The IP address of the current Pod/instance used when sharding reports.")
+
+	flag.StringVar(&serviceName, "service-name", controllers.DefaultServiceName, "When sharding reports, the service endpoints for this service will be used to find peers.")
+	flag.StringVar(&serviceNamespace, "service-namespace", "", "When sharding reports, the service endpoints in this namespace will be used to find peers.")
 
 	// Read and parse target-labels into known VulnerabilityLabels.
 	flag.Func("target-labels",
@@ -87,13 +111,11 @@ func main() {
 				label, ok := vulnerabilityreport.LabelWithName(i)
 				if !ok {
 					err := errors.New("invalidConfigError")
-					setupLog.Error(err, fmt.Sprintf("unknown target label %s", i))
 					return err
 				}
 				targetLabels = appendIfNotExists(targetLabels, []vulnerabilityreport.VulnerabilityLabel{label})
 			}
 
-			setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(targetLabels), targetLabels))
 			return nil
 		})
 
@@ -104,6 +126,28 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	podIP := net.ParseIP(podIPString)
+	if podIP == nil {
+		setupLog.Error(nil, fmt.Sprintf("invalid pod IP %s", podIPString))
+		os.Exit(1)
+	}
+
+	if serviceNamespace == "" {
+		setupLog.Error(nil, "service namespace must not be empty")
+		os.Exit(1)
+	}
+
+	setupLog.Info(fmt.Sprintf("this is exporter instance %s", podIP.String()))
+
+	// Print target labels.
+	if len(targetLabels) > 0 {
+		tl := []string{}
+		for _, l := range targetLabels {
+			tl = append(tl, l.Name)
+		}
+		setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(tl), tl))
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -118,11 +162,43 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Set up consistent hashing to shard reports over all of our exporters.
+	// This is arbitrarily based on the assumption that 97 exporters is a reasonable maximum for now.
+	// This could be made configurable in the future if actual usage requires it.
+	consistentCfg := consistent.Config{
+		PartitionCount:    97,
+		ReplicationFactor: 20,
+		Load:              1.25,
+		Hasher:            hasher{},
+	}
+
+	peerRing := utils.BuildPeerHashRing(consistentCfg, podIP.String(), serviceName, serviceNamespace)
+
+	// Create and start the informer which will keep the endpoints in sync in our ring.
+	stopInformer := make(chan struct{})
+	defer close(stopInformer)
+
+	informerLog := ctrl.Log.WithName("informer").WithName("Endpoints")
+	inf := utils.BuildPeerInformer(stopInformer, peerRing, consistentCfg, informerLog)
+	go inf.Run(stopInformer)
+
+	// Wait for the ring to be synced for the first time so we can use it immediately.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	for {
+		if peerRing.MemberCount() > 0 || ctx.Err() != nil {
+			break
+		}
+	}
+
+	setupLog.Info(fmt.Sprintf("found %d exporters in %s service", peerRing.MemberCount(), peerRing.ServiceName))
+
 	if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
 		Client:           mgr.GetClient(),
 		Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
 		MaxJitterPercent: maxJitterPercent,
 		Scheme:           mgr.GetScheme(),
+		ShardHelper:      peerRing,
 		TargetLabels:     targetLabels,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
@@ -134,6 +210,7 @@ func main() {
 		Log:              ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
 		MaxJitterPercent: maxJitterPercent,
 		Scheme:           mgr.GetScheme(),
+		ShardHelper:      peerRing,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
 		os.Exit(1)
@@ -149,11 +226,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	shutdownLog := ctrl.Log.WithName("shutdownHook")
+	defer shutdownRequeue(mgr.GetClient(), shutdownLog, podIP.String())
+
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
+	log.Info(fmt.Sprintf("attempting to re-queue reports for instance %s", podIP))
+
+	vulnerabilityreport.RequeueReportsForPod(c, log, podIP)
+
+	configauditreport.RequeueReportsForPod(c, log, podIP)
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {

@@ -8,6 +8,7 @@ workflows:
       - architect/go-build:
           name: go-build
           binary: starboard-exporter
+          resource_class: large
           filters:
             tags:
               only: /^v.*/
