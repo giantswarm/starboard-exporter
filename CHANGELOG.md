@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added missing monitoring options in the Helm chart values.yaml.
+- Add missing monitoring options in the Helm chart values.yaml.
 - Support sharding report metrics across multiple instances of the exporter.
 - Set `runAsNonRoot` and use `RuntimeDefault` seccomp profile.
 
