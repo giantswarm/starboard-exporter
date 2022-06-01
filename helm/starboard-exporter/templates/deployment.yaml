@@ -25,6 +25,10 @@ spec:
       nodeSelector:
         {{- . | toYaml | nindent 8 }}
       {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -35,7 +39,7 @@ spec:
               topologyKey: kubernetes.io/hostname
             weight: 100
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
+          -:
             nodeSelectorTerms:
               - matchExpressions:
                   - key: kubernetes.io/os
