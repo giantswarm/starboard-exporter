@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support sharding report metrics across multiple instances of the exporter.
 - Set `runAsNonRoot` and use `RuntimeDefault` seccomp profile.
 - Make replica count configurable in Helm values.
+- Add configurable tolerations to Helm values.
 
 ## [0.4.1] - 2022-04-26
 
