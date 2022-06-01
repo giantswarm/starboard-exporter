@@ -39,7 +39,7 @@ spec:
               topologyKey: kubernetes.io/hostname
             weight: 100
         nodeAffinity:
-          -:
+          requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
                   - key: kubernetes.io/os
