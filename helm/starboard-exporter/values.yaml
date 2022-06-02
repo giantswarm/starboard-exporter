@@ -11,6 +11,7 @@ pod:
     id: 1000
 
 nodeSelector: {}
+tolerations: {}
 
 # container securityContext
 securityContext:
