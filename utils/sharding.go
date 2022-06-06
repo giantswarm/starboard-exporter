@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
@@ -114,27 +115,28 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	// Set handlers for new/updated endpoints.
 	handlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			added, kept, _, ok := getEndpointChanges(obj, nil, log)
-			if !ok {
-				return
-			}
-			peerRing.SetMembersFromLists(added, kept)
+			updateEndpoints(obj, nil, peerRing, log)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			// In the future, we might need to re-queue objects which belong to deleted peers.
 			// When scaling down, it is possible that metrics will be double reported for up to the reconciliation period.
 			// For now, we'll just set the desired peers.
-			added, kept, _, ok := getEndpointChanges(newObj, oldObj, log)
-			if !ok {
-				return
-			}
-			peerRing.SetMembersFromLists(added, kept)
+			updateEndpoints(oldObj, newObj, peerRing, log)
 		},
 		// We can add a delete handler here. Not sure yet what it should do.
 	}
 
 	informer.AddEventHandler(handlers)
 	return informer
+}
+
+func updateEndpoints(currentObj interface{}, previousObj interface{}, ring *ShardHelper, log logr.Logger) {
+	added, kept, _, ok := getEndpointChanges(currentObj, previousObj, log)
+	if !ok {
+		return
+	}
+	ring.SetMembersFromLists(added, kept)
+	log.Info(fmt.Sprintf("found %d peers from service endpoints", len(added)+len(kept)))
 }
 
 // getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
