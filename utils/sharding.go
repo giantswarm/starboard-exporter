@@ -121,7 +121,7 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 			// In the future, we might need to re-queue objects which belong to deleted peers.
 			// When scaling down, it is possible that metrics will be double reported for up to the reconciliation period.
 			// For now, we'll just set the desired peers.
-			updateEndpoints(oldObj, newObj, peerRing, log)
+			updateEndpoints(newObj, oldObj, peerRing, log)
 		},
 		// We can add a delete handler here. Not sure yet what it should do.
 	}
@@ -136,7 +136,7 @@ func updateEndpoints(currentObj interface{}, previousObj interface{}, ring *Shar
 		return
 	}
 	ring.SetMembersFromLists(added, kept)
-	log.Info(fmt.Sprintf("found %d peers from service endpoints", len(added)+len(kept)))
+	log.Info(fmt.Sprintf("updated peer list with %d endpoints", len(added)+len(kept)))
 }
 
 // getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
