@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"sort"
 	"strconv"
 	"testing"
 
@@ -204,10 +203,10 @@ func Test_getEndpointChanges(t *testing.T) {
 			// Calculate endpoint updates.
 			added, kept, removed, ok := getEndpointChanges(tc.current, previous, log)
 
-			t.Logf("case %v: added: %v, kept: %v, removed: %v\n", tc, sort.StringSlice(added), kept, removed)
+			t.Logf("case %v: added: %v, kept: %v, removed: %v\n", tc, added, kept, removed)
 
 			if !ok {
-				t.Fatalf("unable to parse endpoint changes for case %v: added: %s, kept: %s, removed: %s\n", tc, sort.StringSlice(added), kept, removed)
+				t.Fatalf("unable to parse endpoint changes for case %v: added: %s, kept: %s, removed: %s\n", tc, added, kept, removed)
 			}
 
 			compareStringFunc := func(a, b string) bool { return a < b }
