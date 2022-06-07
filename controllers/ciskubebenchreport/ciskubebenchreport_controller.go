@@ -24,11 +24,14 @@ import (
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	"github.com/giantswarm/starboard-exporter/controllers"
 	"github.com/giantswarm/starboard-exporter/utils"
@@ -47,6 +50,7 @@ type CISKubeBenchReportReconciler struct {
 	Scheme *runtime.Scheme
 
 	MaxJitterPercent int
+	TargetLabels     []ReportLabel
 }
 
 //+kubebuilder:rbac:groups=aquasecurity.github.io.giantswarm,resources=ciskubebenchreport,verbs=get;list;watch;create;update;patch;delete
@@ -60,7 +64,7 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 	registerMetricsOnce.Do(r.registerMetrics)
 
 	report := &aqua.CISKubeBenchReport{}
-	if err := r.Client.Get(ctx, req.NamespacedName, report); err != nil {
+	if err := r.Client.Get(ctx, client.ObjectKey{Name: req.Name, Namespace: req.Namespace}, report); err != nil {
 		if apierrors.IsNotFound(err) {
 			// Most likely the report was deleted.
 			return ctrl.Result{}, nil
@@ -70,53 +74,48 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 		r.Log.Error(err, "Unable to read CISKubeBenchReport")
 		return ctrl.Result{}, err
 	}
-	r.Log.Info(fmt.Sprintf("Reconciled %s",
-		report.Report.Summary,
-	))
-	// spew.Dump(report)
-	/*
-		if report.DeletionTimestamp.IsZero() {
-			// Give the report our finalizer if it doesn't have one.
-			if !utils.SliceContains(report.GetFinalizers(), CISKubeBenchReportFinalizer) {
-				ctrlutil.AddFinalizer(report, CISKubeBenchReportFinalizer)
-				if err := r.Update(ctx, report); err != nil {
-					return ctrl.Result{}, err
-				}
-			}
 
-			r.Log.Info(fmt.Sprintf("Reconciled %s || Found (C/H/M/L): %d/%d/%d/%d",
-				req.NamespacedName,
-				report.Report.Summary.PassCount,
-				report.Report.Summary.InfoCount,
-				report.Report.Summary.WarnCount,
-				report.Report.Summary.FailCount,
-			))
-
-			// Publish summary metrics for this report.
-			publishSummaryMetrics(report)
-
-		} else {
-
-			if utils.SliceContains(report.GetFinalizers(), CISKubeBenchReportFinalizer) {
-				// Unfortunately, we can't just clear the series based on one label value,
-				// we have to reconstruct all of the label values to delete the series.
-				// That's the only reason the finalizer is needed at all.
-				r.clearImageMetrics(report)
-
-				ctrlutil.RemoveFinalizer(report, CISKubeBenchReportFinalizer)
-				if err := r.Update(ctx, report); err != nil {
-					return ctrl.Result{}, err
-				}
+	if report.DeletionTimestamp.IsZero() {
+		// Give the report our finalizer if it doesn't have one.
+		if !utils.SliceContains(report.GetFinalizers(), CISKubeBenchReportFinalizer) {
+			ctrlutil.AddFinalizer(report, CISKubeBenchReportFinalizer)
+			if err := r.Update(ctx, report); err != nil {
+				return ctrl.Result{}, err
 			}
 		}
-	*/
+
+		r.Log.Info(fmt.Sprintf("Reconciled %s || Found (C/H/M/L): %d/%d/%d/%d",
+			req.NamespacedName,
+			report.Report.Summary.PassCount,
+			report.Report.Summary.InfoCount,
+			report.Report.Summary.WarnCount,
+			report.Report.Summary.FailCount,
+		))
+
+		// Publish summary metrics for this report.
+		publishSummaryMetrics(report)
+
+	} else {
+
+		if utils.SliceContains(report.GetFinalizers(), CISKubeBenchReportFinalizer) {
+			// Unfortunately, we can't just clear the series based on one label value,
+			// we have to reconstruct all of the label values to delete the series.
+			// That's the only reason the finalizer is needed at all.
+			r.clearImageMetrics(report)
+
+			ctrlutil.RemoveFinalizer(report, CISKubeBenchReportFinalizer)
+			if err := r.Update(ctx, report); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
 	return utils.JitterRequeue(controllers.DefaultRequeueDuration, r.MaxJitterPercent, r.Log), nil
 }
 
-/*
 func (r *CISKubeBenchReportReconciler) registerMetrics() {
 
-	CISBenchmarkInfo = prometheus.NewGaugeVec(
+	CISBenchmarkInfo := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Subsystem: metricSubsystem,
@@ -130,7 +129,6 @@ func (r *CISKubeBenchReportReconciler) registerMetrics() {
 }
 
 // SetupWithManager sets up the controller with the Manager.
-*/
 func (r *CISKubeBenchReportReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	err := ctrl.NewControllerManagedBy(mgr).
 		For(&aqua.CISKubeBenchReport{}).
@@ -142,52 +140,52 @@ func (r *CISKubeBenchReportReconciler) SetupWithManager(mgr ctrl.Manager) error 
 	return nil
 }
 
-/*
 func (r *CISKubeBenchReportReconciler) clearImageMetrics(report *aqua.CISKubeBenchReport) {
 	// clear summary metrics
-	summaryValues := valuesForReport(report, metricLabels)
+	summaryValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
 
-	// Delete the series for each severity.
-	for severity := range getCountPerSeverity(report) {
+	// Delete the series for each node.
+	for severity := range getCountPerResult(report) {
 		v := summaryValues
 		v["severity"] = severity
 
 		// Delete the metric.
-		CISKubeBenchSummary.Delete(
+		BenchmarkSummary.Delete(
 			v,
 		)
 	}
 }
 
-func getCountPerSeverity(report *aqua.ciskubebenchreportummary) map[string]float64 {
-	// Format is e.g. {FAIL: 10}.
+func getCountPerResult(report *aqua.CISKubeBenchReport) map[string]float64 {
 	return map[string]float64{
-		string(aqua.ResultPass): float64(report.Report.Summary.PassCount),
-		string(aqua.ResultInfo): float64(report.Report.Summary.InfoCount),
-		string(aqua.ResultWarn): float64(report.Report.Summary.WarnCount),
-		string(aqua.ResultFail): float64(report.Report.Summary.FailCount),
+		"PassCount": float64(report.Report.Summary.PassCount),
+		"InfoCount": float64(report.Report.Summary.InfoCount),
+		"WarnCount": float64(report.Report.Summary.WarnCount),
+		"FailCount": float64(report.Report.Summary.FailCount),
 	}
 }
 
 func publishSummaryMetrics(report *aqua.CISKubeBenchReport) {
-	summaryValues := valuesForReport(report, metricLabels)
+	summaryValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
 
 	// Add the severity label after the standard labels and expose each severity metric.
-	for severity, count := range getCountPerSeverity(report) {
+	for severity, count := range getCountPerResult(report) {
 		v := summaryValues
 		v["severity"] = severity
 
 		// Expose the metric.
-		CISKubeBenchSummary.With(
+		BenchmarkSummary.With(
 			v,
 		).Set(count)
 	}
 }
 
-func valuesForReport(report *aqua.CISKubeBenchReport, labels []string) map[string]string {
+func valuesForReport(report *aqua.CISKubeBenchReport, labels []ReportLabel) map[string]string {
 	result := map[string]string{}
 	for _, label := range labels {
-		result[label] = reportValueFor(label, report)
+		if label.Scope == FieldScopeReport {
+			result[label.Name] = reportValueFor(label.Name, report)
+		}
 	}
 	return result
 }
@@ -196,8 +194,6 @@ func reportValueFor(field string, report *aqua.CISKubeBenchReport) string {
 	switch field {
 	case "resource_name":
 		return report.Name
-	case "resource_namespace":
-		return report.Namespace
 	case "severity":
 		return "" // this value will be overwritten on publishSummaryMetrics
 	default:
@@ -205,4 +201,3 @@ func reportValueFor(field string, report *aqua.CISKubeBenchReport) string {
 		return ""
 	}
 }
-*/

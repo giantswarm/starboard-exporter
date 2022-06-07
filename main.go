@@ -43,6 +43,7 @@ import (
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 
 	"github.com/giantswarm/starboard-exporter/controllers"
+	"github.com/giantswarm/starboard-exporter/controllers/ciskubebenchreport"
 	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
 	"github.com/giantswarm/starboard-exporter/utils"
@@ -81,6 +82,7 @@ func main() {
 	var serviceName string
 	var serviceNamespace string
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
+	reportLabels := []ciskubebenchreport.ReportLabel{}
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -217,6 +219,17 @@ func main() {
 		ShardHelper:      peerRing,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
+		os.Exit(1)
+	}
+
+	if err = (&ciskubebenchreport.CISKubeBenchReportReconciler{
+		Client:           mgr.GetClient(),
+		Log:              ctrl.Log.WithName("controllers").WithName("CISKubeBenchReport"),
+		MaxJitterPercent: maxJitterPercent,
+		Scheme:           mgr.GetScheme(),
+		TargetLabels:     reportLabels,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CISKubeBenchReport")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
