@@ -131,7 +131,26 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 }
 
 func updateEndpoints(currentObj interface{}, previousObj interface{}, ring *ShardHelper, log logr.Logger) {
-	added, kept, _, ok := getEndpointChanges(currentObj, previousObj, log)
+	current, err := toEndpoint(currentObj, log)
+	if err != nil {
+		log.Error(err, "could not convert obj to Endpoints")
+		return
+	}
+
+	var previous *corev1.Endpoints
+	{
+		previous = nil
+
+		if previousObj != nil {
+			previous, err = toEndpoint(currentObj, log)
+			if err != nil {
+				log.Error(err, "could not convert obj to Endpoints")
+				return
+			}
+		}
+	}
+
+	added, kept, _, ok := getEndpointChanges(current, previous, log)
 	if !ok {
 		return
 	}
@@ -140,12 +159,12 @@ func updateEndpoints(currentObj interface{}, previousObj interface{}, ring *Shar
 }
 
 // getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
-func getEndpointChanges(currentObj interface{}, previousObj interface{}, log logr.Logger) ([]string, []string, []string, bool) {
-	current, err := toEndpoint(currentObj, log)
-	if err != nil {
-		log.Error(err, "could not convert obj to Endpoints")
-		return nil, nil, nil, false
-	}
+func getEndpointChanges(current *corev1.Endpoints, previous *corev1.Endpoints, log logr.Logger) ([]string, []string, []string, bool) {
+	// current, err := toEndpoint(currentObj, log)
+	// if err != nil {
+	// 	log.Error(err, "could not convert obj to Endpoints")
+	// 	return nil, nil, nil, false
+	// }
 
 	currentEndpoints := []string{}                   // Stores current endpoints to return directly if we don't have a previous state.
 	currentEndpointsMap := make(map[string]struct{}) // Stores the endpoints as a map for quicker comparisons to previous state.
@@ -160,17 +179,17 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 		}
 	}
 
-	if previousObj == nil {
+	if previous == nil {
 		// If there is no previous object, we're only adding new (initial) endpoints.
 		// Just return the current endpoint list.
 		return currentEndpoints, nil, nil, true
 	}
 
-	previous, err := toEndpoint(previousObj, log)
-	if err != nil {
-		log.Error(err, "could not convert obj to Endpoints")
-		return nil, nil, nil, false
-	}
+	// previous, err := toEndpoint(previousObj, log)
+	// if err != nil {
+	// 	log.Error(err, "could not convert obj to Endpoints")
+	// 	return nil, nil, nil, false
+	// }
 
 	added := []string{}
 	kept := []string{}

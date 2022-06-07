@@ -16,6 +16,8 @@ require (
 	sigs.k8s.io/controller-runtime v0.12.1
 )
 
+require gotest.tools v2.2.0+incompatible
+
 require (
 	cloud.google.com/go/compute v1.6.1 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
