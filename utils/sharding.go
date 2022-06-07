@@ -160,11 +160,6 @@ func updateEndpoints(currentObj interface{}, previousObj interface{}, ring *Shar
 
 // getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
 func getEndpointChanges(current *corev1.Endpoints, previous *corev1.Endpoints, log logr.Logger) ([]string, []string, []string, bool) {
-	// current, err := toEndpoint(currentObj, log)
-	// if err != nil {
-	// 	log.Error(err, "could not convert obj to Endpoints")
-	// 	return nil, nil, nil, false
-	// }
 
 	currentEndpoints := []string{}                   // Stores current endpoints to return directly if we don't have a previous state.
 	currentEndpointsMap := make(map[string]struct{}) // Stores the endpoints as a map for quicker comparisons to previous state.
@@ -184,12 +179,6 @@ func getEndpointChanges(current *corev1.Endpoints, previous *corev1.Endpoints, l
 		// Just return the current endpoint list.
 		return currentEndpoints, nil, nil, true
 	}
-
-	// previous, err := toEndpoint(previousObj, log)
-	// if err != nil {
-	// 	log.Error(err, "could not convert obj to Endpoints")
-	// 	return nil, nil, nil, false
-	// }
 
 	added := []string{}
 	kept := []string{}
