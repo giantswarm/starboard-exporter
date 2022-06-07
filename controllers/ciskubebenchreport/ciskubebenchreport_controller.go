@@ -84,7 +84,7 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 			}
 		}
 
-		r.Log.Info(fmt.Sprintf("Reconciled %s || Found (C/H/M/L): %d/%d/%d/%d",
+		r.Log.Info(fmt.Sprintf("Reconciled %s || Found (P/I/W/F): %d/%d/%d/%d",
 			req.NamespacedName,
 			report.Report.Summary.PassCount,
 			report.Report.Summary.InfoCount,
@@ -168,15 +168,13 @@ func getCountPerResult(report *aqua.CISKubeBenchReport) map[string]float64 {
 func publishSummaryMetrics(report *aqua.CISKubeBenchReport) {
 	summaryValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
 
-	// Add the severity label after the standard labels and expose each severity metric.
-	for severity, count := range getCountPerResult(report) {
+	for range getCountPerResult(report) {
 		v := summaryValues
-		v["severity"] = severity
 
 		// Expose the metric.
 		BenchmarkSummary.With(
 			v,
-		).Set(count)
+		)
 	}
 }
 
@@ -192,10 +190,16 @@ func valuesForReport(report *aqua.CISKubeBenchReport, labels []ReportLabel) map[
 
 func reportValueFor(field string, report *aqua.CISKubeBenchReport) string {
 	switch field {
-	case "resource_name":
+	case "node_name":
 		return report.Name
-	case "severity":
-		return "" // this value will be overwritten on publishSummaryMetrics
+	case "fail_count":
+		return fmt.Sprint(report.Report.Summary.FailCount)
+	case "pass_count":
+		return fmt.Sprint(report.Report.Summary.PassCount)
+	case "info_count":
+		return fmt.Sprint(report.Report.Summary.InfoCount)
+	case "warn_count":
+		return fmt.Sprint(report.Report.Summary.WarnCount)
 	default:
 		// Error?
 		return ""
