@@ -26,6 +26,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	apitypes "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -187,6 +188,8 @@ func valuesForReport(report *aqua.ConfigAuditReport, labels []string) map[string
 
 func reportValueFor(field string, report *aqua.ConfigAuditReport) string {
 	switch field {
+	case "report_name":
+		return apitypes.NamespacedName{Name: report.Name, Namespace: report.Namespace}.String()
 	case "resource_name":
 		return report.Name
 	case "resource_namespace":
