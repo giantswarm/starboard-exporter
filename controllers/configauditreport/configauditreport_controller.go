@@ -195,7 +195,7 @@ func reportValueFor(field string, report *aqua.ConfigAuditReport) string {
 	case "resource_namespace":
 		return report.Namespace
 	case "severity":
-		return "" // this value will be overwritten on publishSummaryMetrics
+		return "" // this value will be overwritten in publishSummaryMetrics
 	default:
 		// Error?
 		return ""
