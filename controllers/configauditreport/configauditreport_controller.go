@@ -23,6 +23,7 @@ import (
 	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -55,33 +56,22 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	_ = log.FromContext(ctx)
 	_ = r.Log.WithValues("configauditreport", req.NamespacedName)
 
-	report := &aqua.ConfigAuditReport{}
-	if err := r.Client.Get(ctx, req.NamespacedName, report); err != nil {
-		if apierrors.IsNotFound(err) {
-			// Most likely the report was deleted.
-			return ctrl.Result{}, nil
-		}
-
-		// Error reading the object.
-		r.Log.Error(err, "Unable to read configauditreport")
-		return ctrl.Result{}, err
-	}
-
-	// We have fetched the report and have four possibilities:
-	// - Not deleting + belongs to our shard 			--> give it our label (to trigger reconciliation by any previous owner) and expose the metric.
-	// - Not deleting + does not belong to our shard 	--> remove it from our metrics. Keep the finalizer.
-	// - Deleting + belongs to our shard				--> remove it from our metrics. Remove the finalizer.
-	// - Deleting + does not belong to our shard		--> remove it from our metrics. Keep the finalizer.
+	deletedSummaries := ConfigAuditSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
 
 	shouldOwn := r.ShardHelper.ShouldOwn(req.NamespacedName.String())
+	if shouldOwn {
 
-	if report.DeletionTimestamp.IsZero() && shouldOwn {
-		// Give the report our finalizer if it doesn't have one.
-		if !utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
-			ctrlutil.AddFinalizer(report, ConfigAuditReportFinalizer)
-			if err := r.Update(ctx, report); err != nil {
-				return ctrl.Result{}, err
+		// Try to get the report. It might not exist anymore, in which case we don't need to do anything.
+		report := &aqua.ConfigAuditReport{}
+		if err := r.Client.Get(ctx, req.NamespacedName, report); err != nil {
+			if apierrors.IsNotFound(err) {
+				// Most likely the report was deleted.
+				return ctrl.Result{}, nil
 			}
+
+			// Error reading the object.
+			r.Log.Error(err, "Unable to read report")
+			return ctrl.Result{}, err
 		}
 
 		r.Log.Info(fmt.Sprintf("Reconciled %s || Found (C/H/M/L): %d/%d/%d/%d",
@@ -92,8 +82,16 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			report.Report.Summary.LowCount,
 		))
 
-		// Publish summary metrics for this report.
+		// Publish summary and CVE metrics for this report.
 		publishSummaryMetrics(report)
+
+		if utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
+			// Remove the finalizer if we're the shard owner.
+			ctrlutil.RemoveFinalizer(report, ConfigAuditReportFinalizer)
+			if err := r.Update(ctx, report); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
 
 		// Add a label to this report so any previous owners will reconcile and drop the metric.
 		report.Labels[controllers.ShardOwnerLabel] = r.ShardHelper.PodIP
@@ -101,25 +99,49 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		if err != nil {
 			r.Log.Error(err, "unable to add shard owner label")
 		}
-
 	} else {
-		// Unfortunately, we can't yet clear the series based on one label value,
-		// we have to reconstruct all of the label values to delete the series.
-		// That's the only reason the finalizer is needed at all.
-		// So we first clear our metrics for the report, and then remove the finalizer
-		// if we're the shard which owns this report.
-
-		// Drop the report from our metrics.
-		r.clearImageMetrics(report)
-
-		if shouldOwn && utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
-			// Remove the finalizer if we're the shard owner.
-			ctrlutil.RemoveFinalizer(report, ConfigAuditReportFinalizer)
-			if err := r.Update(ctx, report); err != nil {
-				return ctrl.Result{}, err
-			}
+		if deletedSummaries > 0 {
+			r.Log.Info(fmt.Sprintf("cleared %d summary metrics", deletedSummaries))
 		}
 	}
+
+	// if report.DeletionTimestamp.IsZero() && shouldOwn {
+	// 	// Give the report our finalizer if it doesn't have one.
+	// 	if !utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
+	// 		ctrlutil.AddFinalizer(report, ConfigAuditReportFinalizer)
+	// 		if err := r.Update(ctx, report); err != nil {
+	// 			return ctrl.Result{}, err
+	// 		}
+	// 	}
+
+	// 	// Publish summary metrics for this report.
+	// 	publishSummaryMetrics(report)
+
+	// 	// Add a label to this report so any previous owners will reconcile and drop the metric.
+	// 	report.Labels[controllers.ShardOwnerLabel] = r.ShardHelper.PodIP
+	// 	err := r.Client.Update(ctx, report, &client.UpdateOptions{})
+	// 	if err != nil {
+	// 		r.Log.Error(err, "unable to add shard owner label")
+	// 	}
+
+	// } else {
+	// 	// Unfortunately, we can't yet clear the series based on one label value,
+	// 	// we have to reconstruct all of the label values to delete the series.
+	// 	// That's the only reason the finalizer is needed at all.
+	// 	// So we first clear our metrics for the report, and then remove the finalizer
+	// 	// if we're the shard which owns this report.
+
+	// 	// Drop the report from our metrics.
+	// 	r.clearImageMetrics(report)
+
+	// 	if shouldOwn && utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
+	// 		// Remove the finalizer if we're the shard owner.
+	// 		ctrlutil.RemoveFinalizer(report, ConfigAuditReportFinalizer)
+	// 		if err := r.Update(ctx, report); err != nil {
+	// 			return ctrl.Result{}, err
+	// 		}
+	// 	}
+	// }
 
 	return utils.JitterRequeue(controllers.DefaultRequeueDuration, r.MaxJitterPercent, r.Log), nil
 }
@@ -136,21 +158,21 @@ func (r *ConfigAuditReportReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
-func (r *ConfigAuditReportReconciler) clearImageMetrics(report *aqua.ConfigAuditReport) {
-	// clear summary metrics
-	summaryValues := valuesForReport(report, metricLabels)
+// func (r *ConfigAuditReportReconciler) clearImageMetrics(report *aqua.ConfigAuditReport) {
+// 	// clear summary metrics
+// 	summaryValues := valuesForReport(report, metricLabels)
 
-	// Delete the series for each severity.
-	for severity := range getCountPerSeverity(report) {
-		v := summaryValues
-		v["severity"] = severity
+// 	// Delete the series for each severity.
+// 	for severity := range getCountPerSeverity(report) {
+// 		v := summaryValues
+// 		v["severity"] = severity
 
-		// Delete the metric.
-		ConfigAuditSummary.Delete(
-			v,
-		)
-	}
-}
+// 		// Delete the metric.
+// 		ConfigAuditSummary.Delete(
+// 			v,
+// 		)
+// 	}
+// }
 
 func RequeueReportsForPod(c client.Client, log logr.Logger, podIP string) {
 	reportList := &aqua.ConfigAuditReportList{}
