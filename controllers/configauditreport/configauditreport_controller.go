@@ -105,44 +105,6 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 	}
 
-	// if report.DeletionTimestamp.IsZero() && shouldOwn {
-	// 	// Give the report our finalizer if it doesn't have one.
-	// 	if !utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
-	// 		ctrlutil.AddFinalizer(report, ConfigAuditReportFinalizer)
-	// 		if err := r.Update(ctx, report); err != nil {
-	// 			return ctrl.Result{}, err
-	// 		}
-	// 	}
-
-	// 	// Publish summary metrics for this report.
-	// 	publishSummaryMetrics(report)
-
-	// 	// Add a label to this report so any previous owners will reconcile and drop the metric.
-	// 	report.Labels[controllers.ShardOwnerLabel] = r.ShardHelper.PodIP
-	// 	err := r.Client.Update(ctx, report, &client.UpdateOptions{})
-	// 	if err != nil {
-	// 		r.Log.Error(err, "unable to add shard owner label")
-	// 	}
-
-	// } else {
-	// 	// Unfortunately, we can't yet clear the series based on one label value,
-	// 	// we have to reconstruct all of the label values to delete the series.
-	// 	// That's the only reason the finalizer is needed at all.
-	// 	// So we first clear our metrics for the report, and then remove the finalizer
-	// 	// if we're the shard which owns this report.
-
-	// 	// Drop the report from our metrics.
-	// 	r.clearImageMetrics(report)
-
-	// 	if shouldOwn && utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
-	// 		// Remove the finalizer if we're the shard owner.
-	// 		ctrlutil.RemoveFinalizer(report, ConfigAuditReportFinalizer)
-	// 		if err := r.Update(ctx, report); err != nil {
-	// 			return ctrl.Result{}, err
-	// 		}
-	// 	}
-	// }
-
 	return utils.JitterRequeue(controllers.DefaultRequeueDuration, r.MaxJitterPercent, r.Log), nil
 }
 
@@ -157,22 +119,6 @@ func (r *ConfigAuditReportReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return nil
 }
-
-// func (r *ConfigAuditReportReconciler) clearImageMetrics(report *aqua.ConfigAuditReport) {
-// 	// clear summary metrics
-// 	summaryValues := valuesForReport(report, metricLabels)
-
-// 	// Delete the series for each severity.
-// 	for severity := range getCountPerSeverity(report) {
-// 		v := summaryValues
-// 		v["severity"] = severity
-
-// 		// Delete the metric.
-// 		ConfigAuditSummary.Delete(
-// 			v,
-// 		)
-// 	}
-// }
 
 func RequeueReportsForPod(c client.Client, log logr.Logger, podIP string) {
 	reportList := &aqua.ConfigAuditReportList{}
