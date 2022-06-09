@@ -11,8 +11,9 @@ const (
 	metricNamespace = "starboard_exporter"
 	metricSubsystem = "ciskubebenchreport"
 
-	LabelGroupAll     = "all"
-	labelGroupSummary = "summary"
+	LabelGroupAll            = "all"
+	labelGroupSummary        = "summary"
+	labelGroupSectionSummary = "sectionsummary"
 )
 
 type FieldScope string
@@ -100,10 +101,22 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Subsystem: metricSubsystem,
-			Name:      "cis_benchmark_summary_count",
+			Name:      "cis_benchmark_report_summary_count",
 			Help:      "Exposes the summary of checks of a particular node.",
 		},
 		labelNamesForGroup(labelGroupSummary),
+	)
+)
+
+var (
+	BenchmarkSectionSummary = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricNamespace,
+			Subsystem: metricSubsystem,
+			Name:      "cis_benchmark_section_summary_count",
+			Help:      "Exposes the summary of checks of a particular section on a particular node.",
+		},
+		labelNamesForGroup(labelGroupSectionSummary),
 	)
 )
 
