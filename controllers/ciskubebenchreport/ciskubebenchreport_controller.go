@@ -178,14 +178,58 @@ func publishSummaryMetrics(report *aqua.CISKubeBenchReport) {
 	}
 }
 
+func publishSectionMetrics(report *aqua.CISKubeBenchReport, targetLabels []ReportLabel) {
+
+	for node_name := range valuesForReport(report, targetLabels) {
+
+		// Add node name to section metrics
+		for s := range report.Report.Sections {
+			secValues := valuesForSection(s, targetLabels)
+
+			secValues["node_name"] = node_name
+
+			//Expose the metric.
+			BenchmarkSectionSummary.With(
+				secValues,
+			)
+		}
+	}
+}
+
 func valuesForReport(report *aqua.CISKubeBenchReport, labels []ReportLabel) map[string]string {
 	result := map[string]string{}
 	for _, label := range labels {
-		if label.Scope == FieldScopeReport {
+		if label.Scope == FieldScopeSection {
 			result[label.Name] = reportValueFor(label.Name, report)
 		}
 	}
 	return result
+}
+
+func valuesForSection(sec *aqua.CISKubeBenchSection, labels []ReportLabel) map[string]string {
+	result := map[string]string{}
+	for _, label := range labels {
+		if label.Scope == FieldScopeSection {
+			result[label.Name] = secValueFor(label.Name, sec)
+		}
+	}
+	return result
+}
+
+func secValueFor(field string, sec aqua.CISKubeBenchSection) string {
+	switch field {
+	case "total_fail":
+		return fmt.Sprint(sec.TotalFail)
+	case "total_pass":
+		return fmt.Sprint(sec.TotalPass)
+	case "total_info":
+		return fmt.Sprint(sec.TotalWarn)
+	case "total_warn":
+		return fmt.Sprint(sec.TotalWarn)
+	default:
+		// Error?
+		return ""
+	}
 }
 
 func reportValueFor(field string, report *aqua.CISKubeBenchReport) string {
