@@ -3,16 +3,16 @@ module github.com/giantswarm/starboard-exporter
 go 1.18
 
 require (
-	github.com/aquasecurity/starboard v0.15.4
+	github.com/aquasecurity/starboard v0.15.6
 	github.com/buraksezer/consistent v0.9.0
 	github.com/cespare/xxhash/v2 v2.1.2
 	github.com/go-logr/logr v1.2.3
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.2-0.20220421062905-4dcf02ec7b3c
 	// github.com/prometheus/client_golang v1.12.1
-	k8s.io/api v0.24.0
-	k8s.io/apimachinery v0.24.0
-	k8s.io/client-go v0.24.0
+	k8s.io/api v0.24.1
+	k8s.io/apimachinery v0.24.1
+	k8s.io/client-go v0.24.1
 	sigs.k8s.io/controller-runtime v0.12.1
 )
 
