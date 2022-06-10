@@ -116,6 +116,10 @@ func main() {
 				targetLabels = appendIfNotExists(targetLabels, []vulnerabilityreport.VulnerabilityLabel{label})
 			}
 
+			// If exposing detail metrics, we must always include the report name in order to delete them by name later.
+			reportNameLabel, _ := vulnerabilityreport.LabelWithName("report_name")
+			targetLabels = appendIfNotExists(targetLabels, []vulnerabilityreport.VulnerabilityLabel{reportNameLabel})
+
 			return nil
 		})
 

@@ -11,6 +11,7 @@ const (
 )
 
 var metricLabels = []string{
+	"report_name",
 	"resource_name",
 	"resource_namespace",
 	"severity",

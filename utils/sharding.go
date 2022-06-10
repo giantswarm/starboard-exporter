@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
@@ -114,21 +115,13 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	// Set handlers for new/updated endpoints.
 	handlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			added, kept, _, ok := getEndpointChanges(obj, nil, log)
-			if !ok {
-				return
-			}
-			peerRing.SetMembersFromLists(added, kept)
+			updateEndpoints(obj, nil, peerRing, log)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			// In the future, we might need to re-queue objects which belong to deleted peers.
 			// When scaling down, it is possible that metrics will be double reported for up to the reconciliation period.
 			// For now, we'll just set the desired peers.
-			added, kept, _, ok := getEndpointChanges(newObj, oldObj, log)
-			if !ok {
-				return
-			}
-			peerRing.SetMembersFromLists(added, kept)
+			updateEndpoints(newObj, oldObj, peerRing, log)
 		},
 		// We can add a delete handler here. Not sure yet what it should do.
 	}
@@ -137,13 +130,36 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	return informer
 }
 
-// getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
-func getEndpointChanges(currentObj interface{}, previousObj interface{}, log logr.Logger) ([]string, []string, []string, bool) {
+func updateEndpoints(currentObj interface{}, previousObj interface{}, ring *ShardHelper, log logr.Logger) {
 	current, err := toEndpoint(currentObj, log)
 	if err != nil {
 		log.Error(err, "could not convert obj to Endpoints")
-		return nil, nil, nil, false
+		return
 	}
+
+	var previous *corev1.Endpoints
+	{
+		previous = nil
+
+		if previousObj != nil {
+			previous, err = toEndpoint(currentObj, log)
+			if err != nil {
+				log.Error(err, "could not convert obj to Endpoints")
+				return
+			}
+		}
+	}
+
+	added, kept, _, ok := getEndpointChanges(current, previous, log)
+	if !ok {
+		return
+	}
+	ring.SetMembersFromLists(added, kept)
+	log.Info(fmt.Sprintf("updated peer list with %d endpoints", len(added)+len(kept)))
+}
+
+// getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
+func getEndpointChanges(current *corev1.Endpoints, previous *corev1.Endpoints, log logr.Logger) ([]string, []string, []string, bool) {
 
 	currentEndpoints := []string{}                   // Stores current endpoints to return directly if we don't have a previous state.
 	currentEndpointsMap := make(map[string]struct{}) // Stores the endpoints as a map for quicker comparisons to previous state.
@@ -158,16 +174,10 @@ func getEndpointChanges(currentObj interface{}, previousObj interface{}, log log
 		}
 	}
 
-	if previousObj == nil {
+	if previous == nil {
 		// If there is no previous object, we're only adding new (initial) endpoints.
 		// Just return the current endpoint list.
 		return currentEndpoints, nil, nil, true
-	}
-
-	previous, err := toEndpoint(previousObj, log)
-	if err != nil {
-		log.Error(err, "could not convert obj to Endpoints")
-		return nil, nil, nil, false
 	}
 
 	added := []string{}
