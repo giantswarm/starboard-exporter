@@ -277,6 +277,8 @@ func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 	vulnerabilityreport.RequeueReportsForPod(c, log, podIP)
 
 	configauditreport.RequeueReportsForPod(c, log, podIP)
+
+	ciskubebenchreport.RequeueReportsForPod(c, log, podIP)
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {

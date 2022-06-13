@@ -93,12 +93,9 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 		))
 
 		// Publish summary metrics for this report.
-		r.Log.Info("Publishing SummaryMetrics")
-		publishSummaryMetrics(report)
-		r.Log.Info(fmt.Sprintf("Publishing SectionMetrics. Labels: %s", r.TargetLabels))
-		publishSectionMetrics(report, r.TargetLabels)
-		r.Log.Info(fmt.Sprintf("Publishing ResultsMetrics. Labels: %s", r.TargetLabels))
-		publishResultMetrics(report, r.TargetLabels)
+		//publishSummaryMetrics(report)
+		//publishSectionMetrics(report, r.TargetLabels)
+		//publishResultMetrics(report, r.TargetLabels)
 
 	} else {
 
@@ -116,6 +113,37 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 	}
 
 	return utils.JitterRequeue(controllers.DefaultRequeueDuration, r.MaxJitterPercent, r.Log), nil
+}
+
+func RequeueReportsForPod(c client.Client, log logr.Logger, podIP string) {
+	cisList := &aqua.CISKubeBenchReportList{}
+	opts := []client.ListOption{
+		client.MatchingLabels{controllers.ShardOwnerLabel: podIP},
+	}
+
+	// Get the list of reports with our label.
+	err := c.List(context.Background(), cisList, opts...)
+	if err != nil {
+		log.Error(err, "unable to fetch ciskubebenchreport")
+	}
+
+	for _, r := range cisList.Items {
+		// Retrieve the individual report.
+		report := &aqua.CISKubeBenchReport{}
+		err := c.Get(context.Background(), client.ObjectKey{Name: r.Name, Namespace: r.Namespace}, report)
+		if err != nil {
+			log.Error(err, "unable to fetch ciskubebenchreport")
+		}
+
+		// Clear the shard-owner label if it still has our label
+		if r.Labels[controllers.ShardOwnerLabel] == podIP {
+			r.Labels[controllers.ShardOwnerLabel] = ""
+			err = c.Update(context.Background(), report, &client.UpdateOptions{})
+			if err != nil {
+				log.Error(err, fmt.Sprintf("unable to remove %s label", controllers.ShardOwnerLabel))
+			}
+		}
+	}
 }
 
 func (r *CISKubeBenchReportReconciler) registerMetrics() {
