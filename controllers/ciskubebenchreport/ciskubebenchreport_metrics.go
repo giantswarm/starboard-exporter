@@ -35,7 +35,7 @@ type ReportLabel struct {
 var metricLabels = []ReportLabel{
 	{
 		Name:   "node_name",
-		Groups: []string{LabelGroupAll, labelGroupSummary, labelGroupSectionSummary},
+		Groups: []string{LabelGroupAll, labelGroupSummary, labelGroupSectionSummary, labelGroupResult},
 		Scope:  FieldScopeReport,
 	},
 	{
@@ -76,6 +76,11 @@ var metricLabels = []ReportLabel{
 	{
 		Name:   "total_fail",
 		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
+		Scope:  FieldScopeSection,
+	},
+	{
+		Name:   "node_type",
+		Groups: []string{LabelGroupAll, labelGroupSectionSummary, labelGroupResult},
 		Scope:  FieldScopeSection,
 	},
 	{
@@ -165,7 +170,7 @@ var (
 			Name:      "cis_benchmark_test_info",
 			Help:      "Exposes the information of test of a particular section on a particular node.",
 		},
-		labelNamesForGroup(labelGroupSectionSummary),
+		labelNamesForGroup(labelGroupResult),
 	)
 )
 

@@ -173,14 +173,13 @@ func getCountPerResult(report *aqua.CISKubeBenchReport) map[string]float64 {
 func publishSummaryMetrics(report *aqua.CISKubeBenchReport) {
 	summaryValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
 
-	for range getCountPerResult(report) {
-		v := summaryValues
+	v := summaryValues
 
-		// Expose the metric.
-		BenchmarkSummary.With(
-			v,
-		)
-	}
+	// Expose the metric.
+	BenchmarkSummary.With(
+		v,
+	)
+
 }
 
 func publishSectionMetrics(report *aqua.CISKubeBenchReport, targetLabels []ReportLabel) {
@@ -218,7 +217,7 @@ func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []Report
 
 				//Expose the metric.
 				BenchmarkTestInfo.With(
-					secValues,
+					resValues,
 				)
 			}
 		}
@@ -229,7 +228,7 @@ func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []Report
 func valuesForReport(report *aqua.CISKubeBenchReport, labels []ReportLabel) map[string]string {
 	result := map[string]string{}
 	for _, label := range labels {
-		if label.Scope == FieldScopeSection {
+		if label.Scope == FieldScopeReport {
 			result[label.Name] = reportValueFor(label.Name, report)
 		}
 	}
@@ -259,11 +258,11 @@ func valuesForResult(res aqua.CISKubeBenchResult, labels []ReportLabel) map[stri
 func resValueFor(field string, res aqua.CISKubeBenchResult) string {
 	switch field {
 	case "test_number":
-		return fmt.Sprint(res.TestNumber)
+		return res.TestNumber
 	case "test_desc":
-		return fmt.Sprint(res.TestDesc)
+		return res.TestDesc
 	case "test_status":
-		return fmt.Sprint(res.Status)
+		return res.Status
 	default:
 		// Error?
 		return ""
@@ -280,6 +279,8 @@ func secValueFor(field string, sec aqua.CISKubeBenchSection) string {
 		return fmt.Sprint(sec.TotalWarn)
 	case "total_warn":
 		return fmt.Sprint(sec.TotalWarn)
+	case "node_type":
+		return sec.NodeType
 	default:
 		// Error?
 		return ""
