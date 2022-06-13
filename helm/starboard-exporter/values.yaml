@@ -42,6 +42,9 @@ exporter:
       # - image_repository
       # - image_tag
       # - vulnerability_id
+  CISKubeBenchReports:
+    targetLabels:
+      # - all
 
 monitoring:
   serviceMonitor:

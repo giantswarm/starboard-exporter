@@ -67,6 +67,9 @@ spec:
         {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
+        {{- if .Values.exporter.CISKubeBenchReports.targetLabels }}
+          - --report-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
+        {{- end }}
         {{- if .Values.exporter.requeueMaxJitterPercent }}
           - --max-jitter-percent={{ .Values.exporter.requeueMaxJitterPercent }}
         {{- end }}
