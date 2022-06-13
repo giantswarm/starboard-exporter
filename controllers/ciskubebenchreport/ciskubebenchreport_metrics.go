@@ -13,7 +13,8 @@ const (
 
 	LabelGroupAll            = "all"
 	labelGroupSummary        = "summary"
-	labelGroupSectionSummary = "sectionsummary"
+	labelGroupSectionSummary = "section"
+	labelGroupResult         = "result"
 )
 
 type FieldScope string
@@ -21,6 +22,7 @@ type FieldScope string
 const (
 	FieldScopeReport  FieldScope = "report"
 	FieldScopeSection FieldScope = "section"
+	FieldScopeResult  FieldScope = "result"
 )
 
 type ReportLabel struct {
@@ -33,7 +35,7 @@ type ReportLabel struct {
 var metricLabels = []ReportLabel{
 	{
 		Name:   "node_name",
-		Groups: []string{LabelGroupAll, labelGroupSummary},
+		Groups: []string{LabelGroupAll, labelGroupSummary, labelGroupSectionSummary},
 		Scope:  FieldScopeReport,
 	},
 	{
@@ -55,6 +57,41 @@ var metricLabels = []ReportLabel{
 		Name:   "warn_count",
 		Groups: []string{LabelGroupAll, labelGroupSummary},
 		Scope:  FieldScopeReport,
+	},
+	{
+		Name:   "total_pass",
+		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
+		Scope:  FieldScopeSection,
+	},
+	{
+		Name:   "total_warn",
+		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
+		Scope:  FieldScopeSection,
+	},
+	{
+		Name:   "total_info",
+		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
+		Scope:  FieldScopeSection,
+	},
+	{
+		Name:   "total_fail",
+		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
+		Scope:  FieldScopeSection,
+	},
+	{
+		Name:   "test_number",
+		Groups: []string{LabelGroupAll, labelGroupResult},
+		Scope:  FieldScopeResult,
+	},
+	{
+		Name:   "test_desc",
+		Groups: []string{LabelGroupAll, labelGroupResult},
+		Scope:  FieldScopeResult,
+	},
+	{
+		Name:   "test_status",
+		Groups: []string{LabelGroupAll, labelGroupResult},
+		Scope:  FieldScopeResult,
 	},
 }
 
@@ -115,6 +152,18 @@ var (
 			Subsystem: metricSubsystem,
 			Name:      "cis_benchmark_section_summary_count",
 			Help:      "Exposes the summary of checks of a particular section on a particular node.",
+		},
+		labelNamesForGroup(labelGroupSectionSummary),
+	)
+)
+
+var (
+	BenchmarkTestInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricNamespace,
+			Subsystem: metricSubsystem,
+			Name:      "cis_benchmark_test_info",
+			Help:      "Exposes the information of test of a particular section on a particular node.",
 		},
 		labelNamesForGroup(labelGroupSectionSummary),
 	)
