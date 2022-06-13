@@ -95,6 +95,11 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 		// Publish summary metrics for this report.
 		publishSummaryMetrics(report)
 
+		if len(r.TargetLabels) > 0 {
+			publishSectionMetrics(report, r.TargetLabels)
+			publishResultMetrics(report, r.TargetLabels)
+		}
+
 	} else {
 
 		if utils.SliceContains(report.GetFinalizers(), CISKubeBenchReportFinalizer) {
@@ -180,20 +185,45 @@ func publishSummaryMetrics(report *aqua.CISKubeBenchReport) {
 
 func publishSectionMetrics(report *aqua.CISKubeBenchReport, targetLabels []ReportLabel) {
 
-	for node_name := range valuesForReport(report, targetLabels) {
+	reportValues := valuesForReport(report, targetLabels)
 
-		// Add node name to section metrics
-		for s := range report.Report.Sections {
-			secValues := valuesForSection(s, targetLabels)
+	// Add node name to section metrics
+	for _, s := range report.Report.Sections {
+		secValues := valuesForSection(s, targetLabels)
 
-			secValues["node_name"] = node_name
+		secValues["node_name"] = reportValues["node_name"]
 
-			//Expose the metric.
-			BenchmarkSectionSummary.With(
-				secValues,
-			)
+		//Expose the metric.
+		BenchmarkSectionSummary.With(
+			secValues,
+		)
+	}
+}
+
+func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []ReportLabel) {
+
+	reportValues := valuesForReport(report, targetLabels)
+
+	// Add node name to section metrics
+	for _, s := range report.Report.Sections {
+		secValues := valuesForSection(s, targetLabels)
+
+		for _, t := range s.Tests {
+			// Add node name and node type to result metrics
+			for _, r := range t.Results {
+				resValues := valuesForResult(r, targetLabels)
+
+				resValues["node_name"] = reportValues["node_name"]
+				resValues["node_type"] = secValues["node_type"]
+
+				//Expose the metric.
+				BenchmarkTestInfo.With(
+					secValues,
+				)
+			}
 		}
 	}
+
 }
 
 func valuesForReport(report *aqua.CISKubeBenchReport, labels []ReportLabel) map[string]string {
@@ -206,7 +236,7 @@ func valuesForReport(report *aqua.CISKubeBenchReport, labels []ReportLabel) map[
 	return result
 }
 
-func valuesForSection(sec *aqua.CISKubeBenchSection, labels []ReportLabel) map[string]string {
+func valuesForSection(sec aqua.CISKubeBenchSection, labels []ReportLabel) map[string]string {
 	result := map[string]string{}
 	for _, label := range labels {
 		if label.Scope == FieldScopeSection {
@@ -214,6 +244,30 @@ func valuesForSection(sec *aqua.CISKubeBenchSection, labels []ReportLabel) map[s
 		}
 	}
 	return result
+}
+
+func valuesForResult(res aqua.CISKubeBenchResult, labels []ReportLabel) map[string]string {
+	result := map[string]string{}
+	for _, label := range labels {
+		if label.Scope == FieldScopeResult {
+			result[label.Name] = resValueFor(label.Name, res)
+		}
+	}
+	return result
+}
+
+func resValueFor(field string, res aqua.CISKubeBenchResult) string {
+	switch field {
+	case "test_number":
+		return fmt.Sprint(res.TestNumber)
+	case "test_desc":
+		return fmt.Sprint(res.TestDesc)
+	case "test_status":
+		return fmt.Sprint(res.Status)
+	default:
+		// Error?
+		return ""
+	}
 }
 
 func secValueFor(field string, sec aqua.CISKubeBenchSection) string {
