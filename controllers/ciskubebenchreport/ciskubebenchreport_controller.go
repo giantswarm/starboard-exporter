@@ -94,11 +94,8 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 		// Publish summary metrics for this report.
 		publishSummaryMetrics(report)
-
-		if len(r.TargetLabels) > 0 {
-			publishSectionMetrics(report, r.TargetLabels)
-			publishResultMetrics(report, r.TargetLabels)
-		}
+		publishSectionMetrics(report, r.TargetLabels)
+		publishResultMetrics(report, r.TargetLabels)
 
 	} else {
 
