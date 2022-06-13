@@ -121,6 +121,28 @@ func main() {
 			return nil
 		})
 
+	flag.Func("report-labels",
+		"A comma-separated list of labels to be exposed per-report. Alias 'all' is supported.",
+		func(input string) error {
+			items := strings.Split(input, ",")
+			for _, i := range items {
+				if i == ciskubebenchreport.LabelGroupAll {
+					// Special case for "all".
+					reportLabels = appendIfNotExistsCIS(reportLabels, ciskubebenchreport.LabelsForGroup(ciskubebenchreport.LabelGroupAll))
+					continue
+				}
+
+				label, ok := ciskubebenchreport.LabelWithName(i)
+				if !ok {
+					err := errors.New("invalidConfigError")
+					return err
+				}
+				reportLabels = appendIfNotExistsCIS(reportLabels, []ciskubebenchreport.ReportLabel{label})
+			}
+
+			return nil
+		})
+
 	opts := zap.Options{
 		Development: true,
 	}
@@ -262,6 +284,24 @@ func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vu
 	contained := make(map[string]bool)
 
 	for _, existingLabelName := range vulnerabilityreport.LabelNamesForList(base) {
+		contained[existingLabelName] = true
+	}
+
+	for _, newItem := range items {
+		if !contained[newItem.Name] {
+			result = append(result, newItem)
+			contained[newItem.Name] = true
+		}
+	}
+
+	return result
+}
+
+func appendIfNotExistsCIS(base []ciskubebenchreport.ReportLabel, items []ciskubebenchreport.ReportLabel) []ciskubebenchreport.ReportLabel {
+	result := base
+	contained := make(map[string]bool)
+
+	for _, existingLabelName := range ciskubebenchreport.LabelNamesForList(base) {
 		contained[existingLabelName] = true
 	}
 
