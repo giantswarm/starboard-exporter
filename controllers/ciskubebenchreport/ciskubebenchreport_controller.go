@@ -193,10 +193,10 @@ func (r *CISKubeBenchReportReconciler) clearImageMetrics(report *aqua.CISKubeBen
 
 func getCountPerResult(report *aqua.CISKubeBenchReport) map[string]float64 {
 	return map[string]float64{
-		"Pass":       float64(report.Report.Summary.PassCount),
-		"Info":       float64(report.Report.Summary.InfoCount),
-		"Warn":       float64(report.Report.Summary.WarnCount),
-		"fail_count": float64(report.Report.Summary.FailCount),
+		"Pass": float64(report.Report.Summary.PassCount),
+		"Info": float64(report.Report.Summary.InfoCount),
+		"Warn": float64(report.Report.Summary.WarnCount),
+		"Fail": float64(report.Report.Summary.FailCount),
 	}
 }
 
