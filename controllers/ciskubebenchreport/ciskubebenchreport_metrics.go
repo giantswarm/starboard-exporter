@@ -79,6 +79,11 @@ var metricLabels = []ReportLabel{
 		Scope:  FieldScopeSection,
 	},
 	{
+		Name:   "status",
+		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
+		Scope:  FieldScopeReport,
+	},
+	{
 		Name:   "node_type",
 		Groups: []string{LabelGroupAll, labelGroupSectionSummary, labelGroupResult},
 		Scope:  FieldScopeSection,
