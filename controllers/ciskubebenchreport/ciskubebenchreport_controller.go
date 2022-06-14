@@ -94,7 +94,9 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 		// Publish summary metrics for this report.
 		publishSummaryMetrics(report)
+		r.Log.Info("Publishing Section metrics")
 		publishSectionMetrics(report, r.TargetLabels)
+		r.Log.Info("Publishing Result metrics")
 		publishResultMetrics(report, r.TargetLabels)
 
 	} else {
@@ -200,10 +202,10 @@ func getCountPerResult(report *aqua.CISKubeBenchReport) map[string]float64 {
 
 func getCountPerResultSection(section aqua.CISKubeBenchSection) map[string]float64 {
 	return map[string]float64{
-		"PassCount": float64(section.TotalPass),
-		"InfoCount": float64(section.TotalInfo),
-		"WarnCount": float64(section.TotalWarn),
-		"FailCount": float64(section.TotalFail),
+		"total_pass": float64(section.TotalPass),
+		"total_info": float64(section.TotalInfo),
+		"total_warn": float64(section.TotalWarn),
+		"total_fail": float64(section.TotalFail),
 	}
 }
 
