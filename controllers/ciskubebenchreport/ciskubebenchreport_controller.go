@@ -191,22 +191,31 @@ func (r *CISKubeBenchReportReconciler) clearImageMetrics(report *aqua.CISKubeBen
 
 func getCountPerResult(report *aqua.CISKubeBenchReport) map[string]float64 {
 	return map[string]float64{
-		"PassCount": float64(report.Report.Summary.PassCount),
-		"InfoCount": float64(report.Report.Summary.InfoCount),
-		"WarnCount": float64(report.Report.Summary.WarnCount),
-		"FailCount": float64(report.Report.Summary.FailCount),
+		"pass_count": float64(report.Report.Summary.PassCount),
+		"info_count": float64(report.Report.Summary.InfoCount),
+		"warn_count": float64(report.Report.Summary.WarnCount),
+		"fail_count": float64(report.Report.Summary.FailCount),
+	}
+}
+
+func getCountPerResultSection(section aqua.CISKubeBenchSection) map[string]float64 {
+	return map[string]float64{
+		"PassCount": float64(section.TotalPass),
+		"InfoCount": float64(section.TotalInfo),
+		"WarnCount": float64(section.TotalWarn),
+		"FailCount": float64(section.TotalFail),
 	}
 }
 
 func publishSummaryMetrics(report *aqua.CISKubeBenchReport) {
 	summaryValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
 
-	v := summaryValues
-
-	// Expose the metric.
-	BenchmarkSummary.With(
-		v,
-	)
+	for _, count := range getCountPerResult(report) {
+		// Expose the metric.
+		BenchmarkSummary.With(
+			summaryValues,
+		).Set(count)
+	}
 
 }
 
@@ -216,14 +225,18 @@ func publishSectionMetrics(report *aqua.CISKubeBenchReport, targetLabels []Repor
 
 	// Add node name to section metrics
 	for _, s := range report.Report.Sections {
-		secValues := valuesForSection(s, targetLabels)
 
-		secValues["node_name"] = reportValues["node_name"]
+		for _, count := range getCountPerResultSection(s) {
+			secValues := valuesForSection(s, targetLabels)
 
-		//Expose the metric.
-		BenchmarkSectionSummary.With(
-			secValues,
-		)
+			secValues["node_name"] = reportValues["node_name"]
+
+			//Expose the metric.
+			BenchmarkSectionSummary.With(
+				secValues,
+			).Set(count)
+		}
+
 	}
 }
 
@@ -299,14 +312,6 @@ func resValueFor(field string, res aqua.CISKubeBenchResult) string {
 
 func secValueFor(field string, sec aqua.CISKubeBenchSection) string {
 	switch field {
-	case "total_fail":
-		return fmt.Sprint(sec.TotalFail)
-	case "total_pass":
-		return fmt.Sprint(sec.TotalPass)
-	case "total_info":
-		return fmt.Sprint(sec.TotalWarn)
-	case "total_warn":
-		return fmt.Sprint(sec.TotalWarn)
 	case "node_type":
 		return sec.NodeType
 	default:
@@ -319,14 +324,6 @@ func reportValueFor(field string, report *aqua.CISKubeBenchReport) string {
 	switch field {
 	case "node_name":
 		return report.Name
-	case "fail_count":
-		return fmt.Sprint(report.Report.Summary.FailCount)
-	case "pass_count":
-		return fmt.Sprint(report.Report.Summary.PassCount)
-	case "info_count":
-		return fmt.Sprint(report.Report.Summary.InfoCount)
-	case "warn_count":
-		return fmt.Sprint(report.Report.Summary.WarnCount)
 	default:
 		// Error?
 		return ""
