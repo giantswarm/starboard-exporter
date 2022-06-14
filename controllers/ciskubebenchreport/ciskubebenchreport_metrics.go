@@ -39,48 +39,8 @@ var metricLabels = []ReportLabel{
 		Scope:  FieldScopeReport,
 	},
 	{
-		Name:   "pass_count",
-		Groups: []string{LabelGroupAll, labelGroupSummary},
-		Scope:  FieldScopeReport,
-	},
-	{
-		Name:   "info_count",
-		Groups: []string{LabelGroupAll, labelGroupSummary},
-		Scope:  FieldScopeReport,
-	},
-	{
-		Name:   "fail_count",
-		Groups: []string{LabelGroupAll, labelGroupSummary},
-		Scope:  FieldScopeReport,
-	},
-	{
-		Name:   "warn_count",
-		Groups: []string{LabelGroupAll, labelGroupSummary},
-		Scope:  FieldScopeReport,
-	},
-	{
-		Name:   "total_pass",
-		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
-		Scope:  FieldScopeSection,
-	},
-	{
-		Name:   "total_warn",
-		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
-		Scope:  FieldScopeSection,
-	},
-	{
-		Name:   "total_info",
-		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
-		Scope:  FieldScopeSection,
-	},
-	{
-		Name:   "total_fail",
-		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
-		Scope:  FieldScopeSection,
-	},
-	{
 		Name:   "status",
-		Groups: []string{LabelGroupAll, labelGroupSectionSummary},
+		Groups: []string{LabelGroupAll, labelGroupSummary, labelGroupSectionSummary},
 		Scope:  FieldScopeReport,
 	},
 	{
