@@ -85,7 +85,7 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 		}
 
 		r.Log.Info(fmt.Sprintf("Reconciled %s || Found (P/I/W/F): %d/%d/%d/%d",
-			req.NamespacedName,
+			req.Name,
 			report.Report.Summary.PassCount,
 			report.Report.Summary.InfoCount,
 			report.Report.Summary.WarnCount,
@@ -193,27 +193,28 @@ func (r *CISKubeBenchReportReconciler) clearImageMetrics(report *aqua.CISKubeBen
 
 func getCountPerResult(report *aqua.CISKubeBenchReport) map[string]float64 {
 	return map[string]float64{
-		"pass_count": float64(report.Report.Summary.PassCount),
-		"info_count": float64(report.Report.Summary.InfoCount),
-		"warn_count": float64(report.Report.Summary.WarnCount),
+		"Pass":       float64(report.Report.Summary.PassCount),
+		"Info":       float64(report.Report.Summary.InfoCount),
+		"Warn":       float64(report.Report.Summary.WarnCount),
 		"fail_count": float64(report.Report.Summary.FailCount),
 	}
 }
 
 func getCountPerResultSection(section aqua.CISKubeBenchSection) map[string]float64 {
 	return map[string]float64{
-		"total_pass": float64(section.TotalPass),
-		"total_info": float64(section.TotalInfo),
-		"total_warn": float64(section.TotalWarn),
-		"total_fail": float64(section.TotalFail),
+		"Pass": float64(section.TotalPass),
+		"Info": float64(section.TotalInfo),
+		"Warn": float64(section.TotalWarn),
+		"Fail": float64(section.TotalFail),
 	}
 }
 
 func publishSummaryMetrics(report *aqua.CISKubeBenchReport) {
 	summaryValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
 
-	for _, count := range getCountPerResult(report) {
+	for status, count := range getCountPerResult(report) {
 		// Expose the metric.
+		summaryValues["status"] = status
 		BenchmarkSummary.With(
 			summaryValues,
 		).Set(count)
@@ -228,10 +229,11 @@ func publishSectionMetrics(report *aqua.CISKubeBenchReport, targetLabels []Repor
 	// Add node name to section metrics
 	for _, s := range report.Report.Sections {
 
-		for _, count := range getCountPerResultSection(s) {
+		for status, count := range getCountPerResultSection(s) {
 			secValues := valuesForSection(s, targetLabels)
 
 			secValues["node_name"] = reportValues["node_name"]
+			secValues["status"] = status
 
 			//Expose the metric.
 			BenchmarkSectionSummary.With(
