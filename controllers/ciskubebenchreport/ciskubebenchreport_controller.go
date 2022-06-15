@@ -186,19 +186,19 @@ func (r *CISKubeBenchReportReconciler) SetupWithManager(mgr ctrl.Manager) error 
 
 func getCountPerResult(report *aqua.CISKubeBenchReport) map[string]float64 {
 	return map[string]float64{
-		"Pass": float64(report.Report.Summary.PassCount),
-		"Info": float64(report.Report.Summary.InfoCount),
-		"Warn": float64(report.Report.Summary.WarnCount),
-		"Fail": float64(report.Report.Summary.FailCount),
+		"PASS": float64(report.Report.Summary.PassCount),
+		"INFO": float64(report.Report.Summary.InfoCount),
+		"WARN": float64(report.Report.Summary.WarnCount),
+		"FAIL": float64(report.Report.Summary.FailCount),
 	}
 }
 
 func getCountPerResultSection(section aqua.CISKubeBenchSection) map[string]float64 {
 	return map[string]float64{
-		"Pass": float64(section.TotalPass),
-		"Info": float64(section.TotalInfo),
-		"Warn": float64(section.TotalWarn),
-		"Fail": float64(section.TotalFail),
+		"PASS": float64(section.TotalPass),
+		"INFO": float64(section.TotalInfo),
+		"WARN": float64(section.TotalWarn),
+		"FAIL": float64(section.TotalFail),
 	}
 }
 
