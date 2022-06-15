@@ -82,7 +82,7 @@ func main() {
 	var serviceName string
 	var serviceNamespace string
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
-	reportLabels := []ciskubebenchreport.ReportLabel{}
+	cisReportLabels := []ciskubebenchreport.ReportLabel{}
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -132,7 +132,7 @@ func main() {
 			for _, i := range items {
 				if i == ciskubebenchreport.LabelGroupAll {
 					// Special case for "all".
-					reportLabels = appendIfNotExistsCIS(reportLabels, ciskubebenchreport.LabelsForGroup(ciskubebenchreport.LabelGroupAll))
+					cisReportLabels = appendIfNotExistsCIS(cisReportLabels, ciskubebenchreport.LabelsForGroup(ciskubebenchreport.LabelGroupAll))
 					continue
 				}
 
@@ -141,29 +141,7 @@ func main() {
 					err := errors.New("invalidConfigError")
 					return err
 				}
-				reportLabels = appendIfNotExistsCIS(reportLabels, []ciskubebenchreport.ReportLabel{label})
-			}
-
-			return nil
-		})
-
-	flag.Func("report-labels",
-		"A comma-separated list of labels to be exposed per-report. Alias 'all' is supported.",
-		func(input string) error {
-			items := strings.Split(input, ",")
-			for _, i := range items {
-				if i == ciskubebenchreport.LabelGroupAll {
-					// Special case for "all".
-					reportLabels = appendIfNotExistsCIS(reportLabels, ciskubebenchreport.LabelsForGroup(ciskubebenchreport.LabelGroupAll))
-					continue
-				}
-
-				label, ok := ciskubebenchreport.LabelWithName(i)
-				if !ok {
-					err := errors.New("invalidConfigError")
-					return err
-				}
-				reportLabels = appendIfNotExistsCIS(reportLabels, []ciskubebenchreport.ReportLabel{label})
+				cisReportLabels = appendIfNotExistsCIS(cisReportLabels, []ciskubebenchreport.ReportLabel{label})
 			}
 
 			return nil
@@ -271,7 +249,7 @@ func main() {
 		Log:              ctrl.Log.WithName("controllers").WithName("CISKubeBenchReport"),
 		MaxJitterPercent: maxJitterPercent,
 		Scheme:           mgr.GetScheme(),
-		TargetLabels:     reportLabels,
+		TargetLabels:     cisReportLabels,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CISKubeBenchReport")
 		os.Exit(1)
