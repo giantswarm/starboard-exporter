@@ -1,7 +1,7 @@
 apiVersion: v1
 appVersion: [[ .AppVersion ]]
 name: starboard-exporter
-description: A Helm chart for starboard-exporter, which exposes Prometheus metrics from Starboard's VulnerabilityReport custom resources (CRs).
+description: A Helm chart for starboard-exporter, which exposes Prometheus metrics from Aqua VulnerabilityReport and other custom resources.
 engine: gotpl
 home: https://github.com/giantswarm/starboard-exporter
 sources:
