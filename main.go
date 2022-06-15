@@ -249,6 +249,7 @@ func main() {
 		Log:              ctrl.Log.WithName("controllers").WithName("CISKubeBenchReport"),
 		MaxJitterPercent: maxJitterPercent,
 		Scheme:           mgr.GetScheme(),
+		ShardHelper:      peerRing,
 		TargetLabels:     cisReportLabels,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CISKubeBenchReport")
