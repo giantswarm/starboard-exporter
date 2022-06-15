@@ -230,7 +230,7 @@ func publishSectionMetrics(report *aqua.CISKubeBenchReport, targetLabels []Repor
 	for _, s := range report.Report.Sections {
 
 		for status, count := range getCountPerResultSection(s) {
-			secValues := valuesForSection(s, targetLabels)
+			secValues := valuesForSection(s, LabelsForGroup(labelGroupSectionSummary))
 
 			secValues["node_name"] = reportValues["node_name"]
 			secValues["status"] = status
@@ -250,12 +250,12 @@ func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []Report
 
 	// Add node name to section metrics
 	for _, s := range report.Report.Sections {
-		secValues := valuesForSection(s, targetLabels)
+		secValues := valuesForSection(s, LabelsForGroup(labelGroupSectionSummary))
 
 		for _, t := range s.Tests {
 			// Add node name and node type to result metrics
 			for _, r := range t.Results {
-				resValues := valuesForResult(r, targetLabels)
+				resValues := valuesForResult(r, LabelsForGroup(labelGroupResult))
 
 				resValues["node_name"] = reportValues["node_name"]
 				resValues["node_type"] = secValues["node_type"]
