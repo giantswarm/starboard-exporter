@@ -27,6 +27,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	apitypes "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -50,6 +51,7 @@ type CISKubeBenchReportReconciler struct {
 	Scheme *runtime.Scheme
 
 	MaxJitterPercent int
+	ShardHelper      *utils.ShardHelper
 	TargetLabels     []ReportLabel
 }
 
@@ -61,27 +63,25 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 	_ = log.FromContext(ctx)
 	_ = r.Log.WithValues("ciskubebenchreport", req.NamespacedName)
 
-	registerMetricsOnce.Do(r.registerMetrics)
+	// The report has changed, meaning our metrics are out of date for this report. Clear them.
+	deletedSummaries := BenchmarkSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
+	deletedSections := BenchmarkSectionSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
+	deletedResults := BenchmarkResultInfo.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
 
-	report := &aqua.CISKubeBenchReport{}
-	if err := r.Client.Get(ctx, client.ObjectKey{Name: req.Name, Namespace: req.Namespace}, report); err != nil {
-		if apierrors.IsNotFound(err) {
-			// Most likely the report was deleted.
-			return ctrl.Result{}, nil
-		}
+	shouldOwn := r.ShardHelper.ShouldOwn(req.NamespacedName.String())
+	if shouldOwn {
 
-		// Error reading the object.
-		r.Log.Error(err, "Unable to read CISKubeBenchReport")
-		return ctrl.Result{}, err
-	}
-
-	if report.DeletionTimestamp.IsZero() {
-		// Give the report our finalizer if it doesn't have one.
-		if !utils.SliceContains(report.GetFinalizers(), CISKubeBenchReportFinalizer) {
-			ctrlutil.AddFinalizer(report, CISKubeBenchReportFinalizer)
-			if err := r.Update(ctx, report); err != nil {
-				return ctrl.Result{}, err
+		// Try to get the report. It might not exist anymore, in which case we don't need to do anything.
+		report := &aqua.CISKubeBenchReport{}
+		if err := r.Client.Get(ctx, req.NamespacedName, report); err != nil {
+			if apierrors.IsNotFound(err) {
+				// Most likely the report was deleted.
+				return ctrl.Result{}, nil
 			}
+
+			// Error reading the object.
+			r.Log.Error(err, "Unable to read report")
+			return ctrl.Result{}, err
 		}
 
 		r.Log.Info(fmt.Sprintf("Reconciled %s || Found (P/I/W/F): %d/%d/%d/%d",
@@ -92,26 +92,32 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 			report.Report.Summary.FailCount,
 		))
 
-		// Publish summary metrics for this report.
-		r.Log.Info("Publishing Summary metrics")
+		// Publish summary metrics.
 		publishSummaryMetrics(report)
-		r.Log.Info("Publishing Section metrics")
+
+		// Publish section metrics
 		publishSectionMetrics(report, r.TargetLabels)
-		r.Log.Info("Publishing Result metrics.")
+
+		// Publish result metrics (detailed)
 		publishResultMetrics(report, r.TargetLabels)
 
-	} else {
-
 		if utils.SliceContains(report.GetFinalizers(), CISKubeBenchReportFinalizer) {
-			// Unfortunately, we can't just clear the series based on one label value,
-			// we have to reconstruct all of the label values to delete the series.
-			// That's the only reason the finalizer is needed at all.
-			r.clearImageMetrics(report)
-
+			// Remove the finalizer if we're the shard owner.
 			ctrlutil.RemoveFinalizer(report, CISKubeBenchReportFinalizer)
 			if err := r.Update(ctx, report); err != nil {
 				return ctrl.Result{}, err
 			}
+		}
+
+		// Add a label to this report so any previous owners will reconcile and drop the metric.
+		report.Labels[controllers.ShardOwnerLabel] = r.ShardHelper.PodIP
+		err := r.Client.Update(ctx, report, &client.UpdateOptions{})
+		if err != nil {
+			r.Log.Error(err, "unable to add shard owner label")
+		}
+	} else {
+		if deletedSummaries > 0 || deletedSections > 0 || deletedResults > 0 {
+			r.Log.Info(fmt.Sprintf("cleared %d and %d summaries and %d detail metrics", deletedSummaries, deletedSections, deletedResults))
 		}
 	}
 
@@ -176,22 +182,6 @@ func (r *CISKubeBenchReportReconciler) SetupWithManager(mgr ctrl.Manager) error 
 	return nil
 }
 
-func (r *CISKubeBenchReportReconciler) clearImageMetrics(report *aqua.CISKubeBenchReport) {
-	// clear summary metrics
-	summaryValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
-
-	// Delete the series for each node.
-	for severity := range getCountPerResult(report) {
-		v := summaryValues
-		v["severity"] = severity
-
-		// Delete the metric.
-		BenchmarkSummary.Delete(
-			v,
-		)
-	}
-}
-
 func getCountPerResult(report *aqua.CISKubeBenchReport) map[string]float64 {
 	return map[string]float64{
 		"Pass": float64(report.Report.Summary.PassCount),
@@ -233,6 +223,7 @@ func publishSectionMetrics(report *aqua.CISKubeBenchReport, targetLabels []Repor
 		for status, count := range getCountPerResultSection(s) {
 			secValues := valuesForSection(s, LabelsForGroup(labelGroupSectionSummary))
 
+			secValues["report_name"] = reportValues["report_name"]
 			secValues["node_name"] = reportValues["node_name"]
 			secValues["status"] = status
 
@@ -258,6 +249,7 @@ func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []Report
 			for _, r := range t.Results {
 				resValues := valuesForResult(r, LabelsForGroup(labelGroupResult))
 
+				resValues["report_name"] = reportValues["report_name"]
 				resValues["node_name"] = reportValues["node_name"]
 				resValues["node_type"] = secValues["node_type"]
 
@@ -327,6 +319,8 @@ func secValueFor(field string, sec aqua.CISKubeBenchSection) string {
 
 func reportValueFor(field string, report *aqua.CISKubeBenchReport) string {
 	switch field {
+	case "report_name":
+		return apitypes.NamespacedName{Name: report.Name, Namespace: report.Namespace}.String()
 	case "node_name":
 		return report.Name
 	default:

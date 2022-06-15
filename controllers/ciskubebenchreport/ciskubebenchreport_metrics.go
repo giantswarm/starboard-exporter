@@ -34,6 +34,11 @@ type ReportLabel struct {
 
 var metricLabels = []ReportLabel{
 	{
+		Name:   "report_name",
+		Groups: []string{LabelGroupAll, labelGroupSummary, labelGroupSectionSummary, labelGroupResult},
+		Scope:  FieldScopeReport,
+	},
+	{
 		Name:   "node_name",
 		Groups: []string{LabelGroupAll, labelGroupSummary, labelGroupSectionSummary, labelGroupResult},
 		Scope:  FieldScopeReport,
