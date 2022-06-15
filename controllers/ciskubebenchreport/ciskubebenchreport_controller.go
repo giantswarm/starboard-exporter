@@ -63,6 +63,8 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 	_ = log.FromContext(ctx)
 	_ = r.Log.WithValues("ciskubebenchreport", req.NamespacedName)
 
+	registerMetricsOnce.Do(r.registerMetrics)
+
 	// The report has changed, meaning our metrics are out of date for this report. Clear them.
 	deletedSummaries := BenchmarkSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
 	deletedSections := BenchmarkSectionSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
