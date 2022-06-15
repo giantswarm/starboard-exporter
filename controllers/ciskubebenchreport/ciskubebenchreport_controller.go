@@ -93,10 +93,11 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 		))
 
 		// Publish summary metrics for this report.
+		r.Log.Info("Publishing Summary metrics")
 		publishSummaryMetrics(report)
-		r.Log.Info("Publishing Section metrics. Labels: %d", r.TargetLabels)
+		r.Log.Info("Publishing Section metrics")
 		publishSectionMetrics(report, r.TargetLabels)
-		r.Log.Info("Publishing Result metrics. Labels: %d", r.TargetLabels)
+		r.Log.Info("Publishing Result metrics.")
 		publishResultMetrics(report, r.TargetLabels)
 
 	} else {
