@@ -128,11 +128,11 @@ var (
 )
 
 var (
-	BenchmarkTestInfo = prometheus.NewGaugeVec(
+	BenchmarkResultInfo = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Subsystem: metricSubsystem,
-			Name:      "cis_benchmark_test_info",
+			Name:      "cis_benchmark_result_info",
 			Help:      "Exposes the information of test of a particular section on a particular node.",
 		},
 		labelNamesForGroup(labelGroupResult),
@@ -144,4 +144,6 @@ var CISBenchmarkInfo *prometheus.GaugeVec
 func init() {
 	// Register custom metrics with the global prometheus registry
 	metrics.Registry.MustRegister(BenchmarkSummary)
+	metrics.Registry.MustRegister(BenchmarkSectionSummary)
+	metrics.Registry.MustRegister(BenchmarkResultInfo)
 }

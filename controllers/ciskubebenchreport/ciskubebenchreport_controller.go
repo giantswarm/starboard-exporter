@@ -262,7 +262,7 @@ func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []Report
 				resValues["node_type"] = secValues["node_type"]
 
 				//Expose the metric.
-				BenchmarkTestInfo.With(
+				BenchmarkResultInfo.With(
 					resValues,
 				).Set(0)
 			}
