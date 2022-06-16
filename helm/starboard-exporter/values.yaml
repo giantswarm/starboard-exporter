@@ -44,7 +44,9 @@ exporter:
       # - vulnerability_id
   CISKubeBenchReports:
     targetLabels:
-      # - all
+      # - test_number
+      # - test_desc
+      # - test_status
 
 monitoring:
   serviceMonitor:
