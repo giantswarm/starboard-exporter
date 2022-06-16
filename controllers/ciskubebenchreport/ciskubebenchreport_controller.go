@@ -94,14 +94,7 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 			report.Report.Summary.FailCount,
 		))
 
-		// Publish summary metrics.
-		publishSummaryMetrics(report)
-
-		// Publish section metrics
-		publishSectionMetrics(report, r.TargetLabels)
-
-		// Publish result metrics (detailed)
-		publishResultMetrics(report, r.TargetLabels)
+		r.publishCISMetrics(report)
 
 		if utils.SliceContains(report.GetFinalizers(), CISKubeBenchReportFinalizer) {
 			// Remove the finalizer if we're the shard owner.
@@ -124,6 +117,19 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 	}
 
 	return utils.JitterRequeue(controllers.DefaultRequeueDuration, r.MaxJitterPercent, r.Log), nil
+}
+
+func (r *CISKubeBenchReportReconciler) publishCISMetrics(report *aqua.CISKubeBenchReport) {
+	// Publish summary metrics.
+	publishSummaryMetrics(report)
+
+	// Publish section metrics
+	publishSectionMetrics(report)
+
+	// If we have custom metrics to expose, do it.
+	if len(r.TargetLabels) > 0 {
+		publishResultMetrics(report, r.TargetLabels)
+	}
 }
 
 func RequeueReportsForPod(c client.Client, log logr.Logger, podIP string) {
@@ -215,9 +221,9 @@ func publishSummaryMetrics(report *aqua.CISKubeBenchReport) {
 
 }
 
-func publishSectionMetrics(report *aqua.CISKubeBenchReport, targetLabels []ReportLabel) {
+func publishSectionMetrics(report *aqua.CISKubeBenchReport) {
 
-	reportValues := valuesForReport(report, targetLabels)
+	reportValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
 
 	// Add node name to section metrics
 	for _, s := range report.Report.Sections {
@@ -240,7 +246,7 @@ func publishSectionMetrics(report *aqua.CISKubeBenchReport, targetLabels []Repor
 
 func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []ReportLabel) {
 
-	reportValues := valuesForReport(report, targetLabels)
+	reportValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
 
 	// Add node name to section metrics
 	for _, s := range report.Report.Sections {
@@ -249,7 +255,7 @@ func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []Report
 		for _, t := range s.Tests {
 			// Add node name and node type to result metrics
 			for _, r := range t.Results {
-				resValues := valuesForResult(r, LabelsForGroup(labelGroupResult))
+				resValues := valuesForResult(r, targetLabels)
 
 				resValues["report_name"] = reportValues["report_name"]
 				resValues["node_name"] = reportValues["node_name"]
