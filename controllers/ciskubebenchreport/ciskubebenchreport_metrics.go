@@ -113,7 +113,7 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Subsystem: metricSubsystem,
-			Name:      "cis_benchmark_report_summary_count",
+			Name:      "report_summary_count",
 			Help:      "Exposes the summary of checks of a particular node.",
 		},
 		labelNamesForGroup(labelGroupSummary),
@@ -125,7 +125,7 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Subsystem: metricSubsystem,
-			Name:      "cis_benchmark_section_summary_count",
+			Name:      "section_summary_count",
 			Help:      "Exposes the summary of checks of a particular section on a particular node.",
 		},
 		labelNamesForGroup(labelGroupSectionSummary),
@@ -137,7 +137,7 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Subsystem: metricSubsystem,
-			Name:      "cis_benchmark_result_info",
+			Name:      "result_info",
 			Help:      "Exposes the information of test of a particular section on a particular node.",
 		},
 		labelNamesForGroup(labelGroupResult),
