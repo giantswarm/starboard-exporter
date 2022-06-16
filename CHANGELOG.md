@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set `runAsNonRoot` and use `RuntimeDefault` seccomp profile.
 - Make replica count configurable in Helm values.
 - Add configurable tolerations to Helm values.
+- Reconcile and expose metrics for `CISKubeBenchReport` custom resources.
+
 
 ## [0.4.1] - 2022-04-26
 
