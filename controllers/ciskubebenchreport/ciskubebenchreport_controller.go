@@ -165,17 +165,17 @@ func RequeueReportsForPod(c client.Client, log logr.Logger, podIP string) {
 
 func (r *CISKubeBenchReportReconciler) registerMetrics() {
 
-	CISBenchmarkInfo := prometheus.NewGaugeVec(
+	BenchmarkResultInfo := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Subsystem: metricSubsystem,
-			Name:      "cis_benchmarks",
-			Help:      "Indicates the results of a CIS benchmark.",
+			Name:      "result_info",
+			Help:      "Exposes the detailed information of a test",
 		},
 		LabelNamesForList(r.TargetLabels),
 	)
 
-	metrics.Registry.MustRegister(CISBenchmarkInfo)
+	metrics.Registry.MustRegister(BenchmarkResultInfo)
 }
 
 // SetupWithManager sets up the controller with the Manager.
