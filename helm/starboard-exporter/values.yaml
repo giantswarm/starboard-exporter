@@ -13,7 +13,13 @@ pod:
 nodeSelector: {}
 tolerations: {}
 
-# container securityContext
+# Pod securityContext
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container securityContext
 securityContext:
   allowPrivilegeEscalation: false
   capabilities:
@@ -21,6 +27,9 @@ securityContext:
     - ALL
   privileged: false
   readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
 
 resources:
   requests:
