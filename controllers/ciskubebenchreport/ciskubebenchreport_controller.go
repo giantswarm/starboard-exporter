@@ -165,7 +165,7 @@ func RequeueReportsForPod(c client.Client, log logr.Logger, podIP string) {
 
 func (r *CISKubeBenchReportReconciler) registerMetrics() {
 
-	BenchmarkResultInfo := prometheus.NewGaugeVec(
+	BenchmarkResultInfo = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Subsystem: metricSubsystem,
