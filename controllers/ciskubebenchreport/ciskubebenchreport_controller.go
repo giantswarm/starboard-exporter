@@ -246,20 +246,30 @@ func publishSectionMetrics(report *aqua.CISKubeBenchReport) {
 
 func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []ReportLabel) {
 
-	reportValues := valuesForReport(report, LabelsForGroup(labelGroupSummary))
+	reportValues := valuesForReport(report, targetLabels)
 
 	// Add node name to section metrics
 	for _, s := range report.Report.Sections {
-		secValues := valuesForSection(s, LabelsForGroup(labelGroupSectionSummary))
+		secValues := valuesForSection(s, targetLabels)
 
 		for _, t := range s.Tests {
 			// Add node name and node type to result metrics
 			for _, r := range t.Results {
 				resValues := valuesForResult(r, targetLabels)
 
+				// Set report_name label from report
 				resValues["report_name"] = reportValues["report_name"]
-				resValues["node_name"] = reportValues["node_name"]
-				resValues["node_type"] = secValues["node_type"]
+
+				// Inherit labels from report and section only if they are enabled
+				if _, found := reportValues["node_name"]; found {
+					resValues["node_name"] = reportValues["node_name"]
+				}
+				if _, found := secValues["node_type"]; found {
+					resValues["node_type"] = secValues["node_type"]
+				}
+				if _, found := secValues["section_name"]; found {
+					resValues["section_name"] = secValues["section_name"]
+				}
 
 				//Expose the metric.
 				BenchmarkResultInfo.With(
@@ -319,6 +329,8 @@ func secValueFor(field string, sec aqua.CISKubeBenchSection) string {
 	switch field {
 	case "node_type":
 		return sec.NodeType
+	case "section_name":
+		return sec.Text
 	default:
 		// Error?
 		return ""
