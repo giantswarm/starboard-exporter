@@ -50,7 +50,7 @@ var metricLabels = []ReportLabel{
 	},
 	{
 		Name:   "section_name",
-		Groups: []string{LabelGroupAll, labelGroupSummary, labelGroupSectionSummary, labelGroupResult},
+		Groups: []string{LabelGroupAll, labelGroupSectionSummary, labelGroupResult},
 		Scope:  FieldScopeSection,
 	},
 	{
