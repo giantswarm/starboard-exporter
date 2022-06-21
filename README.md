@@ -6,9 +6,49 @@ Exposes Prometheus metrics from [Starboard][starboard-upstream]'s `Vulnerability
 
 ## Metrics
 
-This exporter exposes two types of metrics:
+This exporter exposes various types of metrics:
 
-### Summary
+### Summary / CIS Benchmark Report
+
+A summary series exposes the count of checks of each status reported in a given `CISKubeBenchReport`. For example:
+
+```shell
+starboard_exporter_ciskubebenchreport_report_summary_count{
+    node_name="bj56o-master-bj56o-000000"
+    status="FAIL"
+    } 31
+```
+
+### Summary / CIS Benchmark Section
+
+A summary series exposes the count of checks of each status reported in a given `CISKubeBenchSection`. For example:
+
+```shell
+starboard_exporter_ciskubebenchreport_section_summary_count{
+    node_name="bj56o-master-bj56o-000000"
+    node_type="controlplane"
+    section_name="Control Plane Configuration"
+    status="WARN"
+    } 4
+```
+
+### Detail / CIS Benchmark Result
+
+A detail for CIS benchmark results series exposes field from each instance of an Aqua `CISKubeBenchResult`. For example:
+
+```shell
+starboard_exporter_ciskubebenchreport_result_info{
+    node_name="bj56o-master-bj56o-000000"
+    node_type="controlplane"
+    pod="starboard-exporter-859955f485-cwkj6"
+    section_name="Control Plane Configuration"
+    test_desc="Client certificate authentication should not be used for users (Manual)"
+    test_number="3.1.1"
+    test_status="WARN"
+    } 1
+```
+
+### Summary / Vulnerabilities
 
 A summary series exposes the count of CVEs of each severity reported in a given `VulnerabilityReport`. For example:
 
@@ -28,7 +68,7 @@ This indicates that the `giantswarm/starboard-operator` image in the `demo` name
 
 ### Detail / Vulnerability
 
-A detail or vulnerability series exposes fields from each instance of an Aqua `Vulnerability`. The value of the metric is the `Score` for the vulnerability. For example:
+A detail for vulnerability series exposes fields from each instance of an Aqua `Vulnerability`. The value of the metric is the `Score` for the vulnerability. For example:
 
 ```shell
 starboard_exporter_vulnerabilityreport_image_vulnerability{
@@ -92,6 +132,30 @@ exporter:
       - image_repository
       - image_tag
       - vulnerability_id
+      - ...
+```
+
+To enable an additional detail series *per CIS Benchmark Result*, use the `--cis-detail-report-labels` flag to specify which labels should be exposed. For example:
+
+```shell
+# Expose only section_name, test_name and test_status
+--cis-detail-report-labels=section_name,test_name,test_status
+
+# Run with (almost) all fields exposed as labels.
+--cis-detail-report-labels=all
+```
+
+CIS detail target labels can also be set via Helm values:
+
+```yaml
+exporter:
+  CISKubeBenchReports:
+    targetLabels:
+      - node_name
+      - node_type
+      - section_name
+      - test_name
+      - test_status
       - ...
 ```
 
