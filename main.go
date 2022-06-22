@@ -178,7 +178,7 @@ func main() {
 		for _, l := range targetLabels {
 			tl = append(tl, l.Name)
 		}
-		setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(tl), tl))
+		setupLog.Info(fmt.Sprintf("Using %d vulnerability target labels: %v", len(tl), tl))
 	}
 
 	// Print CIS report labels.
@@ -187,7 +187,7 @@ func main() {
 		for _, l := range cisReportLabels {
 			tl = append(tl, l.Name)
 		}
-		setupLog.Info(fmt.Sprintf("Using %d report labels: %v", len(tl), tl))
+		setupLog.Info(fmt.Sprintf("Using %d CIS report labels: %v", len(tl), tl))
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
