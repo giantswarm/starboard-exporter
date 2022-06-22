@@ -172,13 +172,22 @@ func main() {
 
 	setupLog.Info(fmt.Sprintf("this is exporter instance %s", podIP.String()))
 
-	// Print target labels.
+	// Print Vulnerabilities target labels.
 	if len(targetLabels) > 0 {
 		tl := []string{}
 		for _, l := range targetLabels {
 			tl = append(tl, l.Name)
 		}
 		setupLog.Info(fmt.Sprintf("Using %d target labels: %v", len(tl), tl))
+	}
+
+	// Print CIS report labels.
+	if len(cisReportLabels) > 0 {
+		tl := []string{}
+		for _, l := range cisReportLabels {
+			tl = append(tl, l.Name)
+		}
+		setupLog.Info(fmt.Sprintf("Using %d report labels: %v", len(tl), tl))
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
