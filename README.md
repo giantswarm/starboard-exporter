@@ -6,9 +6,11 @@ Exposes Prometheus metrics from [Starboard][starboard-upstream]'s `Vulnerability
 
 ## Metrics
 
-This exporter exposes various types of metrics:
+This exporter exposes several types of metrics:
 
-### Summary / CIS Benchmark Report
+### CIS Benchmarks
+
+#### Report Summary
 
 A summary series exposes the count of checks of each status reported in a given `CISKubeBenchReport`. For example:
 
@@ -19,7 +21,7 @@ starboard_exporter_ciskubebenchreport_report_summary_count{
     } 31
 ```
 
-### Summary / CIS Benchmark Section
+#### Section Summary
 
 A summary series exposes the count of checks of each status reported in a given `CISKubeBenchSection`. For example:
 
@@ -32,7 +34,7 @@ starboard_exporter_ciskubebenchreport_section_summary_count{
     } 4
 ```
 
-### Detail / CIS Benchmark Result
+#### Result Detail
 
 A detail for CIS benchmark results series exposes field from each instance of an Aqua `CISKubeBenchResult`. For example:
 
@@ -48,7 +50,9 @@ starboard_exporter_ciskubebenchreport_result_info{
     } 1
 ```
 
-### Summary / Vulnerabilities
+### Vulnerability Reports
+
+#### Report Summary
 
 A summary series exposes the count of CVEs of each severity reported in a given `VulnerabilityReport`. For example:
 
@@ -66,7 +70,7 @@ starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{
 
 This indicates that the `giantswarm/starboard-operator` image in the `demo` namespace contains 4 medium-severity vulnerabilities.
 
-### Detail / Vulnerability
+#### Vulnerability Details
 
 A "detail" or "vulnerability" series exposes fields from each instance of an Aqua `Vulnerability`. The value of the metric is the `Score` for the vulnerability. For example:
 
@@ -90,6 +94,16 @@ starboard_exporter_vulnerabilityreport_image_vulnerability{
 This indicates that the vulnerability with the id `CVE-2021-3712` was found in the `giantswarm/starboard-operator` image in the `demo` namespace, and it has a CVSS 3.x score of 7.4.
 
 An additional series would be exposed for every combination of those labels.
+
+### Config Audit Reports
+
+#### Report Summary
+
+A summary series exposes the count of "" "" of each severity reported in a given `ConfigAuditReport`. For example:
+
+```shell
+WIP WHILE I CREATE A TEST CLUSTER
+```
 
 #### A Note on Cardinality
 
