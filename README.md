@@ -12,7 +12,7 @@ This exporter exposes several types of metrics:
 
 #### Report Summary
 
-A summary series exposes the count of checks of each status reported in a given `CISKubeBenchReport`. For example:
+A report summary series exposes the count of checks of each status reported in a given `CISKubeBenchReport`. For example:
 
 ```shell
 starboard_exporter_ciskubebenchreport_report_summary_count{
@@ -23,7 +23,7 @@ starboard_exporter_ciskubebenchreport_report_summary_count{
 
 #### Section Summary
 
-A summary series exposes the count of checks of each status reported in a given `CISKubeBenchSection`. For example:
+For slightly more granular reporting, a section summary series exposes the count of checks of each status reported in a given `CISKubeBenchSection`. For example:
 
 ```shell
 starboard_exporter_ciskubebenchreport_section_summary_count{
@@ -36,7 +36,7 @@ starboard_exporter_ciskubebenchreport_section_summary_count{
 
 #### Result Detail
 
-A detail for CIS benchmark results series exposes field from each instance of an Aqua `CISKubeBenchResult`. For example:
+A CIS benchmark result info series exposes fields from each instance of an Aqua `CISKubeBenchResult`. For example:
 
 ```shell
 starboard_exporter_ciskubebenchreport_result_info{
