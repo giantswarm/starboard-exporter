@@ -87,7 +87,8 @@ starboard_exporter_vulnerabilityreport_image_vulnerability{
     severity="HIGH",
     vulnerability_id="CVE-2021-3712",
     vulnerability_link="https://avd.aquasec.com/nvd/cve-2021-3712",
-    vulnerability_title="openssl: Read buffer overruns processing ASN.1 strings",vulnerable_resource_name="libssl1.1"
+    vulnerability_title="openssl: Read buffer overruns processing ASN.1 strings",
+    vulnerable_resource_name="libssl1.1"
     } 7.4
 ```
 
@@ -99,10 +100,14 @@ An additional series would be exposed for every combination of those labels.
 
 #### Report Summary
 
-A summary series exposes the count of "" "" of each severity reported in a given `ConfigAuditReport`. For example:
+A summary series exposes the count of checks of each severity reported in a given `ConfigAuditReport`. For example:
 
 ```shell
-WIP WHILE I CREATE A TEST CLUSTER
+starboard_exporter_configauditreport_resource_checks_summary_count{
+  resource_name="replicaset-chart-operator-748f756847",
+  resource_namespace="giantswarm",
+  severity="LOW"
+  } 7
 ```
 
 #### A Note on Cardinality
