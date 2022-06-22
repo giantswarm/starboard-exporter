@@ -65,9 +65,9 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 	registerMetricsOnce.Do(r.registerMetrics)
 
 	// The report has changed, meaning our metrics are out of date for this report. Clear them.
-	deletedSummaries := BenchmarkSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.Name})
-	deletedSections := BenchmarkSectionSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.Name})
-	deletedResults := BenchmarkResultInfo.DeletePartialMatch(prometheus.Labels{"report_name": req.Name})
+	deletedSummaries := BenchmarkSummary.DeletePartialMatch(prometheus.Labels{"node_name": req.Name})
+	deletedSections := BenchmarkSectionSummary.DeletePartialMatch(prometheus.Labels{"node_name": req.Name})
+	deletedResults := BenchmarkResultInfo.DeletePartialMatch(prometheus.Labels{"node_name": req.Name})
 
 	shouldOwn := r.ShardHelper.ShouldOwn(req.Name)
 	if shouldOwn {
@@ -230,7 +230,6 @@ func publishSectionMetrics(report *aqua.CISKubeBenchReport) {
 		for status, count := range getCountPerResultSection(s) {
 			secValues := valuesForSection(s, LabelsForGroup(labelGroupSectionSummary))
 
-			secValues["report_name"] = reportValues["report_name"]
 			secValues["node_name"] = reportValues["node_name"]
 			secValues["status"] = status
 
@@ -255,9 +254,6 @@ func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []Report
 			// Add node name and node type to result metrics
 			for _, r := range t.Results {
 				resValues := valuesForResult(r, targetLabels)
-
-				// Set report_name label from report
-				resValues["report_name"] = reportValues["report_name"]
 
 				// Inherit labels from report and section only if they are enabled
 				if _, found := reportValues["node_name"]; found {
@@ -338,8 +334,6 @@ func secValueFor(field string, sec aqua.CISKubeBenchSection) string {
 
 func reportValueFor(field string, report *aqua.CISKubeBenchReport) string {
 	switch field {
-	case "report_name":
-		return report.Name
 	case "node_name":
 		return report.Name
 	default:

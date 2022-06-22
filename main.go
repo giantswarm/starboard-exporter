@@ -145,7 +145,7 @@ func main() {
 			}
 
 			// If exposing detail metrics, we must always include the report name in order to delete them by name later.
-			reportNameLabel, _ := ciskubebenchreport.LabelWithName("report_name")
+			reportNameLabel, _ := ciskubebenchreport.LabelWithName("node_name")
 			cisReportLabels = appendIfNotExistsCIS(cisReportLabels, []ciskubebenchreport.ReportLabel{reportNameLabel})
 
 			return nil
