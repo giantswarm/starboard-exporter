@@ -112,7 +112,7 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 		}
 	} else {
 		if deletedSummaries > 0 || deletedSections > 0 || deletedResults > 0 {
-			r.Log.Info(fmt.Sprintf("cleared %d and %d summaries and %d detail metrics", deletedSummaries, deletedSections, deletedResults))
+			r.Log.Info(fmt.Sprintf("cleared %d report summary, %d section summary, and %d detail metrics", deletedSummaries, deletedSections, deletedResults))
 		}
 	}
 
@@ -274,7 +274,7 @@ func publishResultMetrics(report *aqua.CISKubeBenchReport, targetLabels []Report
 				//Expose the metric.
 				BenchmarkResultInfo.With(
 					resValues,
-				).Set(0)
+				).Set(1)
 			}
 		}
 	}
