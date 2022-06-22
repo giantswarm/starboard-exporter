@@ -4,8 +4,6 @@ name: starboard-exporter
 description: A Helm chart for starboard-exporter, which exposes Prometheus metrics from Aqua VulnerabilityReport and other custom resources.
 engine: gotpl
 home: https://github.com/giantswarm/starboard-exporter
-sources:
-- https://github.com/aquasecurity/starboard
 version: [[ .Version ]]
 annotations:
   application.giantswarm.io/team: "shield"
