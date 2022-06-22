@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2022-06-22
+
 ### Announcements
 
 - **Important: the `latest` tag alias is being removed.** Some users have reported issues using the `latest` tag on our hosted registries (Docker Hub, Quay, etc.). We advise against using `latest` tags and don't use them ourselves, so this tag is not kept up to date. Please switch to using a tagged version. We will be removing the `latest` tag from our public registries in the near future to avoid confusion.
@@ -127,7 +129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/giantswarm/starboard-exporter/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/giantswarm/starboard-exporter/compare/v0.3.2...v0.3.3
