@@ -141,7 +141,7 @@ func RequeueReportsForPod(c client.Client, log logr.Logger, podIP string) {
 	// Get the list of reports with our label.
 	err := c.List(context.Background(), cisList, opts...)
 	if err != nil {
-		log.Error(err, "unable to fetch ciskubebenchreport")
+		log.Error(err, "unable to list ciskubebenchreports")
 	}
 
 	for _, r := range cisList.Items {

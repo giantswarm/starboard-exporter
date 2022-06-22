@@ -126,7 +126,7 @@ func main() {
 		})
 
 	flag.Func("cis-detail-report-labels",
-		"A comma-separated list of labels to be exposed per-report. Alias 'all' is supported.",
+		"A comma-separated list of labels to be exposed from each CIS benchmark detail report. Alias 'all' is supported.",
 		func(input string) error {
 			items := strings.Split(input, ",")
 			for _, i := range items {

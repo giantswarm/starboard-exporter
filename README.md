@@ -68,7 +68,7 @@ This indicates that the `giantswarm/starboard-operator` image in the `demo` name
 
 ### Detail / Vulnerability
 
-A detail for vulnerability series exposes fields from each instance of an Aqua `Vulnerability`. The value of the metric is the `Score` for the vulnerability. For example:
+A "detail" or "vulnerability" series exposes fields from each instance of an Aqua `Vulnerability`. The value of the metric is the `Score` for the vulnerability. For example:
 
 ```shell
 starboard_exporter_vulnerabilityreport_image_vulnerability{
@@ -135,7 +135,7 @@ exporter:
       - ...
 ```
 
-To enable an additional detail series *per CIS Benchmark Result*, use the `--cis-detail-report-labels` flag to specify which labels should be exposed. For example:
+The same can be done for CIS Benchmark Results. To enable an additional detail series *per CIS Benchmark Result*, use the `--cis-detail-report-labels` flag to specify which labels should be exposed. For example:
 
 ```shell
 # Expose only section_name, test_name and test_status
