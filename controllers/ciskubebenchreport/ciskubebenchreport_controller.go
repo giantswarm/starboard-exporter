@@ -27,7 +27,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	apitypes "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -66,11 +65,11 @@ func (r *CISKubeBenchReportReconciler) Reconcile(ctx context.Context, req ctrl.R
 	registerMetricsOnce.Do(r.registerMetrics)
 
 	// The report has changed, meaning our metrics are out of date for this report. Clear them.
-	deletedSummaries := BenchmarkSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
-	deletedSections := BenchmarkSectionSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
-	deletedResults := BenchmarkResultInfo.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
+	deletedSummaries := BenchmarkSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.Name})
+	deletedSections := BenchmarkSectionSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.Name})
+	deletedResults := BenchmarkResultInfo.DeletePartialMatch(prometheus.Labels{"report_name": req.Name})
 
-	shouldOwn := r.ShardHelper.ShouldOwn(req.NamespacedName.String())
+	shouldOwn := r.ShardHelper.ShouldOwn(req.Name)
 	if shouldOwn {
 
 		// Try to get the report. It might not exist anymore, in which case we don't need to do anything.
@@ -340,7 +339,7 @@ func secValueFor(field string, sec aqua.CISKubeBenchSection) string {
 func reportValueFor(field string, report *aqua.CISKubeBenchReport) string {
 	switch field {
 	case "report_name":
-		return apitypes.NamespacedName{Name: report.Name, Namespace: report.Namespace}.String()
+		return report.Name
 	case "node_name":
 		return report.Name
 	default:
