@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  architect: giantswarm/architect@4.21.0
+  architect: giantswarm/architect@4.23.0
 
 workflows:
   package-and-push-chart-on-tag:
