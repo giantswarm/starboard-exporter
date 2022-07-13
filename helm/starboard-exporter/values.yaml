@@ -45,21 +45,25 @@ project:
 
 exporter:
   requeueMaxJitterPercent: 10
-  vulnerabilityReports:
-    enabled: false
-    targetLabels:
-      # - image_namespace
-      # - image_repository
-      # - image_tag
-      # - vulnerability_id
+  
   CISKubeBenchReports:
-    enabled: false
+    enabled: true
     targetLabels:
       # - test_number
       # - test_desc
       # - test_status
+  
   configAuditReports:
-    enabled: false
+    enabled: true
+
+  vulnerabilityReports:
+      enabled: true
+      targetLabels:
+        # - image_namespace
+        # - image_repository
+        # - image_tag
+        # - vulnerability_id
+
 
 monitoring:
   serviceMonitor:
