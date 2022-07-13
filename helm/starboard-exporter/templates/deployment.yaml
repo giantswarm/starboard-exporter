@@ -67,6 +67,7 @@ spec:
         {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
+          - --cis-benchmark-enabled={{ default .Values.exporter.CISKubeBenchReports.enabled true }}
         {{- if .Values.exporter.CISKubeBenchReports.targetLabels }}
           - --cis-detail-report-labels={{ .Values.exporter.CISKubeBenchReports.targetLabels | join "," }}
         {{- end }}
