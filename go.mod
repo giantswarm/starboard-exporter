@@ -87,5 +87,5 @@ replace (
 	github.com/coreos/etcd => github.com/coreos/etcd v3.3.27+incompatible
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/miekg/dns => github.com/miekg/dns v1.1.49
-	github.com/open-policy-agent/opa => github.com/open-policy-agent/opa v0.40.0
+	github.com/open-policy-agent/opa v0.40.0 => github.com/open-policy-agent/opa v0.42.2
 )
