@@ -8,12 +8,11 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2
 	github.com/go-logr/logr v1.2.3
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.12.2-0.20220421062905-4dcf02ec7b3c
-	// github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2-0.20220421062905-4dcf02ec7b3c // Waiting for 1.13 release.
 	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2
 	k8s.io/client-go v0.24.2
-	sigs.k8s.io/controller-runtime v0.12.2
+	sigs.k8s.io/controller-runtime v0.12.3
 )
 
 require (
@@ -88,5 +87,5 @@ replace (
 	github.com/coreos/etcd => github.com/coreos/etcd v3.3.27+incompatible
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/miekg/dns => github.com/miekg/dns v1.1.49
-	github.com/open-policy-agent/opa => github.com/open-policy-agent/opa v0.40.0
+	github.com/open-policy-agent/opa v0.40.0 => github.com/open-policy-agent/opa v0.42.2
 )

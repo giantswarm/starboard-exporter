@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Allow selectively enabling/disabling controllers for each report type.
+
 ## [0.5.0] - 2022-06-22
 
 ### Announcements

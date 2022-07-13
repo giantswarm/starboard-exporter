@@ -74,13 +74,16 @@ func init() {
 }
 
 func main() {
-	var metricsAddr string
+	var cisBenchmarkEnabled bool
+	var configAuditEnabled bool
 	var enableLeaderElection bool
 	var maxJitterPercent int
+	var metricsAddr string
 	var podIPString string
 	var probeAddr string
 	var serviceName string
 	var serviceNamespace string
+	var vulnerabilityScansEnabled bool
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
 	cisReportLabels := []ciskubebenchreport.ReportLabel{}
 
@@ -125,6 +128,9 @@ func main() {
 			return nil
 		})
 
+	flag.BoolVar(&cisBenchmarkEnabled, "cis-benchmarks-enabled", true,
+		"Enable metrics for CISKubeBenchReport resources.")
+
 	flag.Func("cis-detail-report-labels",
 		"A comma-separated list of labels to be exposed from each CIS benchmark detail report. Alias 'all' is supported.",
 		func(input string) error {
@@ -150,6 +156,12 @@ func main() {
 
 			return nil
 		})
+
+	flag.BoolVar(&configAuditEnabled, "config-audits-enabled", true,
+		"Enable metrics for ConfigAuditReport resources.")
+
+	flag.BoolVar(&vulnerabilityScansEnabled, "vulnerability-scans-enabled", true,
+		"Enable metrics for VulnerabilityReport resources.")
 
 	opts := zap.Options{
 		Development: true,
@@ -234,40 +246,47 @@ func main() {
 
 	setupLog.Info(fmt.Sprintf("found %d exporters in %s service", peerRing.MemberCount(), peerRing.ServiceName))
 
-	if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
-		Client:           mgr.GetClient(),
-		Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
-		MaxJitterPercent: maxJitterPercent,
-		Scheme:           mgr.GetScheme(),
-		ShardHelper:      peerRing,
-		TargetLabels:     targetLabels,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
-		os.Exit(1)
+	if cisBenchmarkEnabled {
+		if err = (&ciskubebenchreport.CISKubeBenchReportReconciler{
+			Client:           mgr.GetClient(),
+			Log:              ctrl.Log.WithName("controllers").WithName("CISKubeBenchReport"),
+			MaxJitterPercent: maxJitterPercent,
+			Scheme:           mgr.GetScheme(),
+			ShardHelper:      peerRing,
+			TargetLabels:     cisReportLabels,
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "CISKubeBenchReport")
+			os.Exit(1)
+		}
 	}
 
-	if err = (&configauditreport.ConfigAuditReportReconciler{
-		Client:           mgr.GetClient(),
-		Log:              ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
-		MaxJitterPercent: maxJitterPercent,
-		Scheme:           mgr.GetScheme(),
-		ShardHelper:      peerRing,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
-		os.Exit(1)
+	if configAuditEnabled {
+		if err = (&configauditreport.ConfigAuditReportReconciler{
+			Client:           mgr.GetClient(),
+			Log:              ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
+			MaxJitterPercent: maxJitterPercent,
+			Scheme:           mgr.GetScheme(),
+			ShardHelper:      peerRing,
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
+			os.Exit(1)
+		}
 	}
 
-	if err = (&ciskubebenchreport.CISKubeBenchReportReconciler{
-		Client:           mgr.GetClient(),
-		Log:              ctrl.Log.WithName("controllers").WithName("CISKubeBenchReport"),
-		MaxJitterPercent: maxJitterPercent,
-		Scheme:           mgr.GetScheme(),
-		ShardHelper:      peerRing,
-		TargetLabels:     cisReportLabels,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "CISKubeBenchReport")
-		os.Exit(1)
+	if vulnerabilityScansEnabled {
+		if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
+			Client:           mgr.GetClient(),
+			Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
+			MaxJitterPercent: maxJitterPercent,
+			Scheme:           mgr.GetScheme(),
+			ShardHelper:      peerRing,
+			TargetLabels:     targetLabels,
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
+			os.Exit(1)
+		}
 	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
