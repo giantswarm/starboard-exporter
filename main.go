@@ -129,7 +129,7 @@ func main() {
 		})
 
 	flag.BoolVar(&cisBenchmarkEnabled, "cis-benchmarks-enabled", true,
-		"Enable metrics for CIS benchmarks based on CISKubeBenchReport resources.")
+		"Enable metrics for CISKubeBenchReport resources.")
 
 	flag.Func("cis-detail-report-labels",
 		"A comma-separated list of labels to be exposed from each CIS benchmark detail report. Alias 'all' is supported.",
@@ -158,10 +158,10 @@ func main() {
 		})
 
 	flag.BoolVar(&configAuditEnabled, "config-audits-enabled", true,
-		"Enable metrics for CIS benchmarks based on CISKubeBenchReport resources.")
+		"Enable metrics for ConfigAuditReport resources.")
 
 	flag.BoolVar(&vulnerabilityScansEnabled, "vulnerability-scans-enabled", true,
-		"Enable metrics for CIS benchmarks based on CISKubeBenchReport resources.")
+		"Enable metrics for VulnerabilityReport resources.")
 
 	opts := zap.Options{
 		Development: true,
