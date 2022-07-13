@@ -68,6 +68,8 @@ spec:
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
           - --cis-benchmarks-enabled={{ default .Values.exporter.CISKubeBenchReports.enabled true }}
+          - --config-audits-enabled={{ default .Values.exporter.configAuditReports.enabled true }}
+          - --vulnerability-scans-enabled={{ default .Values.exporter.vulnerabilityReports.enabled true }}
         {{- if .Values.exporter.CISKubeBenchReports.targetLabels }}
           - --cis-detail-report-labels={{ .Values.exporter.CISKubeBenchReports.targetLabels | join "," }}
         {{- end }}

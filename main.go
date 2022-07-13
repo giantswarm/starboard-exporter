@@ -157,7 +157,7 @@ func main() {
 			return nil
 		})
 
-	flag.BoolVar(&configAuditEnabled, "config-audit-enabled", true,
+	flag.BoolVar(&configAuditEnabled, "config-audits-enabled", true,
 		"Enable metrics for CIS benchmarks based on CISKubeBenchReport resources.")
 
 	flag.BoolVar(&vulnerabilityScansEnabled, "vulnerability-scans-enabled", true,
