@@ -272,6 +272,7 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
 	if vulnerabilityScansEnabled {
 		if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
 			Client:           mgr.GetClient(),
