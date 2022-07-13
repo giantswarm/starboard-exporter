@@ -53,7 +53,7 @@ exporter:
       # - image_tag
       # - vulnerability_id
   CISKubeBenchReports:
-    enabled: true
+    enabled: false
     targetLabels:
       # - test_number
       # - test_desc
