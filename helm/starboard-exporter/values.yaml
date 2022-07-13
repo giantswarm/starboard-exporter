@@ -45,7 +45,7 @@ project:
 
 exporter:
   requeueMaxJitterPercent: 10
- 
+
   CISKubeBenchReports:
     enabled: true
     targetLabels:
