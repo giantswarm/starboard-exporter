@@ -46,7 +46,7 @@ project:
 exporter:
   requeueMaxJitterPercent: 10
   vulnerabilityReports:
-    enabled: true
+    enabled: false
     targetLabels:
       # - image_namespace
       # - image_repository
@@ -59,7 +59,7 @@ exporter:
       # - test_desc
       # - test_status
   configAuditReports:
-    enabled: true
+    enabled: false
 
 monitoring:
   serviceMonitor:
