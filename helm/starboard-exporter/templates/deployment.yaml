@@ -67,9 +67,10 @@ spec:
         {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
-          - --cis-benchmarks-enabled={{ default .Values.exporter.CISKubeBenchReports.enabled true }}
-          - --config-audits-enabled={{ default .Values.exporter.configAuditReports.enabled true }}
-          - --vulnerability-scans-enabled={{ default .Values.exporter.vulnerabilityReports.enabled true }}
+          # A little magic for handling defaulting with booleans https://github.com/helm/helm/issues/3308#issuecomment-781523784
+          - --cis-benchmarks-enabled={{ or .Values.exporter.CISKubeBenchReports.enabled (not (hasKey .Values.exporter.CISKubeBenchReports "enabled")) }}
+          - --config-audits-enabled={{ or .Values.exporter.configAuditReports.enabled (not (hasKey .Values.exporter.configAuditReports "enabled")) }}
+          - --vulnerability-scans-enabled={{ or .Values.exporter.vulnerabilityReports.enabled (not (hasKey .Values.exporter.vulnerabilityReports "enabled")) }}
         {{- if .Values.exporter.CISKubeBenchReports.targetLabels }}
           - --cis-detail-report-labels={{ .Values.exporter.CISKubeBenchReports.targetLabels | join "," }}
         {{- end }}
