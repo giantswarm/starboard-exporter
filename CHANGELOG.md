@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2022-07-13
+
 ### Added
 
 - Allow selectively enabling/disabling controllers for each report type.
@@ -133,7 +135,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/giantswarm/starboard-exporter/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/giantswarm/starboard-exporter/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.3.3...v0.4.0
