@@ -3,7 +3,7 @@ module github.com/giantswarm/starboard-exporter
 go 1.18
 
 require (
-	github.com/aquasecurity/starboard v0.15.6
+	github.com/aquasecurity/starboard v0.15.7
 	github.com/buraksezer/consistent v0.9.0
 	github.com/cespare/xxhash/v2 v2.1.2
 	github.com/go-logr/logr v1.2.3
