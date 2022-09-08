@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+### Added
+
+- Make `interval` and `scrapeTimeout` configurable in the service monitor via `monitoring.serviceMonitor.interval` and `monitoring.serviceMonitor.scrapeTimeout`
+
 ## [0.5.1] - 2022-07-13
 
 ### Added
