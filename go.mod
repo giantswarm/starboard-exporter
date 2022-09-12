@@ -16,7 +16,7 @@ require (
 )
 
 require (
-	github.com/google/go-cmp v0.5.8
+	github.com/google/go-cmp v0.5.9
 	gotest.tools v2.2.0+incompatible
 )
 
