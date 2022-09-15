@@ -13,6 +13,9 @@ pod:
 nodeSelector: {}
 tolerations: {}
 
+# Additional custom pod labels
+podLabels: {}
+
 # Pod securityContext
 podSecurityContext:
   runAsNonRoot: true
