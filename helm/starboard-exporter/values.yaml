@@ -50,7 +50,7 @@ exporter:
   requeueMaxJitterPercent: 10
 
   CISKubeBenchReports:
-    enabled: true
+    enabled: false
     targetLabels:
       # - test_number
       # - test_desc
