@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2022-09-16
+
 ### Added
 
 - Add `podLabels` property to allow custom pod labels.
@@ -149,7 +151,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/giantswarm/starboard-exporter/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/giantswarm/starboard-exporter/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.4.1...v0.5.0
