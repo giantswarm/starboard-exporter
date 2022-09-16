@@ -11,8 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `podLabels` property to allow custom pod labels.
 
-## [0.5.2] - 2022-09-09
+### Changed
 
+- Disable reconciliation of CIS benchmark reports by default. These reports are temporarily removed from `trivy-operator`, to be reintroduced in the future. Reconciliation of CIS benchmarks produced by `starboard` is still supported by setting `exporter.CISKubeBenchReports.enabled: true` in the Helm values.
+
+## [0.5.2] - 2022-09-09
 
 ### Added
 
