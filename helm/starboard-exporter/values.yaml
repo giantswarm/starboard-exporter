@@ -71,6 +71,8 @@ monitoring:
   serviceMonitor:
     enabled: true
     labels: {}
+    relabelings: []
+    metricRelabelings: []
 
   grafanaDashboard:
     enabled: true
