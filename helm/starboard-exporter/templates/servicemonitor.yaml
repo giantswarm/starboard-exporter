@@ -19,6 +19,14 @@ spec:
       {{- end }}
       {{- if .Values.monitoring.serviceMonitor.scrapeTimeout}}
       scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+      {{- end }}      
+      {{- with .Values.monitoring.serviceMonitor.relabelings }}
+      relabelings:
+        {{- toYaml . | nindent 4 }}
+      {{- end }}
+      {{- with .Values.monitoring.serviceMonitor.metricRelabelings }}
+      metricRelabelings:
+        {{- toYaml . | nindent 4 }}
       {{- end }}
   selector:
     matchLabels:
