@@ -70,11 +70,10 @@ exporter:
 monitoring:
   serviceMonitor:
     enabled: true
-    labels:
-      release: prometheus-operator-app
+    labels: {}
     relabelings:
     - action: labeldrop
-      regex: pod|service|container
+      regex: pod|service|container|job
     metricRelabelings: []
 
   grafanaDashboard:
