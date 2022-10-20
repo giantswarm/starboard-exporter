@@ -73,7 +73,7 @@ monitoring:
     labels: {}
     relabelings:
     - action: labeldrop
-      regex: pod|service|container|job
+      regex: pod|service|container
     metricRelabelings: []
 
   grafanaDashboard:
