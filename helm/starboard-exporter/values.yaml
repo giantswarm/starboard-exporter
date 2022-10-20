@@ -1,9 +1,10 @@
 replicas: 1
 registry:
   domain: docker.io
+
 image:
   name: "giantswarm/starboard-exporter"
-  tag: "[[ .Version ]]"
+
 pod:
   user:
     id: 1000
