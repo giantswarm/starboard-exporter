@@ -70,7 +70,8 @@ exporter:
 monitoring:
   serviceMonitor:
     enabled: true
-    labels: {}
+    labels:
+      release: prometheus-operator-app
     relabelings:
     - action: labeldrop
       regex: pod|service|container
