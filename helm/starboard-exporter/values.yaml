@@ -71,6 +71,10 @@ monitoring:
   serviceMonitor:
     enabled: true
     labels: {}
+    relabelings:
+    - action: labeldrop
+      regex: pod|service|container
+    metricRelabelings: []
 
   grafanaDashboard:
     enabled: true
