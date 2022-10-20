@@ -22,11 +22,11 @@ spec:
       {{- end }}      
       {{- with .Values.monitoring.serviceMonitor.relabelings }}
       relabelings:
-        {{- toYaml . | nindent 4 }}
+        {{- toYaml . | nindent 6 }}
       {{- end }}
       {{- with .Values.monitoring.serviceMonitor.metricRelabelings }}
       metricRelabelings:
-        {{- toYaml . | nindent 4 }}
+        {{- toYaml . | nindent 6 }}
       {{- end }}
   selector:
     matchLabels:
