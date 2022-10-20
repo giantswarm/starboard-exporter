@@ -1,10 +1,10 @@
 apiVersion: v1
-appVersion: [[ .AppVersion ]]
+appVersion: 0.6.0
 name: starboard-exporter
 description: A Helm chart for starboard-exporter, which exposes Prometheus metrics from Aqua VulnerabilityReport and other custom resources.
 engine: gotpl
 home: https://github.com/giantswarm/starboard-exporter
-version: [[ .Version ]]
+version: 0.6.0
 annotations:
   application.giantswarm.io/team: "shield"
   config.giantswarm.io/version: 1.x.x

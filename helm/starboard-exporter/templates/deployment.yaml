@@ -62,7 +62,7 @@ spec:
         {{- end }}
       containers:
       - name: {{ include "name" . }}
-        image: "{{ .Values.registry.domain }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.registry.domain }}/{{ .Values.image.name }}:{{ .Chart.Version }}"
         args:
           - --pod-ip=$(MY_POD_IP)
           - --service-name={{ include "resource.default.name"  . }}

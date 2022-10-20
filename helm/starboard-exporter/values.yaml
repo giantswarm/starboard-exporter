@@ -1,9 +1,10 @@
 replicas: 1
 registry:
   domain: docker.io
+
 image:
   name: "giantswarm/starboard-exporter"
-  tag: "[[ .Version ]]"
+
 pod:
   user:
     id: 1000
@@ -41,10 +42,6 @@ resources:
   limits:
     cpu: 100m
     memory: 220Mi
-
-project:
-  branch: "[[ .Branch ]]"
-  commit: "[[ .SHA ]]"
 
 exporter:
   requeueMaxJitterPercent: 10
