@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Make ServiceMonitor relabelings configurable and drop unhelpful pod, container, and service labels by default.
 - Build with `app-build-suite`.
+- Add `app-test-suite` basic smoke tests.
 
 ## [0.6.0] - 2022-09-16
 
