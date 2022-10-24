@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  architect: giantswarm/architect@dev:nancy-upstream-errors
+  architect: giantswarm/architect@4.24.0
 
 workflows:
   package-and-push-chart-on-tag:
