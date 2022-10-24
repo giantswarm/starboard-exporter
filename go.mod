@@ -3,7 +3,7 @@ module github.com/giantswarm/starboard-exporter
 go 1.18
 
 require (
-	github.com/aquasecurity/starboard v0.15.11
+	github.com/aquasecurity/starboard v0.15.10
 	github.com/buraksezer/consistent v0.9.0
 	github.com/cespare/xxhash/v2 v2.1.2
 	github.com/go-logr/logr v1.2.3
@@ -64,7 +64,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220718184931-c8730f7fcb92 // indirect
 	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
-	golang.org/x/text v0.3.8 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -80,12 +80,4 @@ require (
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
-)
-
-replace (
-	github.com/containerd/containerd => github.com/containerd/containerd v1.6.4
-	github.com/coreos/etcd => github.com/coreos/etcd v3.3.27+incompatible
-	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/miekg/dns => github.com/miekg/dns v1.1.49
-	github.com/open-policy-agent/opa v0.43.0 => github.com/open-policy-agent/opa v0.43.1
 )
