@@ -81,11 +81,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace (
-	github.com/containerd/containerd => github.com/containerd/containerd v1.6.4
-	github.com/coreos/etcd => github.com/coreos/etcd v3.3.27+incompatible
-	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/miekg/dns => github.com/miekg/dns v1.1.49
-	github.com/open-policy-agent/opa v0.43.0 => github.com/open-policy-agent/opa v0.43.1
-)
