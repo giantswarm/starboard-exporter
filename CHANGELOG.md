@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- #157
+### Changed
+
+- Fix schema type for tolerations ([#157](https://github.com/giantswarm/starboard-exporter/issues/157)).
 
 ## [0.6.1] - 2022-10-21
 
