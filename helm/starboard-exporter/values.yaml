@@ -12,7 +12,7 @@ pod:
     id: 1000
 
 nodeSelector: {}
-tolerations: {}
+tolerations: []
 
 # Additional custom pod labels
 podLabels: {}
