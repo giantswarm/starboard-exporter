@@ -94,6 +94,7 @@ workflows:
           requires:
             - push-starboard-exporter-to-giantswarm-catalog
 
+      # Push starboard-exporter to app collections
       - architect/push-to-app-collection:
           context: "architect"
           name: push-starboard-exporter-to-aws-app-collection
@@ -114,6 +115,62 @@ workflows:
           name: push-starboard-exporter-to-azure-app-collection
           app_name: "starboard-exporter"
           app_collection_repo: "azure-app-collection"
+          requires:
+            - push-starboard-exporter-to-control-plane-catalog
+          filters:
+            # Only do this when a new tag is created.
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: "architect"
+          name: push-starboard-exporter-to-capa-app-collection
+          app_name: "starboard-exporter"
+          app_collection_repo: "capa-app-collection"
+          requires:
+            - push-starboard-exporter-to-control-plane-catalog
+          filters:
+            # Only do this when a new tag is created.
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: "architect"
+          name: push-starboard-exporter-to-cloud-director-app-collection
+          app_name: "starboard-exporter"
+          app_collection_repo: "cloud-director-app-collection"
+          requires:
+            - push-starboard-exporter-to-control-plane-catalog
+          filters:
+            # Only do this when a new tag is created.
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: "architect"
+          name: push-starboard-exporter-to-gcp-app-collection
+          app_name: "starboard-exporter"
+          app_collection_repo: "gcp-app-collection"
+          requires:
+            - push-starboard-exporter-to-control-plane-catalog
+          filters:
+            # Only do this when a new tag is created.
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: "architect"
+          name: push-starboard-exporter-to-openstack-app-collection
+          app_name: "starboard-exporter"
+          app_collection_repo: "openstack-app-collection"
           requires:
             - push-starboard-exporter-to-control-plane-catalog
           filters:
