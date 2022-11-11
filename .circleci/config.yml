@@ -179,3 +179,17 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: "architect"
+          name: push-starboard-exporter-to-vsphere-app-collection
+          app_name: "starboard-exporter"
+          app_collection_repo: "vsphere-app-collection"
+          requires:
+            - push-starboard-exporter-to-control-plane-catalog
+          filters:
+            # Only do this when a new tag is created.
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
