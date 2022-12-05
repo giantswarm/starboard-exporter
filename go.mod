@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/aquasecurity/starboard v0.15.11
 	github.com/buraksezer/consistent v0.9.0
-	github.com/cespare/xxhash/v2 v2.1.2
+	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/go-logr/logr v1.2.3
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.13.0
