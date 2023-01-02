@@ -32,7 +32,7 @@
                             "type": "boolean"
                         },
                         "targetLabels": {
-                            "type": "null"
+                            "type": ["null", "array"]
                         }
                     }
                 },
@@ -54,7 +54,7 @@
                             "type": "boolean"
                         },
                         "targetLabels": {
-                            "type": "null"
+                            "type": ["null", "array"]
                         }
                     }
                 }
