@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changes
+
+- Adds `custom metrics hpa` capability to `starboard-exporter`
+
 ## [0.6.3] - 2022-12-02
 
 ## [0.6.2] - 2022-10-24
