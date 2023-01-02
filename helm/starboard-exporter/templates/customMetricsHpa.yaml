@@ -18,6 +18,6 @@ spec:
   - type: Pods
     pods:
       metricName: {{ .Values.customMetricsHpa.metricName }}
-      targetAverageValue: {{ .Values.customMetricsHpa.targetAverageValue }}
+      targetAverageValue: {{ .Values.customMetricsHpa.targetAverageValueSeconds }}
 {{- end -}}
 {{- end -}}
