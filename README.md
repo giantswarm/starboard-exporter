@@ -190,3 +190,7 @@ helm repo add giantswarm https://giantswarm.github.io/giantswarm-catalog
 helm repo update
 helm upgrade -i starboard-exporter --namespace <starboard namespace> giantswarm/starboard-exporter
 ```
+
+## Custom metrics HPA
+
+Enable HPA scaling based on prometheus metrics, [here](./docs/custom_metrics_hpa.md)
