@@ -2,6 +2,26 @@
     "$schema": "http://json-schema.org/schema#",
     "type": "object",
     "properties": {
+        "customMetricsHpa": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxReplicas": {
+                    "type": "integer"
+                },
+                "metricName": {
+                    "type": "string"
+                },
+                "minReplicas": {
+                    "type": "integer"
+                },
+                "targetAverageValue": {
+                    "type": "integer"
+                }
+            }
+        },
         "exporter": {
             "type": "object",
             "properties": {
@@ -12,7 +32,7 @@
                             "type": "boolean"
                         },
                         "targetLabels": {
-                            "type": ["null", "array"]
+                            "type": "null"
                         }
                     }
                 },
@@ -34,7 +54,7 @@
                             "type": "boolean"
                         },
                         "targetLabels": {
-                            "type": ["null", "array"]
+                            "type": "null"
                         }
                     }
                 }
