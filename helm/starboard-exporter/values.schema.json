@@ -17,7 +17,7 @@
                 "minReplicas": {
                     "type": "integer"
                 },
-                "targetAverageValue": {
+                "targetAverageValueSeconds": {
                     "type": "integer"
                 }
             }
