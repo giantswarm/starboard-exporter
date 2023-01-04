@@ -15,7 +15,7 @@
           port: 9090
           path: "/gaia"
         ```
-    2. Create seriesQuery & metricsQuery accordingly to fetch metrics of the required component. For example,
+    2. Create seriesQuery & metricsQuery accordingly to fetch metrics of the required component. For example:
         ```
          rules:
            custom:
