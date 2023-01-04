@@ -191,6 +191,6 @@ helm repo update
 helm upgrade -i starboard-exporter --namespace <starboard namespace> giantswarm/starboard-exporter
 ```
 
-## Custom metrics HPA
+## Scaling for Prometheus scrape timeouts
 
-Enable HPA scaling based on prometheus metrics, [here](./docs/custom_metrics_hpa.md)
+When exporting a large volume of metrics, Prometheus might time out before retrieving them all from a single exporter instance. It is possible to automatically scale the number of exporters to keep the scrape time below the configured timeout. To enable HPA scaling based on Prometheus metrics, [here](./docs/custom_metrics_hpa.md)
