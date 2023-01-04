@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changes
+### Added
 
-- Adds `custom metrics hpa` capability to `starboard-exporter`
+- Add Horizontal Pod Autoscaling based on Prometheus scrape times.
 
 ## [0.6.3] - 2022-12-02
 
