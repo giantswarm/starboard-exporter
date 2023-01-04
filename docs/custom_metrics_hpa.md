@@ -1,4 +1,4 @@
-### Enabling custom metrics hpa for starboard exporter
+### Enabling custom metrics HPA for starboard-exporter
 
 #### Required components
 
