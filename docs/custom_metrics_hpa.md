@@ -28,7 +28,7 @@
                metricsQuery: scrape_duration_seconds{app="starboard-exporter"}
         ```
 
-    #### Make sure prometheus adapter is scarping the metrics & exposing custom metric
+    #### Make sure prometheus adapter is scraping the metrics & exposing the custom metric
 
     ```bash
     export TEST_NAMESPACE=giantswarm
