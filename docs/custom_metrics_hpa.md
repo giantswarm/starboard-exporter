@@ -7,15 +7,15 @@
 #### Steps
 
 1. Install prometheus adapter.
-    1. Configure helm chart to connect with prometheus to get the metrics
+    1. Configure helm chart to connect with prometheus to get the metrics. Change the values as required.
         ```
         prometheus:
           # Value is templated
-          url: http://prometheus-operated.gaia-prometheus.svc
+          url: http://prometheus-operated.monitoring.svc
           port: 9090
-          path: "/gaia"
+          path: ""
         ```
-    2. Create seriesQuery & metricsQuery accordingly to fetch metrics of the required component. For example:
+    2. Create seriesQuery & metricsQuery to fetch metrics for the required components. For example, labels like `app="starboard-exporter"` or `job="starboard-exporter"` can be used to filter the `starboard-exporter` metrics in prometheus. Change the values as required.
         ```
          rules:
            custom:
@@ -36,4 +36,4 @@
     kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/$TEST_NAMESPACE/services/*/scrapedurationseconds" | jq -r .
     ```
 
-2. Enable `customMetricsHpa` from `values.yaml`
+2. Enable `customMetricsHPA` from `values.yaml`

@@ -1,5 +1,5 @@
 {{- if .Capabilities.APIVersions.Has "autoscaling/v2beta1" -}}
-{{- if .Values.customMetricsHpa.enabled -}}
+{{- if .Values.customMetricsHPA.enabled -}}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
@@ -12,12 +12,12 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "resource.default.name"  . }}
-  minReplicas: {{ .Values.customMetricsHpa.minReplicas }}
-  maxReplicas: {{ .Values.customMetricsHpa.maxReplicas }}
+  minReplicas: {{ .Values.customMetricsHPA.minReplicas }}
+  maxReplicas: {{ .Values.customMetricsHPA.maxReplicas }}
   metrics:
   - type: Pods
     pods:
-      metricName: {{ .Values.customMetricsHpa.metricName }}
-      targetAverageValue: {{ .Values.customMetricsHpa.targetAverageValueSeconds }}
+      metricName: {{ .Values.customMetricsHPA.metricName }}
+      targetAverageValue: {{ .Values.customMetricsHPA.targetAverageValueSeconds }}
 {{- end -}}
 {{- end -}}
