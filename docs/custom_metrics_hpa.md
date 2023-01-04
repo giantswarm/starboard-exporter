@@ -19,13 +19,13 @@
         ```
          rules:
            custom:
-             - seriesQuery: 'scrape_duration_seconds{app="starboard-exporter"}'
+             - seriesQuery: 'scrape_duration_seconds{job="starboard-exporter"}'
                seriesFilters: []
                resources:
                  template: <<.Resource>>
                name:
                  as: "scrapedurationseconds"
-               metricsQuery: scrape_duration_seconds{app="starboard-exporter"}
+               metricsQuery: scrape_duration_seconds{job="starboard-exporter"}
         ```
 
     #### Make sure prometheus adapter is scraping the metrics & exposing the custom metric
