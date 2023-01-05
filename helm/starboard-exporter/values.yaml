@@ -46,13 +46,6 @@ resources:
 exporter:
   requeueMaxJitterPercent: 10
 
-  CISKubeBenchReports:
-    enabled: false
-    targetLabels:
-      # - test_number
-      # - test_desc
-      # - test_status
-
   configAuditReports:
     enabled: true
 
