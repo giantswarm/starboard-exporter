@@ -22,11 +22,11 @@ require (
 
 require (
 	github.com/aquasecurity/defsec v0.82.7-0.20221229120130-2bc18528da1c // indirect
-	github.com/aquasecurity/go-dep-parser v0.0.0-20230103104431-dd23cdd74cae // indirect
+	github.com/aquasecurity/go-dep-parser v0.0.0-20230105081339-fe9e63bf16bf // indirect
 	github.com/aquasecurity/table v1.8.0 // indirect
 	github.com/aquasecurity/tml v0.6.1 // indirect
-	github.com/aquasecurity/trivy v0.36.0 // indirect
-	github.com/aquasecurity/trivy-db v0.0.0-20221227141502-af78ecb7db4c // indirect
+	github.com/aquasecurity/trivy v0.36.1 // indirect
+	github.com/aquasecurity/trivy-db v0.0.0-20230105123735-5ce110fc82e1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/caarlos0/env/v6 v6.10.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
