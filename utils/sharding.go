@@ -126,7 +126,10 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 		// We can add a delete handler here. Not sure yet what it should do.
 	}
 
-	informer.AddEventHandler(handlers)
+	_, err = informer.AddEventHandler(handlers)
+	if err != nil {
+		log.Info(err.Error(), "error adding event handler to informer")
+	}
 	return informer
 }
 
