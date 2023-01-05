@@ -84,3 +84,10 @@ networkpolicy:
   enabled: true
 
 podAnnotations: {}
+
+customMetricsHPA:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 97  # The number of replicas is limited to 97 by the current sharding math. See https://www.giantswarm.io/blog/cveing-is-believing
+  metricName: scrapedurationseconds
+  targetAverageValueSeconds: 10  # Scrape duration seconds timeout

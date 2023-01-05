@@ -1,0 +1,23 @@
+{{- if .Capabilities.APIVersions.Has "autoscaling/v2beta1" -}}
+{{- if .Values.customMetricsHPA.enabled -}}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: staboard-exporter-custom-metrics-hpa
+  namespace: {{ include "resource.default.namespace"  . }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "resource.default.name"  . }}
+  minReplicas: {{ .Values.customMetricsHPA.minReplicas }}
+  maxReplicas: {{ .Values.customMetricsHPA.maxReplicas }}
+  metrics:
+  - type: Pods
+    pods:
+      metricName: {{ .Values.customMetricsHPA.metricName }}
+      targetAverageValue: {{ .Values.customMetricsHPA.targetAverageValueSeconds }}
+{{- end -}}
+{{- end -}}
