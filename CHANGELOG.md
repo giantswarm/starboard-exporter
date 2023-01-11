@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changes
+
+- Replaces starboard library with trivy-operator library.
+- Removes CIS benchmarks & reporting capabilities.
+
 ### Added
 
 - Add Horizontal Pod Autoscaling based on Prometheus scrape times.

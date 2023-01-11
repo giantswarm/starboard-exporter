@@ -25,17 +25,6 @@
         "exporter": {
             "type": "object",
             "properties": {
-                "CISKubeBenchReports": {
-                    "type": "object",
-                    "properties": {
-                        "enabled": {
-                            "type": "boolean"
-                        },
-                        "targetLabels": {
-                            "type": ["null", "array"]
-                        }
-                    }
-                },
                 "configAuditReports": {
                     "type": "object",
                     "properties": {

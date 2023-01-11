@@ -40,10 +40,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
+	aqua "github.com/aquasecurity/trivy-operator/pkg/apis/aquasecurity/v1alpha1"
 
 	"github.com/giantswarm/starboard-exporter/controllers"
-	"github.com/giantswarm/starboard-exporter/controllers/ciskubebenchreport"
 	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
 	"github.com/giantswarm/starboard-exporter/utils"
@@ -74,7 +73,6 @@ func init() {
 }
 
 func main() {
-	var cisBenchmarkEnabled bool
 	var configAuditEnabled bool
 	var enableLeaderElection bool
 	var maxJitterPercent int
@@ -85,7 +83,6 @@ func main() {
 	var serviceNamespace string
 	var vulnerabilityScansEnabled bool
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
-	cisReportLabels := []ciskubebenchreport.ReportLabel{}
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -128,35 +125,6 @@ func main() {
 			return nil
 		})
 
-	flag.BoolVar(&cisBenchmarkEnabled, "cis-benchmarks-enabled", true,
-		"Enable metrics for CISKubeBenchReport resources.")
-
-	flag.Func("cis-detail-report-labels",
-		"A comma-separated list of labels to be exposed from each CIS benchmark detail report. Alias 'all' is supported.",
-		func(input string) error {
-			items := strings.Split(input, ",")
-			for _, i := range items {
-				if i == ciskubebenchreport.LabelGroupAll {
-					// Special case for "all".
-					cisReportLabels = appendIfNotExistsCIS(cisReportLabels, ciskubebenchreport.LabelsForGroup(ciskubebenchreport.LabelGroupAll))
-					continue
-				}
-
-				label, ok := ciskubebenchreport.LabelWithName(i)
-				if !ok {
-					err := errors.New("invalidConfigError")
-					return err
-				}
-				cisReportLabels = appendIfNotExistsCIS(cisReportLabels, []ciskubebenchreport.ReportLabel{label})
-			}
-
-			// If exposing detail metrics, we must always include the report name in order to delete them by name later.
-			reportNameLabel, _ := ciskubebenchreport.LabelWithName("node_name")
-			cisReportLabels = appendIfNotExistsCIS(cisReportLabels, []ciskubebenchreport.ReportLabel{reportNameLabel})
-
-			return nil
-		})
-
 	flag.BoolVar(&configAuditEnabled, "config-audits-enabled", true,
 		"Enable metrics for ConfigAuditReport resources.")
 
@@ -191,15 +159,6 @@ func main() {
 			tl = append(tl, l.Name)
 		}
 		setupLog.Info(fmt.Sprintf("Using %d vulnerability target labels: %v", len(tl), tl))
-	}
-
-	// Print CIS report labels.
-	if len(cisReportLabels) > 0 {
-		tl := []string{}
-		for _, l := range cisReportLabels {
-			tl = append(tl, l.Name)
-		}
-		setupLog.Info(fmt.Sprintf("Using %d CIS report labels: %v", len(tl), tl))
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -245,20 +204,6 @@ func main() {
 	}
 
 	setupLog.Info(fmt.Sprintf("found %d exporters in %s service", peerRing.MemberCount(), peerRing.ServiceName))
-
-	if cisBenchmarkEnabled {
-		if err = (&ciskubebenchreport.CISKubeBenchReportReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("CISKubeBenchReport"),
-			MaxJitterPercent: maxJitterPercent,
-			Scheme:           mgr.GetScheme(),
-			ShardHelper:      peerRing,
-			TargetLabels:     cisReportLabels,
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "CISKubeBenchReport")
-			os.Exit(1)
-		}
-	}
 
 	if configAuditEnabled {
 		if err = (&configauditreport.ConfigAuditReportReconciler{
@@ -315,7 +260,6 @@ func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 
 	configauditreport.RequeueReportsForPod(c, log, podIP)
 
-	ciskubebenchreport.RequeueReportsForPod(c, log, podIP)
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {
@@ -323,24 +267,6 @@ func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vu
 	contained := make(map[string]bool)
 
 	for _, existingLabelName := range vulnerabilityreport.LabelNamesForList(base) {
-		contained[existingLabelName] = true
-	}
-
-	for _, newItem := range items {
-		if !contained[newItem.Name] {
-			result = append(result, newItem)
-			contained[newItem.Name] = true
-		}
-	}
-
-	return result
-}
-
-func appendIfNotExistsCIS(base []ciskubebenchreport.ReportLabel, items []ciskubebenchreport.ReportLabel) []ciskubebenchreport.ReportLabel {
-	result := base
-	contained := make(map[string]bool)
-
-	for _, existingLabelName := range ciskubebenchreport.LabelNamesForList(base) {
 		contained[existingLabelName] = true
 	}
 

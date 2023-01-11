@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	aqua "github.com/aquasecurity/starboard/pkg/apis/aquasecurity/v1alpha1"
+	aqua "github.com/aquasecurity/trivy-operator/pkg/apis/aquasecurity/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
