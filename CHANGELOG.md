@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0] - 2023-01-11
 
-### Changes
+### Changed
 
 - Replaces starboard library with trivy-operator library.
 - Removes CIS benchmarks & reporting capabilities.
