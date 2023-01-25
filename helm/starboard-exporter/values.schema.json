@@ -43,7 +43,7 @@
                             "type": "boolean"
                         },
                         "targetLabels": {
-                            "type": "null"
+                            "type": ["null", "array"]
                         }
                     }
                 }
