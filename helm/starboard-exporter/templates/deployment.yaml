@@ -60,6 +60,10 @@ spec:
         {{- with .Values.podSecurityContext }}
           {{- . | toYaml | nindent 8 }}
         {{- end }}
+      {{- with .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: {{ include "name" . }}
         image: "{{ .Values.registry.domain }}/{{ .Values.image.name }}:{{ .Chart.Version }}"
