@@ -57,6 +57,9 @@
                 }
             }
         },
+        "imagePullSecrets": {
+            "type": "object"
+        },
         "monitoring": {
             "type": "object",
             "properties": {
