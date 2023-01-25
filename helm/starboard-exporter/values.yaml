@@ -5,6 +5,8 @@ registry:
 image:
   name: "giantswarm/starboard-exporter"
 
+imagePullSecrets: {}
+
 pod:
   user:
     id: 1000
