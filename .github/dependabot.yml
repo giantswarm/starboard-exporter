@@ -1,6 +1,6 @@
 # DO NOT EDIT. Generated with:
 #
-#    devctl@5.9.0
+#    devctl@5.18.2
 #
 version: 2
 updates:
@@ -35,3 +35,11 @@ updates:
       - dependency-name: k8s.io/*
         versions:
           - ">=0.19.0"
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      time: "04:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - giantswarm/team-shield
