@@ -78,7 +78,8 @@ psp:
 networkpolicy:
   enabled: true
 
-podAnnotations: {}
+podAnnotations:
+  giantswarm.io/monitoring: "true"
 
 customMetricsHPA:
   enabled: false
