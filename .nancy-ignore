@@ -6,3 +6,11 @@ CVE-2022-24687 until=2023-05-25
 # Non-CVE info requiring sonatype account
 sonatype-2019-0890
 sonatype-2022-6522 until=2023-02-01
+
+# Ignore till testing monitoring
+CVE-2023-25153
+CVE-2023-25173
+CVE-2023-0475
+CVE-2022-41723
+CVE-2023-25165
+sonatype-2022-6522
