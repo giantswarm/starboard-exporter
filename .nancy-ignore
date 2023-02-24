@@ -5,4 +5,4 @@ CVE-2022-24687 until=2023-05-25
 
 # Non-CVE info requiring sonatype account
 sonatype-2019-0890
-sonatype-2022-6522 until=2023-02-01
+sonatype-2022-6522 until=2023-04-01
