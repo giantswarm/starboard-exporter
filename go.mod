@@ -3,16 +3,16 @@ module github.com/giantswarm/starboard-exporter
 go 1.18
 
 require (
-	github.com/aquasecurity/trivy-operator v0.10.1
+	github.com/aquasecurity/trivy-operator v0.11.1
 	github.com/buraksezer/consistent v0.10.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/go-logr/logr v1.2.3
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
-	k8s.io/api v0.26.0
-	k8s.io/apimachinery v0.26.0
-	k8s.io/client-go v0.26.0
-	sigs.k8s.io/controller-runtime v0.14.1
+	k8s.io/api v0.26.1
+	k8s.io/apimachinery v0.26.1
+	k8s.io/client-go v0.26.1
+	sigs.k8s.io/controller-runtime v0.14.4
 )
 
 require (
@@ -23,7 +23,7 @@ require (
 replace helm.sh/helm/v3 v3.10.1 => helm.sh/helm/v3 v3.10.3
 
 require (
-	github.com/aquasecurity/defsec v0.82.7-0.20221229120130-2bc18528da1c // indirect
+	github.com/aquasecurity/defsec v0.82.7-0.20230120014503-046ee90ace59 // indirect
 	github.com/aquasecurity/go-dep-parser v0.0.0-20230105081339-fe9e63bf16bf // indirect
 	github.com/aquasecurity/table v1.8.0 // indirect
 	github.com/aquasecurity/tml v0.6.1 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
-	github.com/google/go-containerregistry v0.12.1 // indirect
+	github.com/google/go-containerregistry v0.13.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
@@ -85,8 +85,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.26.0 // indirect
-	k8s.io/component-base v0.26.0 // indirect
+	k8s.io/apiextensions-apiserver v0.26.1 // indirect
+	k8s.io/component-base v0.26.1 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20221207184640-f3cff1453715 // indirect
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 // indirect
