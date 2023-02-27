@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Fix/template RoleBinding for deploying into namespaces other than the release namespace.
+
 ## [0.7.1] - 2023-01-25
 
 ### Added
