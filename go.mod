@@ -6,7 +6,7 @@ require (
 	github.com/aquasecurity/trivy-operator v0.11.1
 	github.com/buraksezer/consistent v0.10.0
 	github.com/cespare/xxhash/v2 v2.2.0
-	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/logr v1.2.4
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
 	k8s.io/api v0.26.1
