@@ -6,7 +6,7 @@ metadata:
   name: {{ include "resource.default.name"  . }}
   namespace: {{ include "resource.default.namespace"  . }}
   labels:
-  {{- include "labels.common" . | nindent 4 }}
+  {{- include "labels.monitoring" . | nindent 4 }}
   {{- with .Values.monitoring.serviceMonitor.labels }}
       {{- toYaml . | nindent 4 }}
   {{- end }}
