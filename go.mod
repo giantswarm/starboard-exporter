@@ -1,14 +1,19 @@
 module github.com/giantswarm/starboard-exporter
 
-go 1.18
+go 1.19
+
+// spdx logic write on v0.3.0 and incompatible with v0.3.1-0.20230104082527-d6f58551be3f
+replace github.com/spdx/tools-golang => github.com/spdx/tools-golang v0.3.0
 
 require (
 	github.com/aquasecurity/trivy-operator v0.13.0
 	github.com/buraksezer/consistent v0.10.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/go-logr/logr v1.2.4
+	github.com/google/go-cmp v0.5.9
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
+	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.26.3
 	k8s.io/apimachinery v0.26.3
 	k8s.io/client-go v0.26.3
@@ -16,18 +21,6 @@ require (
 )
 
 require (
-	github.com/google/go-cmp v0.5.9
-	gotest.tools v2.2.0+incompatible
-)
-
-replace (
-	github.com/containerd/containerd v1.6.14 => github.com/containerd/containerd v1.6.18
-	github.com/hashicorp/go-getter v1.6.2 => github.com/hashicorp/go-getter v1.7.0
-	helm.sh/helm/v3 v3.10.3 => helm.sh/helm/v3 v3.11.1
-)
-
-require (
-	github.com/anchore/go-struct-converter v0.0.0-20221221214134-65614c61201e // indirect
 	github.com/aquasecurity/defsec v0.85.0 // indirect
 	github.com/aquasecurity/go-dep-parser v0.0.0-20230409061252-947ef35e4c24 // indirect
 	github.com/aquasecurity/table v1.8.0 // indirect
@@ -35,7 +28,6 @@ require (
 	github.com/aquasecurity/trivy v0.39.1 // indirect
 	github.com/aquasecurity/trivy-db v0.0.0-20230410134746-9692a42d4707 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/caarlos0/env/v6 v6.10.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
