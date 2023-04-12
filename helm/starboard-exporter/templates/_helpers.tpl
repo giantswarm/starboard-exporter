@@ -17,8 +17,15 @@ Create chart name and version as used by the chart label.
 Common labels
 */}}
 {{- define "labels.common" -}}
-app: {{ include "name" . | quote }}
 application.giantswarm.io/team: {{ index .Chart.Annotations "application.giantswarm.io/team" | quote }}
+{{ include "labels.monitoring" . }}
+{{- end -}}
+
+{{/*
+Monitoring labels
+*/}}
+{{- define "labels.monitoring" -}}
+app: {{ include "name" . | quote }}
 {{ include "labels.selector" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
