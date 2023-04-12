@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Removed `application.giantswarm.io/team` label from ServiceMonitor.
+
 ## [0.7.2] - 2023-02-27
 
 ### Changed
