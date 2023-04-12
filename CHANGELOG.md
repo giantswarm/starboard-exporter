@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3] - 2023-04-12
+
 ### Changed
 
 - Removed `application.giantswarm.io/team` label from ServiceMonitor.
@@ -194,7 +196,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.2...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.3...HEAD
+[0.7.3]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.6.3...v0.7.0
