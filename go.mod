@@ -12,7 +12,7 @@ require (
 	github.com/go-logr/logr v1.2.4
 	github.com/google/go-cmp v0.5.9
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.14.0
+	github.com/prometheus/client_golang v1.15.0
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.26.3
 	k8s.io/apimachinery v0.26.3
@@ -60,6 +60,7 @@ require (
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
+	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/samber/lo v1.38.1 // indirect
 	github.com/spdx/tools-golang v0.5.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
