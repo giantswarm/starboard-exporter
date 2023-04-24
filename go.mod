@@ -6,7 +6,7 @@ go 1.19
 replace github.com/spdx/tools-golang => github.com/spdx/tools-golang v0.3.0
 
 require (
-	github.com/aquasecurity/trivy-operator v0.13.0
+	github.com/aquasecurity/trivy-operator v0.13.1
 	github.com/buraksezer/consistent v0.10.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/go-logr/logr v1.2.4
@@ -21,12 +21,12 @@ require (
 )
 
 require (
-	github.com/aquasecurity/defsec v0.85.0 // indirect
-	github.com/aquasecurity/go-dep-parser v0.0.0-20230409061252-947ef35e4c24 // indirect
+	github.com/aquasecurity/defsec v0.86.0 // indirect
+	github.com/aquasecurity/go-dep-parser v0.0.0-20230413091456-df0396537e15 // indirect
 	github.com/aquasecurity/table v1.8.0 // indirect
 	github.com/aquasecurity/tml v0.6.1 // indirect
-	github.com/aquasecurity/trivy v0.39.1 // indirect
-	github.com/aquasecurity/trivy-db v0.0.0-20230410134746-9692a42d4707 // indirect
+	github.com/aquasecurity/trivy v0.40.0 // indirect
+	github.com/aquasecurity/trivy-db v0.0.0-20230411140759-3c2ee2168575 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
@@ -60,7 +60,6 @@ require (
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
-	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/samber/lo v1.38.1 // indirect
 	github.com/spdx/tools-golang v0.5.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
