@@ -6,7 +6,7 @@ go 1.19
 replace github.com/spdx/tools-golang => github.com/spdx/tools-golang v0.3.0
 
 require (
-	github.com/aquasecurity/trivy-operator v0.13.1
+	github.com/aquasecurity/trivy-operator v0.13.2
 	github.com/buraksezer/consistent v0.10.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/go-logr/logr v1.2.4

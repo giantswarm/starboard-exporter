@@ -26,8 +26,8 @@ github.com/aquasecurity/trivy v0.40.0 h1:zT+ZwofGfMqsg3ccFUMPDyiyhBPdDap1TcKWxrq
 github.com/aquasecurity/trivy v0.40.0/go.mod h1:NXuad2fPoIWB97hU6igQsBI1YbMfYD7aAz09SfdZuq4=
 github.com/aquasecurity/trivy-db v0.0.0-20230411140759-3c2ee2168575 h1:8Y/qLPXGFYGGetDo0uhMRnqF8696tWBVis5scJ42q3w=
 github.com/aquasecurity/trivy-db v0.0.0-20230411140759-3c2ee2168575/go.mod h1:zn8GepvD5wBkCmmtBDwh0BWfiMUxS6xfGRcTPmXRVXo=
-github.com/aquasecurity/trivy-operator v0.13.1 h1:zQBAdzaxfjRGFNKN0V0y+ibp8ZiPBdomYyGphuJIm/Y=
-github.com/aquasecurity/trivy-operator v0.13.1/go.mod h1:DZaazIkMJNYeacKJ1Hiv+iGY3pW4icEc+gzFNm48lw8=
+github.com/aquasecurity/trivy-operator v0.13.2 h1:JyDV5aX5g0RhNyqAR87VRk3Ou2hTu8g1cXo0Ky2DrRQ=
+github.com/aquasecurity/trivy-operator v0.13.2/go.mod h1:DZaazIkMJNYeacKJ1Hiv+iGY3pW4icEc+gzFNm48lw8=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
