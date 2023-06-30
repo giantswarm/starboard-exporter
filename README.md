@@ -2,7 +2,7 @@
 
 # starboard-exporter
 
-Exposes Prometheus metrics from [Starboard][starboard-upstream]'s `VulnerabilityReport`, `ConfigAuditReport`, and other custom resources (CRs).
+Exposes Prometheus metrics from [Trivy Operator][trivy-operator-upstream]'s `VulnerabilityReport`, `ConfigAuditReport`, and other custom resources (CRs).
 
 ## Metrics
 
@@ -118,15 +118,6 @@ For some use cases, it is helpful to export additional fields from `Vulnerabilit
 
 In large clusters or environments with many reports and/or vulnerabilities, a single exporter can consume a large amount of memory, and Prometheus may need a long time to scrape the exporter, leading to scrape timeouts. To help spread resource consumption and scrape effort, `starboard-exporter` watches its own service endpoints and will shard metrics for all report types across the available endpoints. In other words, if there are 3 exporter instances, each instance will serve roughly 1/3 of the metrics. This behavior is enabled by default and does not require any additional configuration. To use it, simply change the number of replicas in the Deployment. However, you should read the section on cardinality and be aware that consuming large amounts of high-cardinality data can have performance impacts on Prometheus.
 
-### One vulnerabilityreport per deployment
-
-By default, Starboard generates a `VulnerabilityReport` per ReplicaSet in a Deployment.
-This can cause confusion because vulnerabilities are still reported for Pods which no longer exist, i.e. you fix a CVE in your latest Deployment but the number of CVEs per Deployment stays the same in your metrics.
-
-As of Starboard v0.14.0, the environment variable `OPERATOR_VULNERABILITY_SCANNER_SCAN_ONLY_CURRENT_REVISIONS` can be enabled to only generate a `VulnerabilityReport` from the latest ReplicaSet in the Deployment.
-
-Check the [Starboard configuration docs][starboard-config] for more information.
-
 ## Customization
 
 Summary metrics of the format described above are always enabled.
@@ -178,9 +169,6 @@ exporter:
       - ...
 ```
 
-[starboard-upstream]: https://github.com/aquasecurity/starboard
-[starboard-config]: https://github.com/aquasecurity/starboard/blob/main/docs/operator/configuration.md
-
 ## Helm
 
 How to install the starboard-exporter using helm:
@@ -188,9 +176,12 @@ How to install the starboard-exporter using helm:
 ```shell
 helm repo add giantswarm https://giantswarm.github.io/giantswarm-catalog
 helm repo update
-helm upgrade -i starboard-exporter --namespace <starboard namespace> giantswarm/starboard-exporter
+helm upgrade -i starboard-exporter --namespace <trivy operator namespace> giantswarm/starboard-exporter
 ```
 
 ## Scaling for Prometheus scrape timeouts
 
 When exporting a large volume of metrics, Prometheus might time out before retrieving them all from a single exporter instance. It is possible to automatically scale the number of exporters to keep the scrape time below the configured timeout. To enable HPA scaling based on Prometheus metrics, [here](./docs/custom_metrics_hpa.md)
+
+
+[trivy-operator-upstream]: https://github.com/aquasecurity/trivy-operator
