@@ -30,13 +30,13 @@ def test_api_working(kube_cluster: Cluster) -> None:
 
 @pytest.mark.smoke
 def test_cluster_info(
-    kube_cluster: Cluster, cluster_type: str, chart_extra_info: Dict[str, str]
+    kube_cluster: Cluster, cluster_type: str, test_extra_info: Dict[str, str]
 ) -> None:
     """Example shows how you can access additional information about the cluster the tests are running on"""
     logger.info(f"Running on cluster type {cluster_type}")
     key = "external_cluster_type"
-    if key in chart_extra_info:
-        logger.info(f"{key} is {chart_extra_info[key]}")
+    if key in test_extra_info:
+        logger.info(f"{key} is {test_extra_info[key]}")
     assert kube_cluster.kube_client is not None
     assert cluster_type != ""
 
