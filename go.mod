@@ -10,7 +10,7 @@ require (
 	github.com/buraksezer/consistent v0.10.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/go-logr/logr v1.3.0
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.15.0
 	gotest.tools v2.2.0+incompatible
