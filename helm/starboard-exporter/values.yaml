@@ -1,6 +1,6 @@
 replicas: 1
 registry:
-  domain: docker.io
+  domain: gsoci.azurecr.io
 
 image:
   name: "giantswarm/starboard-exporter"
@@ -30,7 +30,7 @@ securityContext:
   allowPrivilegeEscalation: false
   capabilities:
     drop:
-    - ALL
+      - ALL
   privileged: false
   readOnlyRootFilesystem: true
   runAsNonRoot: true
@@ -64,8 +64,8 @@ monitoring:
     enabled: true
     labels: {}
     relabelings:
-    - action: labeldrop
-      regex: pod|service|container
+      - action: labeldrop
+        regex: pod|service|container
     metricRelabelings: []
 
   grafanaDashboard:
