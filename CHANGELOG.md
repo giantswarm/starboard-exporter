@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.6] - 2023-12-12
+
 ### Changed
 
 - Update go to v1.21 and bump dependencies.
@@ -216,7 +218,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.5...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.6...HEAD
+[0.7.6]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.5...v0.7.6
 [0.7.5]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.4...v0.7.5
 [0.7.4]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.2...v0.7.3
