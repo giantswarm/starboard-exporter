@@ -1,0 +1,18 @@
+{{- if .Values.scaledObject.enabled -}}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "resource.default.name"  . }}
+  namespace: {{ include "resource.default.namespace"  . }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "resource.default.name"  . }}
+  {{- with .Values.scaledObject.triggers }}
+  triggers:
+  {{- . | toYaml | nindent 2 }}
+  {{- end }}
+  minReplicaCount: {{ .Values.scaledObject.minReplicas }}
+  maxReplicaCount: {{ .Values.scaledObject.maxReplicas }}
+{{- end -}}
