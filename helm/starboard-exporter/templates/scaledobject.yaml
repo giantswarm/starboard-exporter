@@ -1,4 +1,4 @@
-{{- if .Values.scaledObject.enabled -}}
+{{- if .Values.kedaScaledObject.enabled -}}
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -9,10 +9,10 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "resource.default.name"  . }}
-  {{- with .Values.scaledObject.triggers }}
+  {{- with .Values.kedaScaledObject.triggers }}
   triggers:
   {{- . | toYaml | nindent 2 }}
   {{- end }}
-  minReplicaCount: {{ .Values.scaledObject.minReplicas }}
-  maxReplicaCount: {{ .Values.scaledObject.maxReplicas }}
+  minReplicaCount: {{ .Values.kedaScaledObject.minReplicas }}
+  maxReplicaCount: {{ .Values.kedaScaledObject.maxReplicas }}
 {{- end -}}
