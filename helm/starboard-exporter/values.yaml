@@ -91,7 +91,7 @@ customMetricsHPA:
   targetAverageValueSeconds: 10  # Scrape duration seconds timeout
 
 kedaScaledObject:
-  enabled: true
+  enabled: false
   minReplicas: *minReplicas
   maxReplicas: *maxReplicas
   triggers: []
