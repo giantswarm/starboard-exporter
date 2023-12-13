@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add a `scaledObject` resource for KEDA support.
+
 ## [0.7.6] - 2023-12-12
 
 ### Changed

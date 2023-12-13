@@ -53,7 +53,7 @@ exporter:
 
   vulnerabilityReports:
     enabled: true
-    targetLabels:
+    targetLabels: []
       # - image_namespace
       # - image_repository
       # - image_tag
@@ -80,9 +80,29 @@ networkpolicy:
 
 podAnnotations: {}
 
+minReplicas: &minReplicas 2
+maxReplicas: &maxReplicas 97  # The number of replicas is limited to 97 by the current sharding math. See https://www.giantswarm.io/blog/cveing-is-believing
+
 customMetricsHPA:
   enabled: false
-  minReplicas: 2
-  maxReplicas: 97  # The number of replicas is limited to 97 by the current sharding math. See https://www.giantswarm.io/blog/cveing-is-believing
+  minReplicas: *minReplicas
+  maxReplicas: *maxReplicas
   metricName: scrapedurationseconds
   targetAverageValueSeconds: 10  # Scrape duration seconds timeout
+
+kedaScaledObject:
+  enabled: false
+  minReplicas: *minReplicas
+  maxReplicas: *maxReplicas
+  triggers: []
+  # https://keda.sh/docs/2.12/concepts/scaling-deployments/#triggers
+  # - type: prometheus
+  #   metadata:
+  #     serverAddress: <server, should be configurable, e.g. https://holmes.stg.holmes.techmon.3stripes.net:443>
+  #     metricName: <metric name, configurable, e.g. scrape_duration_seconds>
+  #     query: <exact query, e.g. avg_over_time(scrape_duration_seconds[1m])>
+  #     threshold: <threshold, e.g. "10">
+  #     authModes: <configurable, might not be required, for us it's "tls", but depends on the server https://keda.sh/docs/2.12/concepts/authentication/ )>
+  #   authenticationRef: # configurable block, might not be required, depends on the server
+  #     name: <auth resource name, created by prometheus owner>
+  #     kind: <configurable TriggerAuthentication or ClusterTriggerAuthentication>
