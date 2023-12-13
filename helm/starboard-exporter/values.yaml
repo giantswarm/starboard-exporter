@@ -80,17 +80,20 @@ networkpolicy:
 
 podAnnotations: {}
 
+minReplicas: &minReplicas 2
+maxReplicas: &maxReplicas 97  # The number of replicas is limited to 97 by the current sharding math. See https://www.giantswarm.io/blog/cveing-is-believing
+
 customMetricsHPA:
   enabled: false
-  minReplicas: 2
-  maxReplicas: 97  # The number of replicas is limited to 97 by the current sharding math. See https://www.giantswarm.io/blog/cveing-is-believing
+  minReplicas: *minReplicas
+  maxReplicas: *maxReplicas
   metricName: scrapedurationseconds
   targetAverageValueSeconds: 10  # Scrape duration seconds timeout
 
-scaledObject:
-  enabled: false
-  minReplicas: 2
-  maxReplicas: 97
+kedaScaledObject:
+  enabled: true
+  minReplicas: *minReplicas
+  maxReplicas: *maxReplicas
   triggers: []
   # https://keda.sh/docs/2.12/concepts/scaling-deployments/#triggers
   # - type: prometheus

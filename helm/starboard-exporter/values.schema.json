@@ -60,6 +60,29 @@
         "imagePullSecrets": {
             "type": "object"
         },
+        "kedaScaledObject": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxReplicas": {
+                    "type": "integer"
+                },
+                "minReplicas": {
+                    "type": "integer"
+                },
+                "triggers": {
+                    "type": "array"
+                }
+            }
+        },
+        "maxReplicas": {
+            "type": "integer"
+        },
+        "minReplicas": {
+            "type": "integer"
+        },
         "monitoring": {
             "type": "object",
             "properties": {
@@ -198,23 +221,6 @@
                             "type": "string"
                         }
                     }
-                }
-            }
-        },
-        "scaledObject": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "maxReplicas": {
-                    "type": "integer"
-                },
-                "minReplicas": {
-                    "type": "integer"
-                },
-                "triggers": {
-                    "type": "array"
                 }
             }
         },
