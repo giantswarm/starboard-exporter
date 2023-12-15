@@ -17,7 +17,7 @@ on:
   schedule:
     - cron: '15 15 15 * *'
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   workflow_dispatch: {}
 
 # Declare default permissions as read only.
