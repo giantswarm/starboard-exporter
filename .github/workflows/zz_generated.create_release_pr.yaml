@@ -152,7 +152,7 @@ jobs:
           binary: "architect"
           version: "6.11.0"
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.1
         with:
           ref: ${{ needs.gather_facts.outputs.branch }}
       - name: Prepare release changes
