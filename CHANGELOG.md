@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.7] - 2023-12-19
+
 ### Added
 
 - Add a `scaledObject` resource for KEDA support.
@@ -222,7 +224,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.6...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.7...HEAD
+[0.7.7]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.6...v0.7.7
 [0.7.6]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.5...v0.7.6
 [0.7.5]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.4...v0.7.5
 [0.7.4]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.3...v0.7.4
