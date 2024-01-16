@@ -7,6 +7,10 @@ image:
 
 imagePullSecrets: {}
 
+global:
+  podSecurityStandards:
+    enforced: false
+
 pod:
   user:
     id: 1000
@@ -71,9 +75,6 @@ monitoring:
   grafanaDashboard:
     enabled: true
     # namespace: ""
-
-psp:
-  enabled: true
 
 networkpolicy:
   enabled: true

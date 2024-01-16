@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Switch PSP values from `psp.enabled` to `global.podSecurityStandards.enforced`.
+
 ## [0.7.7] - 2023-12-19
 
 ### Added
