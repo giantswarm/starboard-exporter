@@ -18,7 +18,7 @@ jobs:
           -O artifacts/users.yaml \
           https://raw.githubusercontent.com/giantswarm/github/main/tools/issue-automation/user-mapping.yaml
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.3.0
       with:
         name: users
         path: artifacts/users.yaml
@@ -30,7 +30,7 @@ jobs:
           -O artifacts/labels.yaml \
           https://raw.githubusercontent.com/giantswarm/github/main/tools/issue-automation/label-mapping.yaml
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.3.0
       with:
         name: labels
         path: artifacts/labels.yaml
