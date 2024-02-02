@@ -1,10 +1,1 @@
-# Hashicorp consul /api and /sdk are no longer intended for public use and don't have newer tags.
-# Waiting for direct dependencies to move away from them.
-CVE-2022-29153 until=2023-05-25
-CVE-2022-24687 until=2023-05-25
-
-# Non-CVE info requiring sonatype account
-sonatype-2019-0890
-sonatype-2022-6522 until=2023-07-01
-CVE-2020-8561      until=2023-07-01
-CVE-2023-26054     until=2023-07-01
+CVE-2020-8561 until=2024-03-03 # k8s.io/apiserver@v0.29.0
