@@ -5,7 +5,7 @@
 name: Fix Vulnerabilities
 on:
   schedule:
-    - cron: '30 * * * *'
+    - cron: '10 * * * *'
   workflow_dispatch:
     inputs:
       branch:
@@ -77,7 +77,7 @@ jobs:
           git checkout -b "${branch}"
           git pull origin "${branch}" || true
       - name: Run nancy-fixer fix
-        uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.1
+        uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.2
       - name: Set up git identity
         run: |
           git config --local user.email "149080493+heraldbot[bot]@users.noreply.github.com"
