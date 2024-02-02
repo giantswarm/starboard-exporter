@@ -5,7 +5,7 @@
 name: Fix Vulnerabilities
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       branch:
@@ -28,12 +28,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch || github.event.ref }}
+          ref: ${{ inputs.branch || github.ref }}
       - name: Gather facts
         id: gather_facts
         run: |
-          head="${{ inputs.branch || github.event.ref }}"
-          echo "branch=${head}" >> $GITHUB_OUTPUT
+          head="${{ inputs.branch || github.ref }}"
+          branch="${{ github.ref_name }}"
+
+          echo "branch=${branch}" >> $GITHUB_OUTPUTT
 
           head="${head#refs/heads/}" # Strip "refs/heads/" prefix.
           echo "head=${head}" >> $GITHUB_OUTPUT
@@ -75,7 +77,7 @@ jobs:
           git checkout -b "${branch}"
           git pull origin "${branch}" || true
       - name: Run nancy-fixer fix
-        uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.0
+        uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.1
       - name: Set up git identity
         run: |
           git config --local user.email "149080493+heraldbot[bot]@users.noreply.github.com"
