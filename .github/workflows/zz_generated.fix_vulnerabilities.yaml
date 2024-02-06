@@ -1,6 +1,6 @@
 # DO NOT EDIT. Generated with:
 #
-#    devctl@6.20.1
+#    devctl@6.20.2
 #
 name: Fix Vulnerabilities
 on:
@@ -77,7 +77,8 @@ jobs:
           git checkout -b "${branch}"
           git pull origin "${branch}" || true
       - name: Run nancy-fixer fix
-        uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.2
+        uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.3
+        timeout-minutes: 20
       - name: Set up git identity
         run: |
           git config --local user.email "149080493+heraldbot[bot]@users.noreply.github.com"
