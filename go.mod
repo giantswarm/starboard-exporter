@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.4
 
 require (
-	github.com/aquasecurity/trivy-operator v0.18.4
+	github.com/aquasecurity/trivy-operator v0.18.5
 	github.com/buraksezer/consistent v0.10.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/go-logr/logr v1.4.1
@@ -42,7 +42,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic-models v0.6.9-0.20230804172637-c7be7c783f49 // indirect
-	github.com/google/go-containerregistry v0.18.0 // indirect
+	github.com/google/go-containerregistry v0.19.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
