@@ -1,3 +1,4 @@
 CVE-2020-8561 until=2024-04-03 # k8s.io/apiserver@v0.29.1
-CVE-2024-25620 until=2024-03-24 # helm.sh/helm/v3@v3.14.0
-CVE-2024-26147 until=2024-03-24 # helm.sh/helm/v3@v3.14.0
+CVE-2024-25620 until=2024-04-04 # helm.sh/helm/v3@v3.14.0
+CVE-2024-26147 until=2024-04-04 # helm.sh/helm/v3@v3.14.0
+CVE-2019-25210 until=2024-04-04 # helm.sh/helm/v3@v3.14.0
