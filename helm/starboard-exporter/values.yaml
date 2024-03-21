@@ -99,7 +99,7 @@ kedaScaledObject:
   # https://keda.sh/docs/2.12/concepts/scaling-deployments/#triggers
   # - type: prometheus
   #   metadata:
-  #     serverAddress: <server, should be configurable, e.g. https://holmes.stg.holmes.techmon.3stripes.net:443>
+  #     serverAddress: <server, should be configurable, e.g. https://keda.svc.cluster.local:443>
   #     metricName: <metric name, configurable, e.g. scrape_duration_seconds>
   #     query: <exact query, e.g. avg_over_time(scrape_duration_seconds[1m])>
   #     threshold: <threshold, e.g. "10">
