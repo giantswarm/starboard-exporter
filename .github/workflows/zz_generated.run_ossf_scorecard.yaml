@@ -17,7 +17,7 @@ on:
   schedule:
     - cron: '15 15 15 * *'
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "test-ossf-bump" ]
   workflow_dispatch: {}
 
 # Declare default permissions as read only.
