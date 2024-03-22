@@ -3,3 +3,4 @@ CVE-2024-25620 until=2024-04-04 # helm.sh/helm/v3@v3.14.0
 CVE-2024-26147 until=2024-04-04 # helm.sh/helm/v3@v3.14.0
 CVE-2019-25210 until=2024-04-04 # helm.sh/helm/v3@v3.14.0
 CVE-2024-24786 until=2024-04-06 # google.golang.org/protobuf@v1.32.0
+CVE-2024-21626 until=2024-04-21 # github.com/opencontainers/runc@v1.1.5
