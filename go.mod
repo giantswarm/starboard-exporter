@@ -7,7 +7,7 @@ toolchain go1.21.4
 require (
 	github.com/aquasecurity/trivy-operator v0.19.4
 	github.com/buraksezer/consistent v0.10.0
-	github.com/cespare/xxhash/v2 v2.2.0
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/go-logr/logr v1.4.1
 	github.com/google/go-cmp v0.6.0
 	github.com/pkg/errors v0.9.1
