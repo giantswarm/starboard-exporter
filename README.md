@@ -1,4 +1,5 @@
 [![CircleCI](https://circleci.com/gh/giantswarm/starboard-exporter.svg?style=shield)](https://circleci.com/gh/giantswarm/starboard-exporter)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/giantswarm/starboard-exporter/badge)](https://securityscorecards.dev/viewer/?uri=github.com/giantswarm/starboard-exporter)
 
 # starboard-exporter
 
