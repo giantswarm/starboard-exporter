@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Switched API version from the `HorizontalPodAutoscaler` from `autoscaling/v2beta1` to `autoscaling/v1`. 
+
 ## [0.7.8] - 2024-01-16
 
 ### Changed

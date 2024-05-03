@@ -1,9 +1,9 @@
 {{- if .Capabilities.APIVersions.Has "autoscaling/v2beta1" -}}
 {{- if .Values.customMetricsHPA.enabled -}}
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: staboard-exporter-custom-metrics-hpa
+  name: starboard-exporter-custom-metrics-hpa
   namespace: {{ include "resource.default.namespace"  . }}
   labels:
     {{- include "labels.common" . | nindent 4 }}
