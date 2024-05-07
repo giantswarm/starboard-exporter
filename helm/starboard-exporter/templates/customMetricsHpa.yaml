@@ -1,4 +1,3 @@
-{{- if .Capabilities.APIVersions.Has "autoscaling/v2beta1" -}}
 {{- if .Values.customMetricsHPA.enabled -}}
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
@@ -19,5 +18,4 @@ spec:
     pods:
       metricName: {{ .Values.customMetricsHPA.metricName }}
       targetAverageValue: {{ .Values.customMetricsHPA.targetAverageValueSeconds }}
-{{- end -}}
 {{- end -}}
