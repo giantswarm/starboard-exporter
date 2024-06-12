@@ -9,7 +9,7 @@ imagePullSecrets: {}
 
 global:
   podSecurityStandards:
-    enforced: false
+    enforced: true
 
 pod:
   user:
