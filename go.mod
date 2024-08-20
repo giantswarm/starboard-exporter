@@ -251,3 +251,5 @@ replace github.com/go-git/go-git/v5 v5.10.1 => github.com/go-git/go-git/v5 v5.11
 replace go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.42.0 => go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.47.0
 
 replace github.com/moby/buildkit v0.12.3 => github.com/moby/buildkit v0.12.5
+
+replace github.com/hashicorp/go-getter v1.7.4 => github.com/hashicorp/go-getter v1.7.6
