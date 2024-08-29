@@ -95,7 +95,7 @@ verticalPodAutoscaler:
   enabled: true
   containerPolicies:
     minAllowed:
-      cpu: 100m
+      cpu: 50m
       memory: 100Mi
     maxAllowed:
       cpu: 1
