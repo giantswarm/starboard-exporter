@@ -1,0 +1,24 @@
+{{- if .Values.verticalPodAutoscaler.enabled -}}
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: starboard-exporter-vpa
+  namespace: {{ include "resource.default.namespace"  . }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  resourcePolicy:
+    containerPolicies:
+    - containerName: '*'
+    {{- if .Values.verticalPodAutoscaler.containerPolicies }}
+      {{- with .Values.verticalPodAutoscaler.containerPolicies -}}
+        {{ tpl (toYaml .) $ | nindent 6 }}
+      {{- end }}
+    {{- end }}
+  targetRef:
+    apiVersion: "apps/v1"
+    kind:       Deployment
+    name:       {{ include "resource.default.name"  . }}
+  updatePolicy:
+    updateMode: Auto
+{{- end -}}
