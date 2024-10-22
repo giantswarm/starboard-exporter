@@ -11,7 +11,7 @@ require (
 	github.com/go-logr/logr v1.4.2
 	github.com/google/go-cmp v0.6.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.20.2
+	github.com/prometheus/client_golang v1.20.5
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.31.0
 	k8s.io/apimachinery v0.31.0
