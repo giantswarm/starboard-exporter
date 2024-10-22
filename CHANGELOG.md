@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Disable logger development mode to avoid panicking
+- Disable logger development mode to avoid panicking.
+- Disable PodSecurityPolicy by default.
+- Expose port 8081 for health/liveness probes.
 
 ## [0.7.11] - 2024-06-12
 
