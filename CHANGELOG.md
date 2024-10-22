@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add Vertical Pod Autoscaler (VPA) configuration, enabled by default.
 
+### Changed
+
+- Disable logger development mode to avoid panicking
+
 ## [0.7.11] - 2024-06-12
 
 ### Changed
