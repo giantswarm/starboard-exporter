@@ -133,7 +133,7 @@ func main() {
 		"Enable metrics for VulnerabilityReport resources.")
 
 	opts := zap.Options{
-		Development: true,
+		Development: false,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
