@@ -5,157 +5,169 @@ orbs:
 workflows:
   package-and-push-chart-on-tag:
     jobs:
-      - architect/go-build:
-          name: go-build
-          binary: starboard-exporter
-          resource_class: large
-          filters:
-            tags:
-              only: /^v.*/
+    - architect/go-build:
+        name: go-build
+        binary: starboard-exporter
+        resource_class: large
+        filters:
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-registries:
-          context: architect
-          name: push-to-registries
-          requires:
-            - go-build
-          filters:
-            tags:
-              only: /^v.*/
+    - architect/push-to-registries:
+        context: architect
+        name: push-to-registries
+        requires:
+        - go-build
+        filters:
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-app-catalog:
-          context: "architect"
-          executor: "app-build-suite"
-          name: push-starboard-exporter-to-control-plane-catalog
-          app_catalog: "control-plane-catalog"
-          app_catalog_test: "control-plane-test-catalog"
-          chart: "starboard-exporter"
-          requires:
-            - push-to-registries
-          filters:
-            tags:
-              only: /^v.*/
+          branches:
+            ignore:
+            - main
+            - master
+    - architect/push-to-app-catalog:
+        context: architect
+        executor: app-build-suite
+        name: push-starboard-exporter-to-control-plane-catalog
+        app_catalog: control-plane-catalog
+        app_catalog_test: control-plane-test-catalog
+        chart: starboard-exporter
+        requires:
+        - push-to-registries
+        filters:
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-app-catalog:
-          context: "architect"
-          executor: "app-build-suite"
-          name: push-starboard-exporter-to-giantswarm-catalog
-          app_catalog: "giantswarm-catalog"
-          app_catalog_test: "giantswarm-test-catalog"
-          chart: "starboard-exporter"
-          persist_chart_archive: true
-          requires:
-            - push-to-registries
-          filters:
-            tags:
-              only: /^v.*/
+          branches:
+            ignore:
+            - main
+            - master
+    - architect/push-to-app-catalog:
+        context: architect
+        executor: app-build-suite
+        name: push-starboard-exporter-to-giantswarm-catalog
+        app_catalog: giantswarm-catalog
+        app_catalog_test: giantswarm-test-catalog
+        chart: starboard-exporter
+        persist_chart_archive: true
+        requires:
+        - push-to-registries
+        filters:
+          tags:
+            only: /^v.*/
 
       # Run app-test-suite tests.
-      - architect/run-tests-with-ats:
-          name: execute chart tests
-          filters:
+          branches:
+            ignore:
+            - main
+            - master
+    - architect/run-tests-with-ats:
+        name: execute chart tests
+        filters:
             # Do not trigger the job on merge to main.
-            branches:
-              ignore:
-                - main
-          requires:
-            - push-starboard-exporter-to-giantswarm-catalog
+          branches:
+            ignore:
+            - main
+        requires:
+        - push-starboard-exporter-to-giantswarm-catalog
 
       # Push starboard-exporter to app collections
-      - architect/push-to-app-collection:
-          context: "architect"
-          name: push-starboard-exporter-to-aws-app-collection
-          app_name: "starboard-exporter"
-          app_collection_repo: "aws-app-collection"
-          requires:
-            - push-starboard-exporter-to-control-plane-catalog
-            - push-to-registries
-          filters:
+    - architect/push-to-app-collection:
+        context: architect
+        name: push-starboard-exporter-to-aws-app-collection
+        app_name: starboard-exporter
+        app_collection_repo: aws-app-collection
+        requires:
+        - push-starboard-exporter-to-control-plane-catalog
+        - push-to-registries
+        filters:
             # Only do this when a new tag is created.
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-app-collection:
-          context: "architect"
-          name: push-starboard-exporter-to-azure-app-collection
-          app_name: "starboard-exporter"
-          app_collection_repo: "azure-app-collection"
-          requires:
-            - push-starboard-exporter-to-control-plane-catalog
-          filters:
+    - architect/push-to-app-collection:
+        context: architect
+        name: push-starboard-exporter-to-azure-app-collection
+        app_name: starboard-exporter
+        app_collection_repo: azure-app-collection
+        requires:
+        - push-starboard-exporter-to-control-plane-catalog
+        filters:
             # Only do this when a new tag is created.
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-app-collection:
-          context: "architect"
-          name: push-starboard-exporter-to-capa-app-collection
-          app_name: "starboard-exporter"
-          app_collection_repo: "capa-app-collection"
-          requires:
-            - push-starboard-exporter-to-control-plane-catalog
-          filters:
+    - architect/push-to-app-collection:
+        context: architect
+        name: push-starboard-exporter-to-capa-app-collection
+        app_name: starboard-exporter
+        app_collection_repo: capa-app-collection
+        requires:
+        - push-starboard-exporter-to-control-plane-catalog
+        filters:
             # Only do this when a new tag is created.
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-app-collection:
-          context: "architect"
-          name: push-starboard-exporter-to-capz-app-collection
-          app_name: "starboard-exporter"
-          app_collection_repo: "capz-app-collection"
-          requires:
-            - push-starboard-exporter-to-control-plane-catalog
-          filters:
+    - architect/push-to-app-collection:
+        context: architect
+        name: push-starboard-exporter-to-capz-app-collection
+        app_name: starboard-exporter
+        app_collection_repo: capz-app-collection
+        requires:
+        - push-starboard-exporter-to-control-plane-catalog
+        filters:
             # Only do this when a new tag is created.
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-app-collection:
-          context: "architect"
-          name: push-starboard-exporter-to-cloud-director-app-collection
-          app_name: "starboard-exporter"
-          app_collection_repo: "cloud-director-app-collection"
-          requires:
-            - push-starboard-exporter-to-control-plane-catalog
-          filters:
+    - architect/push-to-app-collection:
+        context: architect
+        name: push-starboard-exporter-to-cloud-director-app-collection
+        app_name: starboard-exporter
+        app_collection_repo: cloud-director-app-collection
+        requires:
+        - push-starboard-exporter-to-control-plane-catalog
+        filters:
             # Only do this when a new tag is created.
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-app-collection:
-          context: "architect"
-          name: push-starboard-exporter-to-gcp-app-collection
-          app_name: "starboard-exporter"
-          app_collection_repo: "gcp-app-collection"
-          requires:
-            - push-starboard-exporter-to-control-plane-catalog
-          filters:
+    - architect/push-to-app-collection:
+        context: architect
+        name: push-starboard-exporter-to-gcp-app-collection
+        app_name: starboard-exporter
+        app_collection_repo: gcp-app-collection
+        requires:
+        - push-starboard-exporter-to-control-plane-catalog
+        filters:
             # Only do this when a new tag is created.
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-app-collection:
-          context: "architect"
-          name: push-starboard-exporter-to-vsphere-app-collection
-          app_name: "starboard-exporter"
-          app_collection_repo: "vsphere-app-collection"
-          requires:
-            - push-starboard-exporter-to-control-plane-catalog
-          filters:
+    - architect/push-to-app-collection:
+        context: architect
+        name: push-starboard-exporter-to-vsphere-app-collection
+        app_name: starboard-exporter
+        app_collection_repo: vsphere-app-collection
+        requires:
+        - push-starboard-exporter-to-control-plane-catalog
+        filters:
             # Only do this when a new tag is created.
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/
