@@ -146,9 +146,9 @@ workflows:
 
     - architect/push-to-app-collection:
         context: architect
-        name: push-starboard-exporter-to-gcp-app-collection
+        name: push-starboard-exporter-to-proxmox-app-collection
         app_name: starboard-exporter
-        app_collection_repo: gcp-app-collection
+        app_collection_repo: proxmox-app-collection
         requires:
         - push-starboard-exporter-to-control-plane-catalog
         filters:
