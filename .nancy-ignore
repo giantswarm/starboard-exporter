@@ -1,3 +1,2 @@
-CVE-2024-8260 until=2024-11-21 # github.com/open-policy-agent/opa@v0.65.0
-CVE-2019-25210 until=2024-11-21 # helm.sh/helm/v3@v3.15.1
-CVE-2020-8561 until=2024-11-21 # k8s.io/apiserver@v0.31.0
+CVE-2019-25210 until=2025-01-18 # helm.sh/helm/v3@v3.15.1
+CVE-2020-8561 until=2025-01-18 # k8s.io/apiserver@v0.31.0
