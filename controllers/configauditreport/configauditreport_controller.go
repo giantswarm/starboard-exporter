@@ -57,14 +57,14 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	_ = log.FromContext(ctx)
 	_ = r.Log.WithValues("configauditreport", req.NamespacedName)
 
-	deletedSummaries := ConfigAuditSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.NamespacedName.String()})
+	deletedSummaries := ConfigAuditSummary.DeletePartialMatch(prometheus.Labels{"report_name": req.String()})
 
-	shouldOwn := r.ShardHelper.ShouldOwn(req.NamespacedName.String())
+	shouldOwn := r.ShardHelper.ShouldOwn(req.String())
 	if shouldOwn {
 
 		// Try to get the report. It might not exist anymore, in which case we don't need to do anything.
 		report := &aqua.ConfigAuditReport{}
-		if err := r.Client.Get(ctx, req.NamespacedName, report); err != nil {
+		if err := r.Get(ctx, req.NamespacedName, report); err != nil {
 			if apierrors.IsNotFound(err) {
 				// Most likely the report was deleted.
 				return ctrl.Result{}, nil
@@ -96,7 +96,7 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 		// Add a label to this report so any previous owners will reconcile and drop the metric.
 		report.Labels[controllers.ShardOwnerLabel] = r.ShardHelper.PodIP
-		err := r.Client.Update(ctx, report, &client.UpdateOptions{})
+		err := r.Update(ctx, report, &client.UpdateOptions{})
 		if err != nil {
 			r.Log.Error(err, "unable to add shard owner label")
 		}

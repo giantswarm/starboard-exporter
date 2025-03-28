@@ -197,10 +197,8 @@ func main() {
 	// Wait for the ring to be synced for the first time so we can use it immediately.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	for {
-		if peerRing.MemberCount() > 0 || ctx.Err() != nil {
-			break
-		}
+	for peerRing.MemberCount() > 0 || ctx.Err() != nil {
+		// Just wait for the ring to be populated.
 	}
 
 	setupLog.Info(fmt.Sprintf("found %d exporters in %s service", peerRing.MemberCount(), peerRing.ServiceName))
