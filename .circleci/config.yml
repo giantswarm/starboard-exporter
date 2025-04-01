@@ -21,11 +21,11 @@ workflows:
         filters:
           tags:
             only: /^v.*/
-
           branches:
             ignore:
             - main
             - master
+
     - architect/push-to-app-catalog:
         context: architect
         executor: app-build-suite
@@ -38,11 +38,11 @@ workflows:
         filters:
           tags:
             only: /^v.*/
-
           branches:
             ignore:
             - main
             - master
+
     - architect/push-to-app-catalog:
         context: architect
         executor: app-build-suite
@@ -56,12 +56,12 @@ workflows:
         filters:
           tags:
             only: /^v.*/
-
       # Run app-test-suite tests.
           branches:
             ignore:
             - main
             - master
+
     - architect/run-tests-with-ats:
         name: execute chart tests
         filters:
@@ -78,21 +78,6 @@ workflows:
         name: push-starboard-exporter-to-aws-app-collection
         app_name: starboard-exporter
         app_collection_repo: aws-app-collection
-        requires:
-        - push-starboard-exporter-to-control-plane-catalog
-        - push-to-registries
-        filters:
-            # Only do this when a new tag is created.
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v.*/
-
-    - architect/push-to-app-collection:
-        context: architect
-        name: push-starboard-exporter-to-azure-app-collection
-        app_name: starboard-exporter
-        app_collection_repo: azure-app-collection
         requires:
         - push-starboard-exporter-to-control-plane-catalog
         filters:
