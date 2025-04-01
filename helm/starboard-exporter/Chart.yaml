@@ -5,7 +5,7 @@ description: A Helm chart for starboard-exporter, which exposes Prometheus metri
 engine: gotpl
 home: https://github.com/giantswarm/starboard-exporter
 icon: https://s.giantswarm.io/app-icons/prometheus/1/light.svg
-version: 0.8.0
+version: 0.8.1
 annotations:
   application.giantswarm.io/team: "shield"
   config.giantswarm.io/version: 1.x.x
