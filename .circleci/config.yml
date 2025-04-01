@@ -80,7 +80,6 @@ workflows:
         app_collection_repo: aws-app-collection
         requires:
         - push-starboard-exporter-to-control-plane-catalog
-        - push-to-registries
         filters:
             # Only do this when a new tag is created.
           branches:
