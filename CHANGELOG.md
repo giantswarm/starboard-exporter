@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Address new code linter findings for golangci-lint v2.
+- Update Go version and various dependencies.
 
 ## [0.8.0] - 2024-10-23
 
