@@ -1,6 +1,8 @@
 # DO NOT EDIT. Generated with:
 #
-#    devctl@6.20.2
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/c1b16989bf49dfec3938304f370ac314ebe17c65/pkg/gen/input/workflows/internal/file/fix_vulnerabilities.yaml.template
 #
 name: Fix Vulnerabilities
 on:
@@ -26,7 +28,7 @@ jobs:
       skip : ${{ steps.gather_facts.outputs.skip }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ inputs.branch || github.ref }}
       - name: Gather facts
@@ -59,12 +61,12 @@ jobs:
     steps:
       - name: Generate a token
         id: generate_token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
         with:
           app-id: ${{ secrets.HERALD_APP_ID }}
           private-key: ${{ secrets.HERALD_APP_KEY }}
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ steps.generate_token.outputs.token }}
           persist-credentials: false
@@ -77,7 +79,7 @@ jobs:
           git checkout -b "${branch}"
           git pull origin "${branch}" || true
       - name: Run nancy-fixer fix
-        uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.3
+        uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.5.0
         timeout-minutes: 20
       - name: Set up git identity
         run: |
