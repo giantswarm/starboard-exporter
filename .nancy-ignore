@@ -1,4 +1,4 @@
-CVE-2025-22872 until=2025-05-24 # golang.org/x/net@v0.37.0
+CVE-2025-22872 until=2025-06-26 # golang.org/x/net@v0.37.0
 CVE-2025-46569 until=2025-06-14 # github.com/open-policy-agent/opa@v1.1.0
 CVE-2019-25210 until=2025-06-14 # helm.sh/helm/v3@v3.17.3
 CVE-2024-40635 until=2025-06-14 # github.com/containerd/containerd@v1.7.25
