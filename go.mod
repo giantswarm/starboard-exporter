@@ -286,6 +286,9 @@ replace github.com/open-policy-agent/opa v0.65.0 => github.com/open-policy-agent
 
 replace golang.org/x/crypto v0.28.0 => golang.org/x/crypto v0.36.0
 
-replace github.com/containerd/containerd v1.7.23 => github.com/containerd/containerd v1.7.27
+replace (
+	github.com/containerd/containerd v1.7.23 => github.com/containerd/containerd v1.7.27
+	github.com/containerd/containerd v1.7.25 => github.com/containerd/containerd v1.7.27
+)
 
 replace helm.sh/helm/v3 v3.17.1 => helm.sh/helm/v3 v3.17.3
