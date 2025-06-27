@@ -2,111 +2,26 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/c1b16989bf49dfec3938304f370ac314ebe17c65/pkg/gen/input/workflows/internal/file/fix_vulnerabilities.yaml.template
+#    https://github.com/giantswarm/devctl/blob/366c1c3aad2b9b02850a54854aba8108db3ce052/pkg/gen/input/workflows/internal/file/fix_vulnerabilities.yaml.template
 #
-name: Fix Vulnerabilities
+
+name: Fix Go vulnerabilities
+
 on:
   schedule:
     - cron: '0 9 * * 1-5'
   workflow_dispatch:
     inputs:
       branch:
-        description: "Branch on which to fix vulnerabilities"
+        description: Branch on which to fix vulnerabilities
         required: true
         type: string
-  workflow_call:
-    inputs:
-      branch:
-        required: true
-        type: string
+
 jobs:
-  gather_facts:
-    name: Gather facts
-    runs-on: ubuntu-22.04
-    outputs:
-      branch: ${{ steps.gather_facts.outputs.branch }}
-      skip : ${{ steps.gather_facts.outputs.skip }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          ref: ${{ inputs.branch || github.ref }}
-      - name: Gather facts
-        id: gather_facts
-        run: |
-          head="${{ inputs.branch || github.ref }}"
-          branch="${{ github.ref_name }}"
-
-          echo "branch=${branch}" >> $GITHUB_OUTPUT
-
-          head="${head#refs/heads/}" # Strip "refs/heads/" prefix.
-          echo "head=${head}" >> $GITHUB_OUTPUT
-
-          # Skip if there are no go mod files
-          if [[ ! -e go.mod ]] && [[ ! -e go.sum ]]; then
-            skip=true
-            echo "There are no go mod files in the repo, skipping"
-          else
-            skip=false
-          fi
-
-          echo "skip=${skip}" >> $GITHUB_OUTPUT
-          echo "head=\"$head\" branch=\"$branch\" skip=\"$skip\""
-  run_nancy_fixer:
-    name: Fix vulnerabilities with nancy-fixer
-    runs-on: ubuntu-22.04
-    needs:
-      - gather_facts
-    if: ${{ needs.gather_facts.outputs.skip != 'true' }}
-    steps:
-      - name: Generate a token
-        id: generate_token
-        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
-        with:
-          app-id: ${{ secrets.HERALD_APP_ID }}
-          private-key: ${{ secrets.HERALD_APP_KEY }}
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          token: ${{ steps.generate_token.outputs.token }}
-          persist-credentials: false
-          ref: ${{ needs.gather_facts.outputs.branch }}
-      - name: Create new branch
-        id: create_branch
-        run: |
-          branch="remediate-vulnerabilities-${{ needs.gather_facts.outputs.branch }}"
-          echo "branch=${branch}" >> $GITHUB_OUTPUT
-          git checkout -b "${branch}"
-          git pull origin "${branch}" || true
-      - name: Run nancy-fixer fix
-        uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.5.0
-        timeout-minutes: 20
-      - name: Set up git identity
-        run: |
-          git config --local user.email "149080493+heraldbot[bot]@users.noreply.github.com"
-          git config --local user.name "HeraldBot[bot]"
-      - name: Commit new files
-        id: commit_changes
-        run: |
-          git add -A
-          if git diff-index --quiet HEAD; then
-            echo "No changes found"
-            skip=true
-          else
-            git commit -m "Remediate Nancy findings"
-            skip=false
-          fi
-          echo "skip=${skip}" >> $GITHUB_OUTPUT
-      - name: Push changes
-        if: "${{ steps.commit_changes.outputs.skip != 'true' }}"
-        env:
-          remote_repo: "https://${{ github.actor }}:${{ steps.generate_token.outputs.token }}@github.com/${{ github.repository }}.git"
-        run: |
-          git push "${remote_repo}" HEAD:"${{ steps.create_branch.outputs.branch }}"
-      - name: Create PR
-        env:
-          GITHUB_TOKEN: "${{ steps.generate_token.outputs.token }}"
-        if: "${{ steps.commit_changes.outputs.skip != 'true' }}"
-        run: |
-          gh pr create --title "Remediate Nancy findings on ${{ needs.gather_facts.outputs.branch }}" --body "Fix Nancy findings on branch ${{ needs.gather_facts.outputs.branch }}" --head ${{ steps.create_branch.outputs.branch }} --base "${{ needs.gather_facts.outputs.branch }}"
-          gh pr merge --auto --squash
+  fix:
+    uses: giantswarm/github-workflows/.github/workflows/fix-vulnerabilities.yaml@897ce7c11f81fcd01f7cf38e839a42848a63c7e7
+    with:
+      branch: ${{ inputs.branch || github.ref }}
+    secrets:
+      HERALD_APP_ID: ${{ secrets.HERALD_APP_ID }}
+      HERALD_APP_KEY: ${{ secrets.HERALD_APP_KEY }}
