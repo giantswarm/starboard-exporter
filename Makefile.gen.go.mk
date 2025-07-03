@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/fb22684ec4540f6b602968f01b4845bfb7713ee2/pkg/gen/input/makefile/internal/file/Makefile.gen.go.mk.template
+#    https://github.com/giantswarm/devctl/blob/bf7f386ac6a4e807dde959892df1369fee6d789f/pkg/gen/input/makefile/internal/file/Makefile.gen.go.mk.template
 #
 
 APPLICATION    := $(shell go list -m | cut -d '/' -f 3)
@@ -98,6 +98,14 @@ imports: ## Runs goimports.
 lint: ## Runs golangci-lint.
 	@echo "====> $@"
 	golangci-lint run -E gosec -E goconst --timeout=15m ./...
+
+.PHONY: fmt
+fmt: ## Run go fmt against code.
+	go fmt ./...
+
+.PHONY: vet
+vet: ## Run go vet against code.
+	go vet ./...
 
 .PHONY: nancy
 nancy: ## Runs nancy (requires v1.0.37 or newer).
