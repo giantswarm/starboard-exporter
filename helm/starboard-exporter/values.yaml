@@ -5,7 +5,7 @@ registry:
 image:
   name: "giantswarm/starboard-exporter"
 
-imagePullSecrets: {}
+imagePullSecrets: []
 
 global:
   podSecurityStandards:
