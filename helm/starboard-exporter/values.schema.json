@@ -71,7 +71,7 @@
             }
         },
         "imagePullSecrets": {
-            "type": "object"
+            "type": "array"
         },
         "kedaScaledObject": {
             "type": "object",
