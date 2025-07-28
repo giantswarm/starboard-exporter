@@ -1,4 +1,2 @@
-CVE-2025-22872 until=2025-07-26 # golang.org/x/net@v0.37.0
-CVE-2019-25210 until=2025-07-16 # helm.sh/helm/v3@v3.17.3
-CVE-2025-4673 until=2025-07-13 # golang.org/x/net@v0.37.0
+CVE-2025-22872 until=2025-08-27 # golang.org/x/net@v0.37.0
 CVE-2025-53547 until=2025-08-09 # helm.sh/helm/v3@v3.17.3
