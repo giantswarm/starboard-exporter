@@ -61,8 +61,8 @@ spec:
           {{- . | toYaml | nindent 8 }}
         {{- end }}
       {{- with .Values.imagePullSecrets }}
-        imagePullSecrets:
-          {{- toYaml . | nindent 8 }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
       - name: {{ include "name" . }}
