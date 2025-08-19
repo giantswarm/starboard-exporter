@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/6b7b68677854e4a8a22e6811a743aff5abedee14/pkg/gen/input/workflows/internal/file/validate_changelog.yaml.template
+#    https://github.com/giantswarm/devctl/blob/ad0a25fbf301b2513e169ec964a8785d28f75be4/pkg/gen/input/workflows/internal/file/validate_changelog.yaml.template
 #
 name: Validate changelog
 
@@ -18,4 +18,4 @@ permissions:
 
 jobs:
   validate-changelog:
-    uses: giantswarm/github-workflows/.github/workflows/validate-changelog.yaml@f521ed67a6d5dc7ef628138d4bac919f1d3d4079
+    uses: giantswarm/github-workflows/.github/workflows/validate-changelog.yaml@main

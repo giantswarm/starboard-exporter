@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/366c1c3aad2b9b02850a54854aba8108db3ce052/pkg/gen/input/workflows/internal/file/fix_vulnerabilities.yaml.template
+#    https://github.com/giantswarm/devctl/blob/ad0a25fbf301b2513e169ec964a8785d28f75be4/pkg/gen/input/workflows/internal/file/fix_vulnerabilities.yaml.template
 #
 
 name: Fix Go vulnerabilities
@@ -19,7 +19,7 @@ on:
 
 jobs:
   fix:
-    uses: giantswarm/github-workflows/.github/workflows/fix-vulnerabilities.yaml@897ce7c11f81fcd01f7cf38e839a42848a63c7e7
+    uses: giantswarm/github-workflows/.github/workflows/fix-vulnerabilities.yaml@main
     with:
       branch: ${{ inputs.branch || github.ref }}
     secrets:
