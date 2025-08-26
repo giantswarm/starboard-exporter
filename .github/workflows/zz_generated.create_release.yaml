@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/7f3af2198debcf8f013357055807077eba715b3f/pkg/gen/input/workflows/internal/file/create_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/35dace92664421a2fed6852f48c2efe2caecd360/pkg/gen/input/workflows/internal/file/create_release.yaml.template
 #
 name: Create Release
 on:
@@ -54,7 +54,7 @@ jobs:
           echo "version=${version}" >> $GITHUB_OUTPUT
       - name: Checkout code
         if: ${{ steps.get_version.outputs.version != '' }}
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Get project.go path
         id: get_project_go_path
         if: ${{ steps.get_version.outputs.version != '' }}
@@ -90,12 +90,12 @@ jobs:
       - gather_facts
     steps:
       - name: Install architect
-        uses: giantswarm/install-binary-action@c37eb401e5092993fc76d545030b1d1769e61237 # v3.0.0
+        uses: giantswarm/install-binary-action@0797deb878056114fa54ee30c519f617716e8c69 # v3.1.1
         with:
           binary: "architect"
           version: "6.14.1"
       - name: Install semver
-        uses: giantswarm/install-binary-action@c37eb401e5092993fc76d545030b1d1769e61237 # v3.0.0
+        uses: giantswarm/install-binary-action@0797deb878056114fa54ee30c519f617716e8c69 # v3.1.1
         with:
           binary: "semver"
           version: "3.2.0"
@@ -103,7 +103,7 @@ jobs:
           tarball_binary_path: "*/src/${binary}"
           smoke_test: "${binary} --version"
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Update project.go
         id: update_project_go
         env:
@@ -163,7 +163,7 @@ jobs:
       upload_url: ${{ steps.create_gh_release.outputs.upload_url }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           ref: ${{ github.sha }}
       - name: Ensure correct version in project.go
@@ -199,6 +199,7 @@ jobs:
         with:
           body: ${{ steps.changelog_reader.outputs.changes }}
           tag: "v${{ needs.gather_facts.outputs.version }}"
+          skipIfReleaseExists: true
 
   create-release-branch:
     name: Create release branch
@@ -208,7 +209,7 @@ jobs:
     if: ${{ needs.gather_facts.outputs.version }}
     steps:
       - name: Install semver
-        uses: giantswarm/install-binary-action@c37eb401e5092993fc76d545030b1d1769e61237 # v3.0.0
+        uses: giantswarm/install-binary-action@0797deb878056114fa54ee30c519f617716e8c69 # v3.1.1
         with:
           binary: "semver"
           version: "3.0.0"
@@ -216,7 +217,7 @@ jobs:
           tarball_binary_path: "*/src/${binary}"
           smoke_test: "${binary} --version"
       - name: Check out the repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0  # Clone the whole history, not just the most recent commit.
       - name: Fetch all tags and branches
