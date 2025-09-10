@@ -13,10 +13,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
 	gotest.tools v2.2.0+incompatible
-	k8s.io/api v0.34.0
-	k8s.io/apimachinery v0.34.0
-	k8s.io/client-go v0.34.0
-	sigs.k8s.io/controller-runtime v0.22.0
+	k8s.io/api v0.34.1
+	k8s.io/apimachinery v0.34.1
+	k8s.io/client-go v0.34.1
+	sigs.k8s.io/controller-runtime v0.22.1
 )
 
 require (
