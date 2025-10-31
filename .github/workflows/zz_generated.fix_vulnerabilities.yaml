@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/ad0a25fbf301b2513e169ec964a8785d28f75be4/pkg/gen/input/workflows/internal/file/fix_vulnerabilities.yaml.template
+#    https://github.com/giantswarm/devctl/blob/251fa7d9bd403e23321bad6714c1e26c375fedf3/pkg/gen/input/workflows/internal/file/fix_vulnerabilities.yaml.template
 #
 
 name: Fix Go vulnerabilities
@@ -25,3 +25,5 @@ jobs:
     secrets:
       HERALD_APP_ID: ${{ secrets.HERALD_APP_ID }}
       HERALD_APP_KEY: ${{ secrets.HERALD_APP_KEY }}
+      NANCY_USER: ${{ secrets.NANCY_USER }}
+      NANCY_TOKEN: ${{ secrets.NANCY_TOKEN }}
