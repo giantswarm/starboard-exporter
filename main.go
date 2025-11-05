@@ -47,6 +47,9 @@ import (
 	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
 	"github.com/giantswarm/starboard-exporter/utils"
+
+	kubescapeinstall "github.com/kubescape/storage/pkg/apis/softwarecomposition/install"
+
 	//+kubebuilder:scaffold:imports
 )
 
@@ -66,6 +69,11 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	err := aqua.AddToScheme(scheme)
+	if err != nil {
+		setupLog.Error(err, fmt.Sprintf("error registering scheme: %s", err))
+	}
+
+	kubescapeinstall.Install(scheme)
 	if err != nil {
 		setupLog.Error(err, fmt.Sprintf("error registering scheme: %s", err))
 	}
