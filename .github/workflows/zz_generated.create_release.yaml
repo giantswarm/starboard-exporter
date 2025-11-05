@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/35dace92664421a2fed6852f48c2efe2caecd360/pkg/gen/input/workflows/internal/file/create_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/f81dabb94ad79400b60650ce0b6a00d82bb31d0e/pkg/gen/input/workflows/internal/file/create_release.yaml.template
 #
 name: Create Release
 on:
@@ -193,7 +193,7 @@ jobs:
           git push "${REMOTE_REPO}" --tags
       - name: Create release
         id: create_gh_release
-        uses: ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af  # v1.18.0
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b  # v1.20.0
         env:
           GITHUB_TOKEN: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
         with:
