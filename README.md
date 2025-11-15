@@ -65,6 +65,7 @@ starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{
     image_repository="giantswarm/starboard-operator",
     image_tag="0.11.0",
     report_name="replicaset-starboard-app-6894945788-starboard-app",
+    scanner="trivy",
     severity="MEDIUM"
     } 4
 ```
@@ -85,6 +86,7 @@ starboard_exporter_vulnerabilityreport_image_vulnerability{
     image_tag="0.11.0",
     installed_resource_version="1.1.1k-r0",
     report_name="replicaset-starboard-app-6894945788-starboard-app",
+    scanner="trivy",
     severity="HIGH",
     vulnerability_id="CVE-2021-3712",
     vulnerability_link="https://avd.aquasec.com/nvd/cve-2021-3712",
