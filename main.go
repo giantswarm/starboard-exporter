@@ -248,15 +248,15 @@ func main() {
 	}
 
 	if vulnerabilityScansEnabled {
-		if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
+		if err = (&vulnerabilityreport.TrivyVulnerabilityReportReconciler{
 			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
+			Log:              ctrl.Log.WithName("controllers").WithName("TrivyVulnerabilityReport"),
 			MaxJitterPercent: maxJitterPercent,
 			Scheme:           mgr.GetScheme(),
 			ShardHelper:      peerRing,
 			TargetLabels:     targetLabels,
 		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
+			setupLog.Error(err, "unable to create controller", "controller", "TrivyVulnerabilityReport")
 			os.Exit(1)
 		}
 	}
@@ -298,7 +298,7 @@ func main() {
 func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 	log.Info(fmt.Sprintf("attempting to re-queue reports for instance %s", podIP))
 
-	vulnerabilityreport.RequeueReportsForPod(c, log, podIP)
+	vulnerabilityreport.RequeueTrivyReportsForPod(c, log, podIP)
 
 	kubescapevulnerabilityreport.RequeueReportsForPod(c, log, podIP)
 
