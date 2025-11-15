@@ -48,10 +48,8 @@ import (
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
 	"github.com/giantswarm/starboard-exporter/utils"
 
-	kubescapeinstall "github.com/kubescape/storage/pkg/apis/softwarecomposition/install"
-
-	"github.com/giantswarm/starboard-exporter/controllers/kubescapevulnerabilityreport"
-
+	// kubescapeinstall "github.com/kubescape/storage/pkg/apis/softwarecomposition/install"
+	kubescape "github.com/kubescape/storage/pkg/apis/softwarecomposition/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -75,7 +73,7 @@ func init() {
 		setupLog.Error(err, fmt.Sprintf("error registering scheme: %s", err))
 	}
 
-	kubescapeinstall.Install(scheme)
+	err = kubescape.AddToScheme(scheme)
 	if err != nil {
 		setupLog.Error(err, fmt.Sprintf("error registering scheme: %s", err))
 	}
@@ -93,9 +91,8 @@ func main() {
 	var serviceName string
 	var serviceNamespace string
 	var vulnerabilityScansEnabled bool
+	var kubescapeVulnerabilityScansEnabled bool
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
-	var kubescapeScansEnabled bool
-	kubescapeTargetLabels := []kubescapevulnerabilityreport.VulnerabilityLabel{}
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -138,20 +135,13 @@ func main() {
 			return nil
 		})
 
-	flag.Func("kubescape-target-labels",
-		"A comma-separated list of labels to be exposed per-kubescape vulnerability. Alias 'all' is supported.",
-		func(input string) error {
-
-			return nil
-		})
-
 	flag.BoolVar(&configAuditEnabled, "config-audits-enabled", true,
 		"Enable metrics for ConfigAuditReport resources.")
 
 	flag.BoolVar(&vulnerabilityScansEnabled, "vulnerability-scans-enabled", true,
 		"Enable metrics for VulnerabilityReport resources.")
 
-	flag.BoolVar(&kubescapeScansEnabled, "kubescape-scans-enabled", true,
+	flag.BoolVar(&kubescapeVulnerabilityScansEnabled, "kubescape-vulnerability-scans-enabled", true,
 		"Enable metrics for KubescapeVulnerabilityReport resources.")
 
 	opts := zap.Options{
@@ -182,15 +172,6 @@ func main() {
 			tl = append(tl, l.Name)
 		}
 		setupLog.Info(fmt.Sprintf("Using %d vulnerability target labels: %v", len(tl), tl))
-	}
-
-	// Print Kubescape target labels.
-	if len(kubescapeTargetLabels) > 0 {
-		tl := []string{}
-		for _, l := range kubescapeTargetLabels {
-			tl = append(tl, l.Name)
-		}
-		setupLog.Info(fmt.Sprintf("Using %d kubescape target labels: %v", len(tl), tl))
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -261,13 +242,14 @@ func main() {
 		}
 	}
 
-	if kubescapeScansEnabled {
-		if err = (&kubescapevulnerabilityreport.KubescapeVulnerabilityReportReconciler{
+	if kubescapeVulnerabilityScansEnabled {
+		if err = (&vulnerabilityreport.KubescapeVulnerabilityReportReconciler{
 			Client:           mgr.GetClient(),
 			Log:              ctrl.Log.WithName("controllers").WithName("KubescapeVulnerabilityReport"),
 			MaxJitterPercent: maxJitterPercent,
 			Scheme:           mgr.GetScheme(),
 			ShardHelper:      peerRing,
+			TargetLabels:     targetLabels,
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "KubescapeVulnerabilityReport")
 			os.Exit(1)
@@ -300,7 +282,7 @@ func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 
 	vulnerabilityreport.RequeueTrivyReportsForPod(c, log, podIP)
 
-	kubescapevulnerabilityreport.RequeueReportsForPod(c, log, podIP)
+	vulnerabilityreport.RequeueKubescapeReportsForPod(c, log, podIP)
 
 	configauditreport.RequeueReportsForPod(c, log, podIP)
 
