@@ -73,6 +73,8 @@ spec:
           - --service-namespace={{ include "resource.default.namespace"  . }}
         {{- if .Values.exporter.targetLabels }}
           - --target-labels={{ .Values.exporter.targetLabels | join "," }}
+        {{- else if .Values.exporter.vulnerabilityReports.targetLabels }}
+          - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
           # A little magic for handling defaulting with booleans https://github.com/helm/helm/issues/3308#issuecomment-701367019
           - --config-audits-enabled={{ hasKey .Values.exporter.configAuditReports "enabled" | ternary .Values.exporter.configAuditReports.enabled true }}
