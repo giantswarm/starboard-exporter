@@ -57,11 +57,16 @@ exporter:
 
   vulnerabilityReports:
     enabled: true
-    targetLabels: []
-      # - image_namespace
-      # - image_repository
-      # - image_tag
-      # - vulnerability_id
+
+  kubescapeVulnerabilityReports:
+    enabled: true
+
+  # Target labels for vulnerability detail metrics (shared by both Trivy and Kubescape)
+  targetLabels: []
+    # - image_namespace
+    # - image_repository
+    # - image_tag
+    # - vulnerability_id
 
 monitoring:
   serviceMonitor:
