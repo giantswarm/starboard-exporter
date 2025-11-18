@@ -16,6 +16,16 @@ rules:
       - watch
       - update
       - patch
+  - apiGroups:
+      - spdx.softwarecomposition.kubescape.io
+    resources:
+      - vulnerabilitymanifests
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
   - nonResourceURLs:
       - "/"
       - "/healthz"
