@@ -71,12 +71,13 @@ spec:
           - --pod-ip=$(MY_POD_IP)
           - --service-name={{ include "resource.default.name"  . }}
           - --service-namespace={{ include "resource.default.namespace"  . }}
-        {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
-          - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
+        {{- if .Values.exporter.targetLabels }}
+          - --target-labels={{ .Values.exporter.targetLabels | join "," }}
         {{- end }}
           # A little magic for handling defaulting with booleans https://github.com/helm/helm/issues/3308#issuecomment-701367019
           - --config-audits-enabled={{ hasKey .Values.exporter.configAuditReports "enabled" | ternary .Values.exporter.configAuditReports.enabled true }}
           - --vulnerability-scans-enabled={{ hasKey .Values.exporter.vulnerabilityReports "enabled" | ternary .Values.exporter.vulnerabilityReports.enabled true }}
+          - --kubescape-vulnerability-scans-enabled={{ hasKey .Values.exporter.kubescapeVulnerabilityReports "enabled" | ternary .Values.exporter.kubescapeVulnerabilityReports.enabled true }}
         {{- if .Values.exporter.requeueMaxJitterPercent }}
           - --max-jitter-percent={{ .Values.exporter.requeueMaxJitterPercent }}
         {{- end }}
