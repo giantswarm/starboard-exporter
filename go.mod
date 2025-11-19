@@ -50,6 +50,8 @@ require (
 	github.com/cilium/cilium v1.16.9 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containers/common v0.63.0 // indirect
+	github.com/containers/image/v5 v5.36.2 // indirect
+	github.com/containers/storage v1.59.1 // indirect
 	github.com/coreos/go-oidc/v3 v3.14.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/docker/cli v28.3.2+incompatible // indirect
