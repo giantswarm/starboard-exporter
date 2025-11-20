@@ -71,15 +71,23 @@ spec:
           - --pod-ip=$(MY_POD_IP)
           - --service-name={{ include "resource.default.name"  . }}
           - --service-namespace={{ include "resource.default.namespace"  . }}
-        {{- if .Values.exporter.targetLabels }}
-          - --target-labels={{ .Values.exporter.targetLabels | join "," }}
-        {{- else if .Values.exporter.vulnerabilityReports.targetLabels }}
+        {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}
           # A little magic for handling defaulting with booleans https://github.com/helm/helm/issues/3308#issuecomment-701367019
           - --config-audits-enabled={{ hasKey .Values.exporter.configAuditReports "enabled" | ternary .Values.exporter.configAuditReports.enabled true }}
-          - --vulnerability-scans-enabled={{ hasKey .Values.exporter.vulnerabilityReports "enabled" | ternary .Values.exporter.vulnerabilityReports.enabled true }}
-          - --kubescape-vulnerability-scans-enabled={{ hasKey .Values.exporter.kubescapeVulnerabilityReports "enabled" | ternary .Values.exporter.kubescapeVulnerabilityReports.enabled true }}
+        {{- $trivyEnabled := true }}
+        {{- if and (hasKey .Values.exporter.vulnerabilityReports "scanners") (hasKey .Values.exporter.vulnerabilityReports.scanners "trivy") (hasKey .Values.exporter.vulnerabilityReports.scanners.trivy "enabled") }}
+          {{- $trivyEnabled = .Values.exporter.vulnerabilityReports.scanners.trivy.enabled }}
+        {{- else if hasKey .Values.exporter.vulnerabilityReports "enabled" }}
+          {{- $trivyEnabled = .Values.exporter.vulnerabilityReports.enabled }}
+        {{- end }}
+          - --trivy-vulnerability-scans-enabled={{ $trivyEnabled }}
+        {{- $kubescapeEnabled := true }}
+        {{- if and (hasKey .Values.exporter.vulnerabilityReports "scanners") (hasKey .Values.exporter.vulnerabilityReports.scanners "kubescape") (hasKey .Values.exporter.vulnerabilityReports.scanners.kubescape "enabled") }}
+          {{- $kubescapeEnabled = .Values.exporter.vulnerabilityReports.scanners.kubescape.enabled }}
+        {{- end }}
+          - --kubescape-vulnerability-scans-enabled={{ $kubescapeEnabled }}
         {{- if .Values.exporter.requeueMaxJitterPercent }}
           - --max-jitter-percent={{ .Values.exporter.requeueMaxJitterPercent }}
         {{- end }}

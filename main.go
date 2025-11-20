@@ -90,7 +90,7 @@ func main() {
 	var probeAddr string
 	var serviceName string
 	var serviceNamespace string
-	var vulnerabilityScansEnabled bool
+	var trivyVulnerabilityScansEnabled bool
 	var kubescapeVulnerabilityScansEnabled bool
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
 
@@ -138,8 +138,8 @@ func main() {
 	flag.BoolVar(&configAuditEnabled, "config-audits-enabled", true,
 		"Enable metrics for ConfigAuditReport resources.")
 
-	flag.BoolVar(&vulnerabilityScansEnabled, "vulnerability-scans-enabled", true,
-		"Enable metrics for VulnerabilityReport resources.")
+	flag.BoolVar(&trivyVulnerabilityScansEnabled, "trivy-vulnerability-scans-enabled", true,
+		"Enable metrics for Trivy VulnerabilityReport resources.")
 
 	flag.BoolVar(&kubescapeVulnerabilityScansEnabled, "kubescape-vulnerability-scans-enabled", true,
 		"Enable metrics for KubescapeVulnerabilityReport resources.")
@@ -228,7 +228,7 @@ func main() {
 		}
 	}
 
-	if vulnerabilityScansEnabled {
+	if trivyVulnerabilityScansEnabled {
 		if err = (&vulnerabilityreport.TrivyVulnerabilityReportReconciler{
 			Client:           mgr.GetClient(),
 			Log:              ctrl.Log.WithName("controllers").WithName("TrivyVulnerabilityReport"),

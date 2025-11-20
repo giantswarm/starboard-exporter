@@ -56,20 +56,20 @@ exporter:
     enabled: true
 
   vulnerabilityReports:
-    enabled: true
-    # DEPRECATED: Use exporter.targetLabels instead (kept for backwards compatibility)
-    # targetLabels: []
+    # Shared configuration for all vulnerability scanners
+    targetLabels: []
+      # - image_namespace
+      # - image_repository
+      # - image_tag
+      # - vulnerability_id
 
-  kubescapeVulnerabilityReports:
-    enabled: true
-
-  # Target labels for vulnerability detail metrics (shared by both Trivy and Kubescape)
-  # This is the preferred location. For backwards compatibility, exporter.vulnerabilityReports.targetLabels is also supported.
-  targetLabels: []
-    # - image_namespace
-    # - image_repository
-    # - image_tag
-    # - vulnerability_id
+    # Scanner-specific configuration
+    # Possible Label Names: scanner / report_producer / report_source / something else?
+    scanners:
+      trivy:
+        enabled: true
+      kubescape:
+        enabled: true
 
 monitoring:
   serviceMonitor:
