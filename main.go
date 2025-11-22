@@ -47,6 +47,8 @@ import (
 	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
 	"github.com/giantswarm/starboard-exporter/utils"
+
+	kubescape "github.com/kubescape/storage/pkg/apis/softwarecomposition/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -70,6 +72,11 @@ func init() {
 		setupLog.Error(err, fmt.Sprintf("error registering scheme: %s", err))
 	}
 
+	err = kubescape.AddToScheme(scheme)
+	if err != nil {
+		setupLog.Error(err, fmt.Sprintf("error registering scheme: %s", err))
+	}
+
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -82,7 +89,8 @@ func main() {
 	var probeAddr string
 	var serviceName string
 	var serviceNamespace string
-	var vulnerabilityScansEnabled bool
+	var trivyVulnerabilityScansEnabled bool
+	var kubescapeVulnerabilityScansEnabled bool
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
@@ -129,8 +137,11 @@ func main() {
 	flag.BoolVar(&configAuditEnabled, "config-audits-enabled", true,
 		"Enable metrics for ConfigAuditReport resources.")
 
-	flag.BoolVar(&vulnerabilityScansEnabled, "vulnerability-scans-enabled", true,
-		"Enable metrics for VulnerabilityReport resources.")
+	flag.BoolVar(&trivyVulnerabilityScansEnabled, "trivy-vulnerability-scans-enabled", true,
+		"Enable metrics for Trivy VulnerabilityReport resources.")
+
+	flag.BoolVar(&kubescapeVulnerabilityScansEnabled, "kubescape-vulnerability-scans-enabled", true,
+		"Enable metrics for KubescapeVulnerabilityReport resources.")
 
 	opts := zap.Options{
 		Development: false,
@@ -216,16 +227,30 @@ func main() {
 		}
 	}
 
-	if vulnerabilityScansEnabled {
-		if err = (&vulnerabilityreport.VulnerabilityReportReconciler{
+	if trivyVulnerabilityScansEnabled {
+		if err = (&vulnerabilityreport.TrivyVulnerabilityReportReconciler{
 			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("VulnerabilityReport"),
+			Log:              ctrl.Log.WithName("controllers").WithName("TrivyVulnerabilityReport"),
 			MaxJitterPercent: maxJitterPercent,
 			Scheme:           mgr.GetScheme(),
 			ShardHelper:      peerRing,
 			TargetLabels:     targetLabels,
 		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "VulnerabilityReport")
+			setupLog.Error(err, "unable to create controller", "controller", "TrivyVulnerabilityReport")
+			os.Exit(1)
+		}
+	}
+
+	if kubescapeVulnerabilityScansEnabled {
+		if err = (&vulnerabilityreport.KubescapeVulnerabilityReportReconciler{
+			Client:           mgr.GetClient(),
+			Log:              ctrl.Log.WithName("controllers").WithName("KubescapeVulnerabilityReport"),
+			MaxJitterPercent: maxJitterPercent,
+			Scheme:           mgr.GetScheme(),
+			ShardHelper:      peerRing,
+			TargetLabels:     targetLabels,
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "KubescapeVulnerabilityReport")
 			os.Exit(1)
 		}
 	}
@@ -254,7 +279,9 @@ func main() {
 func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 	log.Info(fmt.Sprintf("attempting to re-queue reports for instance %s", podIP))
 
-	vulnerabilityreport.RequeueReportsForPod(c, log, podIP)
+	vulnerabilityreport.RequeueTrivyReportsForPod(c, log, podIP)
+
+	vulnerabilityreport.RequeueKubescapeReportsForPod(c, log, podIP)
 
 	configauditreport.RequeueReportsForPod(c, log, podIP)
 
