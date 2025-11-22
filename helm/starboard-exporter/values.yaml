@@ -63,8 +63,6 @@ exporter:
       # - image_tag
       # - vulnerability_id
 
-    # Scanner-specific configuration
-    # Possible Label Names: scanner / report_producer / report_source / something else?
     scanners:
       trivy:
         enabled: true
