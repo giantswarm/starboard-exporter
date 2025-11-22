@@ -48,7 +48,6 @@ import (
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
 	"github.com/giantswarm/starboard-exporter/utils"
 
-	// kubescapeinstall "github.com/kubescape/storage/pkg/apis/softwarecomposition/install"
 	kubescape "github.com/kubescape/storage/pkg/apis/softwarecomposition/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
