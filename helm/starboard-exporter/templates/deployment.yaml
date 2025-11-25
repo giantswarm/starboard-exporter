@@ -76,18 +76,20 @@ spec:
         {{- end }}
           # A little magic for handling defaulting with booleans https://github.com/helm/helm/issues/3308#issuecomment-701367019
           - --config-audits-enabled={{ hasKey .Values.exporter.configAuditReports "enabled" | ternary .Values.exporter.configAuditReports.enabled true }}
-        {{- $trivyEnabled := true }}
-        {{- if and (hasKey .Values.exporter.vulnerabilityReports "scanners") (hasKey .Values.exporter.vulnerabilityReports.scanners "trivy") (hasKey .Values.exporter.vulnerabilityReports.scanners.trivy "enabled") }}
-          {{- $trivyEnabled = .Values.exporter.vulnerabilityReports.scanners.trivy.enabled }}
+        # If legacy vulnerability reports are disabled, disable Trivy scans
+        {{- if and (hasKey .Values.exporter.vulnerabilityReports "enabled") (not .Values.exporter.vulnerabilityReports.enabled) }}
+          - --trivy-vulnerability-scans-enabled=false
+        {{- else if and (hasKey .Values.exporter.vulnerabilityReports "scanners") (hasKey .Values.exporter.vulnerabilityReports.scanners "trivy") (hasKey .Values.exporter.vulnerabilityReports.scanners.trivy "enabled") }}
+          - --trivy-vulnerability-scans-enabled={{ .Values.exporter.vulnerabilityReports.scanners.trivy.enabled }}
         {{- else if hasKey .Values.exporter.vulnerabilityReports "enabled" }}
-          {{- $trivyEnabled = .Values.exporter.vulnerabilityReports.enabled }}
+          - --trivy-vulnerability-scans-enabled={{ .Values.exporter.vulnerabilityReports.enabled }}
         {{- end }}
-          - --trivy-vulnerability-scans-enabled={{ $trivyEnabled }}
-        {{- $kubescapeEnabled := true }}
-        {{- if and (hasKey .Values.exporter.vulnerabilityReports "scanners") (hasKey .Values.exporter.vulnerabilityReports.scanners "kubescape") (hasKey .Values.exporter.vulnerabilityReports.scanners.kubescape "enabled") }}
-          {{- $kubescapeEnabled = .Values.exporter.vulnerabilityReports.scanners.kubescape.enabled }}
+        # If legacy vulnerability reports are disabled, disable Kubescape scans
+        {{- if and (hasKey .Values.exporter.vulnerabilityReports "enabled") (not .Values.exporter.vulnerabilityReports.enabled) }}
+          - --kubescape-vulnerability-scans-enabled=false
+        {{- else if and (hasKey .Values.exporter.vulnerabilityReports "scanners") (hasKey .Values.exporter.vulnerabilityReports.scanners "kubescape") (hasKey .Values.exporter.vulnerabilityReports.scanners.kubescape "enabled") }}
+          - --kubescape-vulnerability-scans-enabled={{ .Values.exporter.vulnerabilityReports.scanners.kubescape.enabled }}
         {{- end }}
-          - --kubescape-vulnerability-scans-enabled={{ $kubescapeEnabled }}
         {{- if .Values.exporter.requeueMaxJitterPercent }}
           - --max-jitter-percent={{ .Values.exporter.requeueMaxJitterPercent }}
         {{- end }}
