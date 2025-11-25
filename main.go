@@ -242,7 +242,7 @@ func main() {
 	}
 
 	if kubescapeVulnerabilityScansEnabled {
-		if err = (&vulnerabilityreport.KubescapeVulnerabilityReportReconciler{
+		if err = (&vulnerabilityreport.KubescapeVulnerabilityManifestReconciler{
 			Client:           mgr.GetClient(),
 			Log:              ctrl.Log.WithName("controllers").WithName("KubescapeVulnerabilityReport"),
 			MaxJitterPercent: maxJitterPercent,
@@ -281,7 +281,7 @@ func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 
 	vulnerabilityreport.RequeueTrivyReportsForPod(c, log, podIP)
 
-	vulnerabilityreport.RequeueKubescapeReportsForPod(c, log, podIP)
+	vulnerabilityreport.RequeueKubescapeManifestsForPod(c, log, podIP)
 
 	configauditreport.RequeueReportsForPod(c, log, podIP)
 
