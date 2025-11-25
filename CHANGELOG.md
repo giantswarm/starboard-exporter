@@ -18,8 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Renamed Trivy-specific functions and constants to include "Trivy" prefix to distinguish them from Kubescape components while maintaining shared metrics.
 - Command-line flag `--vulnerability-scans-enabled` to `--trivy-vulnerability-scans-enabled` (Breaking Change).
-- Updated README to document Kubescape Operator functionality and support for multiple scanners.
-- Kubescape CVSS score selection prefers v3.1, falling back to highest available version.
 
 
 ## [0.8.2] - 2025-07-03
