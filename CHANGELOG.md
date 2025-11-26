@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Support for Kubescape vulnerability scanning via `VulnerabilityManifest` CR.
+- Scanner label (`scanner="trivy"` or `scanner="kubescape"`) to all vulnerability metrics to distinguish between scanning sources.
+- Command-line flag `--kubescape-vulnerability-scans-enabled`.
+- Helm values configuration for enabling/disabling individual scanners under
+  `exporter.vulnerabilityReports.scanners`.
+- Added backwards compatibility for legacy `vulnerabilityReports.enabled` Helm value (now enables Trivy scanner)
+
+### Changed
+- Renamed Trivy-specific functions and constants to include "Trivy" prefix to distinguish them from Kubescape components while maintaining shared metrics.
+- Command-line flag `--vulnerability-scans-enabled` to `--trivy-vulnerability-scans-enabled` (Breaking Change).
+
+
 ## [0.8.2] - 2025-07-03
 
 ### Changed

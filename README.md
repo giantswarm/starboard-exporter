@@ -3,7 +3,7 @@
 
 # starboard-exporter
 
-Exposes Prometheus metrics from [Trivy Operator][trivy-operator-upstream]'s `VulnerabilityReport`, `ConfigAuditReport`, and other custom resources (CRs).
+Exposes Prometheus metrics from [Trivy Operator][trivy-operator-upstream]'s `VulnerabilityReport`, `ConfigAuditReport`, [Kubescape][kubescape-operator-upstream]'s `VulnerabilityManifest`, and other custom resources (CRs).
 
 ## Metrics
 
@@ -53,9 +53,11 @@ starboard_exporter_ciskubebenchreport_result_info{
 
 ### Vulnerability Reports
 
+Vulnerability reports are supported from both Trivy Operator (`VulnerabilityReport`) and Kubescape (`VulnerabilityManifest`). Both scanners produce the same metric names, distinguished by the `scanner` label.
+
 #### Report Summary
 
-A summary series exposes the count of CVEs of each severity reported in a given `VulnerabilityReport`. For example:
+A summary series exposes the count of CVEs of each severity reported in a given vulnerability report. The `scanner` label indicates the source: `"trivy"` for Trivy Operator reports or `"kubescape"` for Kubescape reports.
 
 ```shell
 starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{
@@ -65,6 +67,7 @@ starboard_exporter_vulnerabilityreport_image_vulnerability_severity_count{
     image_repository="giantswarm/starboard-operator",
     image_tag="0.11.0",
     report_name="replicaset-starboard-app-6894945788-starboard-app",
+    scanner="trivy",
     severity="MEDIUM"
     } 4
 ```
@@ -73,7 +76,7 @@ This indicates that the `giantswarm/starboard-operator` image in the `demo` name
 
 #### Vulnerability Details
 
-A "detail" or "vulnerability" series exposes fields from each instance of an Aqua `Vulnerability`. The value of the metric is the `Score` for the vulnerability. For example:
+A "detail" or "vulnerability" series exposes fields from each instance of a vulnerability. The value of the metric is the CVSS score for the vulnerability. The `scanner` label distinguishes between Trivy and Kubescape sources.
 
 ```shell
 starboard_exporter_vulnerabilityreport_image_vulnerability{
@@ -85,6 +88,7 @@ starboard_exporter_vulnerabilityreport_image_vulnerability{
     image_tag="0.11.0",
     installed_resource_version="1.1.1k-r0",
     report_name="replicaset-starboard-app-6894945788-starboard-app",
+    scanner="trivy",
     severity="HIGH",
     vulnerability_id="CVE-2021-3712",
     vulnerability_link="https://avd.aquasec.com/nvd/cve-2021-3712",
@@ -113,7 +117,7 @@ starboard_exporter_configauditreport_resource_checks_summary_count{
 
 #### A Note on Cardinality
 
-For some use cases, it is helpful to export additional fields from `VulnerabilityReport` CRs. However, because many fields contain unbounded arbitrary data, including them in Prometheus metrics can lead to extremely high cardinality. This can drastically impact Prometheus performance. For this reason, we only expose summary data by default and allow users to opt-in to higher-cardinality fields.
+For some use cases, it is helpful to export additional fields from vulnerability report CRs (both `VulnerabilityReport` and `VulnerabilityManifest`). However, because many fields contain unbounded arbitrary data, including them in Prometheus metrics can lead to extremely high cardinality. This can drastically impact Prometheus performance. For this reason, we only expose summary data by default and allow users to opt-in to higher-cardinality fields.
 
 ### Sharding Reports
 
@@ -144,6 +148,13 @@ exporter:
       - image_tag
       - vulnerability_id
       - ...
+
+    # Enable/disable individual scanners
+    scanners:
+      trivy:
+        enabled: true
+      kubescape:
+        enabled: true
 ```
 
 The same can be done for CIS Benchmark Results. To enable an additional detail series *per CIS Benchmark Result*, use the `--cis-detail-report-labels` flag to specify which labels should be exposed. For example:
@@ -177,7 +188,7 @@ How to install the starboard-exporter using helm:
 ```shell
 helm repo add giantswarm https://giantswarm.github.io/giantswarm-catalog
 helm repo update
-helm upgrade -i starboard-exporter --namespace <trivy operator namespace> giantswarm/starboard-exporter
+helm upgrade -i starboard-exporter --namespace <operator namespace> giantswarm/starboard-exporter
 ```
 
 ## Scaling for Prometheus scrape timeouts
@@ -186,3 +197,4 @@ When exporting a large volume of metrics, Prometheus might time out before retri
 
 
 [trivy-operator-upstream]: https://github.com/aquasecurity/trivy-operator
+[kubescape-operator-upstream]: https://github.com/kubescape/operator
