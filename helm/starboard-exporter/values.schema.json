@@ -40,10 +40,36 @@
                     "type": "object",
                     "properties": {
                         "enabled": {
-                            "type": "boolean"
+                            "type": "boolean",
+                            "description": "Deprecated: Use scanners.trivy.enabled instead. Maintained for backwards compatibility."
                         },
                         "targetLabels": {
-                            "type": "array"
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "Shared labels to add to all vulnerability report metrics"
+                        },
+                        "scanners": {
+                            "type": "object",
+                            "properties": {
+                                "trivy": {
+                                    "type": "object",
+                                    "properties": {
+                                        "enabled": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                },
+                                "kubescape": {
+                                    "type": "object",
+                                    "properties": {
+                                        "enabled": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
