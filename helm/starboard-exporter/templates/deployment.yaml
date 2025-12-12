@@ -90,8 +90,8 @@ spec:
             {{- $trivyEnabled = .Values.exporter.vulnerabilityReports.enabled }}
           {{- end }}
         {{- end }}
-        - --trivy-vulnerability-scans-enabled={{ $trivyEnabled }}
-        - --kubescape-vulnerability-scans-enabled={{ $kubescapeEnabled }}
+          - --trivy-vulnerability-scans-enabled={{ $trivyEnabled }}
+          - --kubescape-vulnerability-scans-enabled={{ $kubescapeEnabled }}
         {{- if .Values.exporter.requeueMaxJitterPercent }}
           - --max-jitter-percent={{ .Values.exporter.requeueMaxJitterPercent }}
         {{- end }}
