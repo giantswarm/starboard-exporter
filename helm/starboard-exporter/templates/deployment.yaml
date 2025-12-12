@@ -78,7 +78,7 @@ spec:
           - --config-audits-enabled={{ hasKey .Values.exporter.configAuditReports "enabled" | ternary .Values.exporter.configAuditReports.enabled true }}
         {{- $trivyEnabled := false }}
         {{- $kubescapeEnabled := false }}
-        {{- if or (not (hasKey .Values.exporter.vulnerabilityReports "enabled")) (.Values.exporter.vulnerabilityReports.enabled == true)}}
+        {{- if or (not (hasKey .Values.exporter.vulnerabilityReports "enabled")) (eq .Values.exporter.vulnerabilityReports.enabled true)}}
           {{- if (hasKey .Values.exporter.vulnerabilityReports "scanners") }}
             {{- if and (hasKey .Values.exporter.vulnerabilityReports.scanners "trivy") (hasKey .Values.exporter.vulnerabilityReports.scanners.trivy "enabled") }}
               {{- $trivyEnabled = .Values.exporter.vulnerabilityReports.scanners.trivy.enabled }}
