@@ -244,6 +244,7 @@ func main() {
 	if kubescapeVulnerabilityScansEnabled {
 		if err = (&vulnerabilityreport.KubescapeVulnerabilityManifestReconciler{
 			Client:           mgr.GetClient(),
+			APIReader:        mgr.GetAPIReader(),
 			Log:              ctrl.Log.WithName("controllers").WithName("KubescapeVulnerabilityReport"),
 			MaxJitterPercent: maxJitterPercent,
 			Scheme:           mgr.GetScheme(),
