@@ -49,6 +49,8 @@ import (
 	"github.com/giantswarm/starboard-exporter/utils"
 
 	kubescape "github.com/kubescape/storage/pkg/apis/softwarecomposition/v1beta1"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -179,6 +181,20 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "58aff8fc.giantswarm",
+		NewCache: func(config *rest.Config, opts cache.Options) (cache.Cache, error) {
+			baseCache, err := cache.New(config, opts)
+			if err != nil {
+				return nil, err
+			}
+
+			// Create a reader that skips the cache for hydration
+			apiReader, err := client.New(config, client.Options{Scheme: opts.Scheme})
+			if err != nil {
+				return nil, err
+			}
+
+			return vulnerabilityreport.NewHydratingCache(baseCache, apiReader), nil
+		},
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -244,7 +260,6 @@ func main() {
 	if kubescapeVulnerabilityScansEnabled {
 		if err = (&vulnerabilityreport.KubescapeVulnerabilityManifestReconciler{
 			Client:           mgr.GetClient(),
-			APIReader:        mgr.GetAPIReader(),
 			Log:              ctrl.Log.WithName("controllers").WithName("KubescapeVulnerabilityReport"),
 			MaxJitterPercent: maxJitterPercent,
 			Scheme:           mgr.GetScheme(),
