@@ -25,9 +25,32 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type cacheEntry struct {
-	resourceVersion string
-	object          client.Object
+type CacheEntry struct {
+	ResourceVersion string
+	Object          client.Object
+}
+
+// DetailStore defines the interface for storing hydrated objects.
+type DetailStore interface {
+	Store(key string, entry CacheEntry)
+	Load(key string) (CacheEntry, bool)
+}
+
+// SyncMapDetailStore is a thread-safe implementation of DetailStore using sync.Map.
+type SyncMapDetailStore struct {
+	data sync.Map
+}
+
+func (s *SyncMapDetailStore) Store(key string, entry CacheEntry) {
+	s.data.Store(key, entry)
+}
+
+func (s *SyncMapDetailStore) Load(key string) (CacheEntry, bool) {
+	val, ok := s.data.Load(key)
+	if !ok {
+		return CacheEntry{}, false
+	}
+	return val.(CacheEntry), true
 }
 
 // HydratingCache wraps a standard controller-runtime cache to provide "read-through"
@@ -36,17 +59,22 @@ type HydratingCache struct {
 	cache.Cache
 	apiReader      client.Reader
 	needsHydration func(client.Object) bool
-	detailStore    sync.Map // map[string]cacheEntry
+	detailStore    DetailStore
 }
 
 // NewHydratingCache creates a new HydratingCache.
 // needsHydration is a function that returns true if the object retrieved from the cache
 // is missing data and needs to be hydrated from the API server.
-func NewHydratingCache(baseCache cache.Cache, apiReader client.Reader, needsHydration func(client.Object) bool) *HydratingCache {
+// If detailStore is nil, a default SyncMapDetailStore is used.
+func NewHydratingCache(baseCache cache.Cache, apiReader client.Reader, needsHydration func(client.Object) bool, detailStore DetailStore) *HydratingCache {
+	if detailStore == nil {
+		detailStore = &SyncMapDetailStore{}
+	}
 	return &HydratingCache{
 		Cache:          baseCache,
 		apiReader:      apiReader,
 		needsHydration: needsHydration,
+		detailStore:    detailStore,
 	}
 }
 
@@ -67,10 +95,9 @@ func (h *HydratingCache) Get(ctx context.Context, key client.ObjectKey, obj clie
 
 	entryKey := key.String()
 	if val, ok := h.detailStore.Load(entryKey); ok {
-		e := val.(cacheEntry)
-		if e.resourceVersion == obj.GetResourceVersion() {
+		if val.ResourceVersion == obj.GetResourceVersion() {
 			// Found a hydrated version for the same ResourceVersion, populate our object
-			h.deepCopyInto(e.object, obj)
+			h.deepCopyInto(val.Object, obj)
 			return nil
 		}
 	}
@@ -82,9 +109,9 @@ func (h *HydratingCache) Get(ctx context.Context, key client.ObjectKey, obj clie
 	}
 
 	// Store a deep copy for next time
-	h.detailStore.Store(entryKey, cacheEntry{
-		resourceVersion: obj.GetResourceVersion(),
-		object:          obj.DeepCopyObject().(client.Object),
+	h.detailStore.Store(entryKey, CacheEntry{
+		ResourceVersion: obj.GetResourceVersion(),
+		Object:          obj.DeepCopyObject().(client.Object),
 	})
 
 	return nil
