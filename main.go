@@ -193,7 +193,10 @@ func main() {
 				return nil, err
 			}
 
-			return vulnerabilityreport.NewHydratingCache(baseCache, apiReader), nil
+			return utils.NewHydratingCache(baseCache, apiReader, func(obj client.Object) bool {
+				manifest, ok := obj.(*kubescape.VulnerabilityManifest)
+				return ok && len(manifest.Spec.Payload.Matches) == 0
+			}), nil
 		},
 	})
 	if err != nil {
