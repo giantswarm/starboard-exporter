@@ -76,7 +76,22 @@ spec:
         {{- end }}
           # A little magic for handling defaulting with booleans https://github.com/helm/helm/issues/3308#issuecomment-701367019
           - --config-audits-enabled={{ hasKey .Values.exporter.configAuditReports "enabled" | ternary .Values.exporter.configAuditReports.enabled true }}
-          - --vulnerability-scans-enabled={{ hasKey .Values.exporter.vulnerabilityReports "enabled" | ternary .Values.exporter.vulnerabilityReports.enabled true }}
+        {{- $trivyEnabled := false }}
+        {{- $kubescapeEnabled := false }}
+        {{- if or (not (hasKey .Values.exporter.vulnerabilityReports "enabled")) (eq .Values.exporter.vulnerabilityReports.enabled true)}}
+          {{- if (hasKey .Values.exporter.vulnerabilityReports "scanners") }}
+            {{- if and (hasKey .Values.exporter.vulnerabilityReports.scanners "trivy") (hasKey .Values.exporter.vulnerabilityReports.scanners.trivy "enabled") }}
+              {{- $trivyEnabled = .Values.exporter.vulnerabilityReports.scanners.trivy.enabled }}
+            {{- end }}
+            {{- if and (hasKey .Values.exporter.vulnerabilityReports.scanners "kubescape") (hasKey .Values.exporter.vulnerabilityReports.scanners.kubescape "enabled") }}
+              {{- $kubescapeEnabled = .Values.exporter.vulnerabilityReports.scanners.kubescape.enabled }}
+            {{- end }}
+          {{- else if hasKey .Values.exporter.vulnerabilityReports "enabled" }}
+            {{- $trivyEnabled = .Values.exporter.vulnerabilityReports.enabled }}
+          {{- end }}
+        {{- end }}
+          - --trivy-vulnerability-scans-enabled={{ $trivyEnabled }}
+          - --kubescape-vulnerability-scans-enabled={{ $kubescapeEnabled }}
         {{- if .Values.exporter.requeueMaxJitterPercent }}
           - --max-jitter-percent={{ .Values.exporter.requeueMaxJitterPercent }}
         {{- end }}

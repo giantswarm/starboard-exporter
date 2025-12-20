@@ -56,12 +56,18 @@ exporter:
     enabled: true
 
   vulnerabilityReports:
-    enabled: true
+    # Shared configuration for all vulnerability scanners
     targetLabels: []
       # - image_namespace
       # - image_repository
       # - image_tag
       # - vulnerability_id
+
+    scanners:
+      trivy:
+        enabled: true
+      kubescape:
+        enabled: true
 
 monitoring:
   serviceMonitor:
