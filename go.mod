@@ -5,7 +5,7 @@ go 1.24.4
 toolchain go1.25.6
 
 require (
-	github.com/aquasecurity/trivy-operator v0.28.0
+	github.com/aquasecurity/trivy-operator v0.29.0
 	github.com/buraksezer/consistent v0.10.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/containers/image/v5 v5.36.2
