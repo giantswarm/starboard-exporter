@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-01-20
+
 ### Added
 - Support for Kubescape vulnerability scanning via `VulnerabilityManifest` CR.
 - Scanner label (`scanner="trivy"` or `scanner="kubescape"`) to all vulnerability metrics to distinguish between scanning sources.
@@ -286,7 +288,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.8.2...v1.0.0
 [0.8.2]: https://github.com/giantswarm/starboard-exporter/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/giantswarm/starboard-exporter/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.7.11...v0.8.0
