@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Disable the kubescape scanner input by default.
+
 ## [1.0.1] - 2026-01-21
 
 ### Fixed
@@ -14,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Downgrade k8s client libraries to v1.34 versions to fix a regression ([#135895](https://github.com/kubernetes/kubernetes/issues/135895)).
 
 ## [1.0.0] - 2026-01-20
+
+### Announcements
+
+- **starboard-exporter now supports kubescape!** In addition to Trivy VulnerabilityReports, starboard-exporter now also supports reconciliation of Kubescape VulnerabilityManifests. Metrics have been updated to include a `scanner` label, indicating the source type of the data. Trivy and Kubescape can be used simultaneously, or individually toggled on and off. See the README for more information.
+- There is a breaking change to one of the CLI flags in this version. The `--vulnerability-scans-enabled` flag has been renamed to `--trivy-vulnerability-scans-enabled` in order to facilitate the new Kubescape scanner support. **Users installing via the Helm chart are not affected.**
 
 ### Added
 - Support for Kubescape vulnerability scanning via `VulnerabilityManifest` CR.
@@ -26,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Renamed Trivy-specific functions and constants to include "Trivy" prefix to distinguish them from Kubescape components while maintaining shared metrics.
 - Command-line flag `--vulnerability-scans-enabled` to `--trivy-vulnerability-scans-enabled` (Breaking Change).
-
 
 ## [0.8.2] - 2025-07-03
 
