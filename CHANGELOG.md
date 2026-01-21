@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-01-21
+
 ### Fixed
 
 - Disable the kubescape scanner input by default.
@@ -302,7 +304,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/giantswarm/starboard-exporter/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/giantswarm/starboard-exporter/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/giantswarm/starboard-exporter/compare/v0.8.2...v1.0.0
 [0.8.2]: https://github.com/giantswarm/starboard-exporter/compare/v0.8.1...v0.8.2
