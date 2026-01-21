@@ -67,7 +67,7 @@ exporter:
       trivy:
         enabled: true
       kubescape:
-        enabled: true
+        enabled: false
 
 monitoring:
   serviceMonitor:
