@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Downgrade k8s client libraries to v1.34 versions to fix a regression ([#135895](https://github.com/kubernetes/kubernetes/issues/135895)).
+
 ## [1.0.0] - 2026-01-20
 
 ### Added
