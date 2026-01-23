@@ -4,6 +4,7 @@ registry:
 
 image:
   name: "giantswarm/starboard-exporter"
+  tag: ""  # Defaults to Chart.AppVersion if empty
 
 imagePullSecrets: []
 
