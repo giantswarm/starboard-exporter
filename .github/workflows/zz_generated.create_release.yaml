@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/da653ffe50bb61d247594e9b842bb36fdac7bb18/pkg/gen/input/workflows/internal/file/create_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/72df19d0bff1cc8a679b00fdb4ac4e2504f8962a/pkg/gen/input/workflows/internal/file/create_release.yaml.template
 #
 name: Create Release
 on:
@@ -14,6 +14,9 @@ on:
       - 'release-v*.*.x'
       # "!" negates previous positive patterns so it has to be at the end.
       - '!release-v*.x.x'
+
+permissions: {}
+
 jobs:
   debug_info:
     name: Debug info
@@ -27,6 +30,8 @@ jobs:
   gather_facts:
     name: Gather facts
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     outputs:
       project_go_path: ${{ steps.get_project_go_path.outputs.path }}
       ref_version: ${{ steps.ref_version.outputs.refversion }}
@@ -54,7 +59,7 @@ jobs:
           echo "version=${version}" >> $GITHUB_OUTPUT
       - name: Checkout code
         if: ${{ steps.get_version.outputs.version != '' }}
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Get project.go path
         id: get_project_go_path
         if: ${{ steps.get_version.outputs.version != '' }}
@@ -85,6 +90,8 @@ jobs:
   update_project_go:
     name: Update project.go
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     if: ${{ needs.gather_facts.outputs.version != '' && needs.gather_facts.outputs.project_go_path != '' && needs.gather_facts.outputs.ref_version != 'true' }}
     needs:
       - gather_facts
@@ -103,7 +110,9 @@ jobs:
           tarball_binary_path: "*/src/${binary}"
           smoke_test: "${binary} --version"
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Update project.go
         id: update_project_go
         env:
@@ -156,6 +165,8 @@ jobs:
   create_release:
     name: Create release
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     needs:
       - gather_facts
     if: ${{ needs.gather_facts.outputs.version }}
@@ -163,9 +174,10 @@ jobs:
       upload_url: ${{ steps.create_gh_release.outputs.upload_url }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.sha }}
+          persist-credentials: false
       - name: Ensure correct version in project.go
         if: ${{ needs.gather_facts.outputs.project_go_path != '' && needs.gather_facts.outputs.ref_version != 'true' }}
         run: |
@@ -194,16 +206,17 @@ jobs:
       - name: Create release
         id: create_gh_release
         uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b  # v1.20.0
-        env:
-          GITHUB_TOKEN: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
         with:
           body: ${{ steps.changelog_reader.outputs.changes }}
           tag: "v${{ needs.gather_facts.outputs.version }}"
+          token: ${{ secrets.TAYLORBOT_GITHUB_ACTION }}
           skipIfReleaseExists: true
 
   create-release-branch:
     name: Create release branch
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     needs:
       - gather_facts
     if: ${{ needs.gather_facts.outputs.version }}
@@ -217,7 +230,7 @@ jobs:
           tarball_binary_path: "*/src/${binary}"
           smoke_test: "${binary} --version"
       - name: Check out the repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0  # Clone the whole history, not just the most recent commit.
       - name: Fetch all tags and branches
