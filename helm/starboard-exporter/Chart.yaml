@@ -9,3 +9,5 @@ version: 1.0.2
 annotations:
   application.giantswarm.io/team: "shield"
   config.giantswarm.io/version: 1.x.x
+  io.giantswarm.application.audience: all
+  io.giantswarm.application.managed: "true"
