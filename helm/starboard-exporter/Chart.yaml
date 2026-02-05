@@ -7,5 +7,6 @@ home: https://github.com/giantswarm/starboard-exporter
 icon: https://s.giantswarm.io/app-icons/prometheus/1/light.svg
 version: 1.0.2
 annotations:
-  application.giantswarm.io/team: "shield"
-  config.giantswarm.io/version: 1.x.x
+  io.giantswarm.application.audience: all
+  io.giantswarm.application.managed: "true"
+  io.giantswarm.application.team: "shield"
