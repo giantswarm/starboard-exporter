@@ -62,6 +62,21 @@ workflows:
             - main
             - master
 
+    - architect/push-to-app-catalog:
+        context: architect
+        executor: app-build-suite
+        name: push-starboard-exporter-chart-to-default-catalog
+        app_catalog: default-catalog
+        app_catalog_test: default-test-catalog
+        persist_chart_archive: true
+        chart: starboard-exporter
+        filters:
+          tags:
+            only: /^v.*/
+          branches:
+            ignore:
+            - main
+
     - architect/run-tests-with-ats:
         name: execute chart tests
         filters:
