@@ -210,8 +210,6 @@ replace (
 	github.com/go-git/go-git/v5 v5.12.0 => github.com/go-git/go-git/v5 v5.13.2
 )
 
-replace go.opentelemetry.io/otel/sdk/log v0.15.0 => go.opentelemetry.io/otel/sdk/log v0.17.0
-
 replace github.com/moby/buildkit v0.12.3 => github.com/moby/buildkit v0.12.5
 
 replace github.com/hashicorp/go-getter v1.7.4 => github.com/hashicorp/go-getter v1.7.6
