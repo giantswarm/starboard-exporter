@@ -1,0 +1,20 @@
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob//pkg/gen/input/workflows/internal/file/zizmor.yaml.template
+#
+name: zizmor
+
+on:
+  - pull_request
+
+permissions: {}
+
+jobs:
+  zizmor:
+    uses: giantswarm/github-workflows/.github/workflows/zizmor.yaml@main
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
