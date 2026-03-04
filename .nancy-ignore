@@ -1,3 +1,4 @@
 CVE-2025-30162 until=2026-03-11 # github.com/cilium/cilium@v1.16.17
 CVE-2025-48056 until=2026-03-11 # github.com/cilium/cilium@v1.16.17
 CVE-2026-24051 until=2026-03-06 # go.opentelemetry.io/otel/sdk@v1.36.0
+CVE-2026-27141 until=2026-04-03 # golang.org/x/net@v0.50.0
