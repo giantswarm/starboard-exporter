@@ -13,7 +13,7 @@ permissions: {}
 
 jobs:
   analyze-github-actions:
-    uses: giantswarm/github-workflows/.github/workflows/analyze-github-actions.yaml@1695bab289f1ce9d79a637aae2d54458e4040a77
+    uses: giantswarm/github-workflows/.github/workflows/analyze-github-actions.yaml@main
     permissions:
       security-events: write
       contents: read
