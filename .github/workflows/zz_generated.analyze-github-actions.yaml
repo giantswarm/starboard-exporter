@@ -13,8 +13,7 @@ permissions: {}
 
 jobs:
   analyze-github-actions:
-    # zizmor: ignore[unpinned-uses] shared workflows are pinned in giantswarm/github-workflows.
-    uses: giantswarm/github-workflows/.github/workflows/analyze-github-actions.yaml@main
+    uses: giantswarm/github-workflows/.github/workflows/analyze-github-actions.yaml@main  # zizmor: ignore[unpinned-uses] shared workflows are pinned in giantswarm/github-workflows.
     permissions:
       security-events: write
       contents: read
