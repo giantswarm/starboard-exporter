@@ -13,7 +13,7 @@ permissions: {}
 
 jobs:
   zizmor:
-    uses: giantswarm/github-workflows/.github/workflows/zizmor.yaml@main
+    uses: giantswarm/github-workflows/.github/workflows/zizmor.yaml@d53685c2a3993869bef783dd149edf73dc2165c4
     permissions:
       security-events: write
       contents: read
