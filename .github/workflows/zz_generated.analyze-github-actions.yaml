@@ -18,3 +18,6 @@ jobs:
       security-events: write
       contents: read
       actions: read
+
+  coverage:
+    uses: giantswarm/github-workflows/.github/workflows/go-coverage.yaml@main
