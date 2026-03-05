@@ -13,7 +13,7 @@ permissions: {}
 
 jobs:
   analyze-github-actions-main:
-    uses: giantswarm/github-workflows/.github/workflows/analyze-github-actions.yaml@main
+    uses: zizmorcore/zizmor-action@main
     permissions:
       security-events: write
       contents: read
