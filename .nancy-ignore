@@ -1,3 +1,5 @@
 CVE-2025-30162 until=2026-04-10 # github.com/cilium/cilium@v1.16.17
 CVE-2025-48056 until=2026-04-10 # github.com/cilium/cilium@v1.16.17
 CVE-2026-27141 until=2026-04-03 # golang.org/x/net@v0.50.0
+CVE-2026-33481 until=2026-04-22 # github.com/anchore/syft@v1.32.0
+CVE-2026-33186 until=2026-04-22 # google.golang.org/grpc@v1.79.1
