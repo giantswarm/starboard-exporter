@@ -1,0 +1,21 @@
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob//pkg/gen/input/workflows/internal/file/zizmor_base.yml.template
+#
+
+# This file contains common scanning rules for zizmor.
+# When running Giant Swarm's analyze-github-actions workflow,
+# this file is merged with a local zizmor.yml file, if one is found, prior to scanning.
+
+# To run zizmor locally with this configuration, change the filename to zizmor.yml.
+# Or, to merge with a local config, run:
+# `yq eval-all '. as $item ireduce ({}; . *+ $item)' "zizmor.base.yml" "zizmor.yml" > "zizmor-tmp.yml" && mv zizmor-tmp.yml zizmor.yml`
+
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # Allow named references (e.g. main) to shared workflows.
+        "giantswarm/github-workflows/*": ref-pin
