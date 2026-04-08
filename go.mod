@@ -2,7 +2,7 @@ module github.com/giantswarm/starboard-exporter
 
 go 1.25.8
 
-toolchain go1.26.1
+toolchain go1.26.2
 
 require (
 	github.com/aquasecurity/trivy-operator v0.30.1
