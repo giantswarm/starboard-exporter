@@ -6,3 +6,4 @@ CVE-2026-33186 until=2026-04-22 # google.golang.org/grpc@v1.79.1
 CVE-2026-33726 until=2026-04-26 # github.com/cilium/cilium@v1.16.17
 CVE-2026-34986 until=2026-05-06 # github.com/go-jose/go-jose/v4@v4.1.3
 CVE-2026-33817 until=2026-05-08 # go.etcd.io/bbolt@v1.4.3
+CVE-2026-39883 until=2026-05-10 # go.opentelemetry.io/otel/sdk@v1.42.0
