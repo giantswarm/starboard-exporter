@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/d0c8f03c86ad4cfaef54d2315dc6f6d402be716d/pkg/gen/input/workflows/internal/file/fix_vulnerabilities.yaml.template
+#    https://github.com/giantswarm/devctl/blob/c2dd604fd787d9aa63ec6c43c817c8596f1356f7/pkg/gen/input/workflows/internal/file/fix_vulnerabilities.yaml.template
 #
 
 name: Fix Go vulnerabilities
@@ -14,11 +14,12 @@ on:
     inputs:
       branch:
         description: Branch on which to fix vulnerabilities
+        default: main
         required: true
         type: string
       log_level:
         description: Log Level (info / error / debug)
-        default: "info"
+        default: info
         type: string
 
 permissions: {}
