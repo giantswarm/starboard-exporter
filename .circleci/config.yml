@@ -8,7 +8,6 @@ workflows:
     - architect/go-build:
         context:
           - architect
-          - bogus
         name: go-build
         binary: starboard-exporter
         resource_class: large
