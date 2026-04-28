@@ -6,6 +6,7 @@ workflows:
   package-and-push-chart-on-tag:
     jobs:
     - architect/go-build:
+        context: architect
         name: go-build
         binary: starboard-exporter
         resource_class: large
