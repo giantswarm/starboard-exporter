@@ -1,0 +1,20 @@
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/0ca1544c45906b713e89f8a546e279eaf63e1e24/pkg/gen/input/workflows/internal/file/analyze_github_actions.yaml.template
+#
+name: analyze-github-actions
+
+on:
+  - pull_request
+
+permissions: {}
+
+jobs:
+  analyze-github-actions:
+    uses: giantswarm/github-workflows/.github/workflows/analyze-github-actions.yaml@main
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
