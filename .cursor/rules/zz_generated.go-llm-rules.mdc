@@ -30,6 +30,6 @@ When creating or modifying Go files, perform the according check and mitigate an
 <!--
 DO NOT EDIT. Generated with devctl.
 This file is maintained at:
-https://github.com/giantswarm/devctl/blob/57c68171868158d915a92dd45201bbeadaa17214/pkg/gen/input/llm/internal/file/go_rules.mdc.template
+https://github.com/giantswarm/devctl/blob/83dbeb7aedca2abc8fd38c99e3cfa49f58d8ff82/pkg/gen/input/llm/internal/file/go_rules.mdc.template
 Manual changes will be overwritten.
 -->
