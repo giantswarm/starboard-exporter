@@ -46,3 +46,37 @@ Define image tag.
 {{- define "image.tag" -}}
 {{- .Values.image.tag | default .Chart.AppVersion -}}
 {{- end -}}
+
+{{/*
+Resolve the config audit report flag.
+A little magic for handling defaulting with booleans https://github.com/helm/helm/issues/3308#issuecomment-701367019
+*/}}
+{{- define "exporter.configAuditReportsEnabled" -}}
+{{- hasKey .Values.exporter.configAuditReports "enabled" | ternary .Values.exporter.configAuditReports.enabled true -}}
+{{- end -}}
+
+{{/*
+Resolve a vulnerability report scanner flag.
+*/}}
+{{- define "exporter.vulnerabilityReports.scannerEnabled" -}}
+{{- $enabled := false -}}
+{{- if or (not (hasKey .Values.exporter.vulnerabilityReports "enabled")) (eq .Values.exporter.vulnerabilityReports.enabled true) -}}
+  {{- if hasKey .Values.exporter.vulnerabilityReports "scanners" -}}
+    {{- if and (hasKey .Values.exporter.vulnerabilityReports.scanners .scanner) (hasKey (index .Values.exporter.vulnerabilityReports.scanners .scanner) "enabled") -}}
+      {{- $scannerConfig := index .Values.exporter.vulnerabilityReports.scanners .scanner -}}
+      {{- $enabled = $scannerConfig.enabled -}}
+    {{- end -}}
+  {{- else if hasKey .Values.exporter.vulnerabilityReports "enabled" -}}
+    {{- $enabled = .Values.exporter.vulnerabilityReports.enabled -}}
+  {{- end -}}
+{{- end -}}
+{{- $enabled -}}
+{{- end -}}
+
+{{- define "exporter.vulnerabilityReports.trivyEnabled" -}}
+{{- include "exporter.vulnerabilityReports.scannerEnabled" (dict "Values" .Values "scanner" "trivy") -}}
+{{- end -}}
+
+{{- define "exporter.vulnerabilityReports.kubescapeEnabled" -}}
+{{- include "exporter.vulnerabilityReports.scannerEnabled" (dict "Values" .Values "scanner" "kubescape") -}}
+{{- end -}}
