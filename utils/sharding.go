@@ -7,7 +7,7 @@ import (
 
 	"github.com/buraksezer/consistent"
 	"github.com/go-logr/logr"
-	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -102,28 +102,33 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	}
 
 	listOptionsFunc := dynamicinformer.TweakListOptionsFunc(func(options *metav1.ListOptions) {
-		options.FieldSelector = "metadata.name=" + peerRing.ServiceName
+		options.LabelSelector = "kubernetes.io/service-name=" + peerRing.ServiceName
 	})
 
 	// Use our namespace and expected endpoints name in our future informer.
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(dc, 0, peerRing.ServiceNamespace, listOptionsFunc)
 
-	// Construct an informer for the endpoints.
+	// Construct an informer for the endpointslices.
 	informer := factory.ForResource(schema.GroupVersionResource{
-		Group: "", Version: "v1", Resource: "endpoints"}).Informer()
+		Group: "discovery.k8s.io", Version: "v1", Resource: "endpointslices"}).Informer()
 
-	// Set handlers for new/updated endpoints.
+	// Set handlers for new/updated/deleted endpointslices.
 	handlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			updateEndpoints(obj, nil, peerRing, log)
+			// Might be valid to add members based on just the added EndpointSlice.
+			// But to be safe we will update members based on all EndpointSlices.
+			updateAllEndpoints(informer, peerRing, log)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			// In the future, we might need to re-queue objects which belong to deleted peers.
-			// When scaling down, it is possible that metrics will be double reported for up to the reconciliation period.
-			// For now, we'll just set the desired peers.
-			updateEndpoints(newObj, oldObj, peerRing, log)
+			// On update some of the endpoints may have been moved to a different EndpointSlice.
+			// We have to set members based on all EndpointSlices.
+			updateAllEndpoints(informer, peerRing, log)
 		},
-		// We can add a delete handler here. Not sure yet what it should do.
+		DeleteFunc: func(obj interface{}) {
+			// On delete some of the endpoints may exist in other EndpointSlices.
+			// We have to set members based on all EndpointSlices.
+			updateAllEndpoints(informer, peerRing, log)
+		},
 	}
 
 	_, err = informer.AddEventHandler(handlers)
@@ -133,93 +138,48 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	return informer
 }
 
-func updateEndpoints(currentObj interface{}, previousObj interface{}, ring *ShardHelper, log logr.Logger) {
-	current, err := toEndpoint(currentObj, log)
-	if err != nil {
-		log.Error(err, "could not convert obj to Endpoints")
-		return
-	}
+// updateAllEndpoints lists all EndpointSlices for the configured service and updates the ring members.
+func updateAllEndpoints(informer cache.SharedIndexInformer, ring *ShardHelper, log logr.Logger) {
+	// List all EndpointSlices for the service.
+	// We use the informer store to list EndpointSlices to reduce load on the API server.
+	list := informer.GetStore().List()
 
-	var previous *corev1.Endpoints
-	{
-		previous = nil
+	// Collect unique IPs across all EndpointSlices.
+	ipSet := make(map[string]struct{})
+	for _, item := range list {
+		eps, err := toEndpointSlice(item, log)
+		if err != nil {
+			log.Error(err, "could not convert item to EndpointSlice")
+			continue
+		}
 
-		if previousObj != nil {
-			previous, err = toEndpoint(currentObj, log)
-			if err != nil {
-				log.Error(err, "could not convert obj to Endpoints")
-				return
+		// Only consider IPv4 EndpointSlices
+		if eps.AddressType != discoveryv1.AddressTypeIPv4 {
+			continue
+		}
+
+		for _, ep := range eps.Endpoints {
+			if ep.Conditions.Ready != nil && !*ep.Conditions.Ready {
+				// Skip endpoints which are not ready.
+				continue
+			}
+			for _, ip := range ep.Addresses {
+				ipSet[ip] = struct{}{}
 			}
 		}
 	}
 
-	added, kept, _, ok := getEndpointChanges(current, previous, log)
-	if !ok {
-		return
-	}
-	ring.SetMembersFromLists(added, kept)
-	log.Info(fmt.Sprintf("updated peer list with %d endpoints", len(added)+len(kept)))
+	// Update ring members with the collected IPs.
+	ring.SetMembers(ipSet)
+	log.Info(fmt.Sprintf("updated peer list with %d endpoints (from EndpointSlices)", len(ipSet)))
 }
 
-// getEndpointChanges takes a current and optional previous object and returns the added, kept, and removed items, plus a success boolean.
-func getEndpointChanges(current *corev1.Endpoints, previous *corev1.Endpoints, log logr.Logger) ([]string, []string, []string, bool) {
-
-	currentEndpoints := []string{}                   // Stores current endpoints to return directly if we don't have a previous state.
-	currentEndpointsMap := make(map[string]struct{}) // Stores the endpoints as a map for quicker comparisons to previous state.
-
-	// Store all the current endpoints for us to use later.
-	for _, subset := range current.Subsets {
-		for _, ip := range subset.Addresses {
-			// We add to both the list and the map. This wastes a little memory because we only ever need one or the other,
-			// but it saves cycles to not loop over the endpoints multiple times. We don't expect tons of endpoints.
-			currentEndpoints = append(currentEndpoints, ip.IP)
-			currentEndpointsMap[ip.IP] = struct{}{}
-		}
-	}
-
-	if previous == nil {
-		// If there is no previous object, we're only adding new (initial) endpoints.
-		// Just return the current endpoint list.
-		return currentEndpoints, nil, nil, true
-	}
-
-	added := []string{}
-	kept := []string{}
-	removed := []string{}
-
-	for _, subset := range previous.Subsets {
-		for _, ip := range subset.Addresses {
-			// Each address was either:
-			// - added   (exists in current, not previous)
-			// - kept    (exists in current and previous)
-			// - removed (not in current, exists in previous)
-
-			if _, found := currentEndpointsMap[ip.IP]; !found {
-				// Endpoint has been removed in current state.
-				removed = append(removed, ip.IP)
-			} else {
-				// Item existed before, so it has been "kept" and not "added".
-				kept = append(kept, ip.IP)
-				delete(currentEndpointsMap, ip.IP)
-			}
-		}
-	}
-
-	// Any remaining items in the added endpoints map were actually new. Return them as a list.
-	for ip := range currentEndpointsMap {
-		added = append(added, ip)
-	}
-
-	return added, kept, removed, true
-
-}
-
-func toEndpoint(obj interface{}, log logr.Logger) (*corev1.Endpoints, error) {
-	ep := &corev1.Endpoints{}
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), ep)
+func toEndpointSlice(obj interface{}, log logr.Logger) (*discoveryv1.EndpointSlice, error) {
+	eps := &discoveryv1.EndpointSlice{}
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), eps)
 	if err != nil {
-		log.Error(err, "could not convert obj to Endpoints")
-		return ep, err
+		log.Error(err, "could not convert obj to EndpointSlice")
+		return eps, err
 	}
-	return ep, nil
+	return eps, nil
 }
