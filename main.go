@@ -33,14 +33,18 @@ import (
 	"github.com/cespare/xxhash/v2"
 	"github.com/go-logr/logr"
 	kubescape "github.com/kubescape/storage/pkg/apis/softwarecomposition/v1beta1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/discovery"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -173,7 +177,8 @@ func main() {
 		setupLog.Info(fmt.Sprintf("Using %d vulnerability target labels: %v", len(tl), tl))
 	}
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	cfg := ctrl.GetConfigOrDie()
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                server.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
@@ -231,44 +236,75 @@ func main() {
 
 	setupLog.Info(fmt.Sprintf("found %d exporters in %s service", peerRing.MemberCount(), peerRing.ServiceName))
 
+	discoveryClient := discovery.NewDiscoveryClientForConfigOrDie(cfg)
 	if configAuditEnabled {
-		if err = (&configauditreport.ConfigAuditReportReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
-			MaxJitterPercent: maxJitterPercent,
-			Scheme:           mgr.GetScheme(),
-			ShardHelper:      peerRing,
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
+		supported, gvk, err := isObjectSupported(&aqua.ConfigAuditReport{}, mgr.GetScheme(), discoveryClient)
+		if err != nil {
+			setupLog.Error(err, "unable to discover API resource", "controller", "ConfigAuditReport")
 			os.Exit(1)
+		}
+
+		if supported {
+			if err = (&configauditreport.ConfigAuditReportReconciler{
+				Client:           mgr.GetClient(),
+				Log:              ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
+				MaxJitterPercent: maxJitterPercent,
+				Scheme:           mgr.GetScheme(),
+				ShardHelper:      peerRing,
+			}).SetupWithManager(mgr); err != nil {
+				setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
+				os.Exit(1)
+			}
+		} else {
+			setupLog.Info("requested API resource is not supported in this cluster, skipping controller", "controller", "ConfigAuditReport", "resource", gvk.String())
 		}
 	}
 
 	if trivyVulnerabilityScansEnabled {
-		if err = (&vulnerabilityreport.TrivyVulnerabilityReportReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("TrivyVulnerabilityReport"),
-			MaxJitterPercent: maxJitterPercent,
-			Scheme:           mgr.GetScheme(),
-			ShardHelper:      peerRing,
-			TargetLabels:     targetLabels,
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "TrivyVulnerabilityReport")
+		supported, gvk, err := isObjectSupported(&aqua.VulnerabilityReport{}, mgr.GetScheme(), discoveryClient)
+		if err != nil {
+			setupLog.Error(err, "unable to discover API resource", "controller", "TrivyVulnerabilityReport")
 			os.Exit(1)
+		}
+
+		if supported {
+			if err = (&vulnerabilityreport.TrivyVulnerabilityReportReconciler{
+				Client:           mgr.GetClient(),
+				Log:              ctrl.Log.WithName("controllers").WithName("TrivyVulnerabilityReport"),
+				MaxJitterPercent: maxJitterPercent,
+				Scheme:           mgr.GetScheme(),
+				ShardHelper:      peerRing,
+				TargetLabels:     targetLabels,
+			}).SetupWithManager(mgr); err != nil {
+				setupLog.Error(err, "unable to create controller", "controller", "TrivyVulnerabilityReport")
+				os.Exit(1)
+			}
+		} else {
+			setupLog.Info("requested API resource is not supported in this cluster, skipping controller", "controller", "TrivyVulnerabilityReport", "resource", gvk.String())
 		}
 	}
 
 	if kubescapeVulnerabilityScansEnabled {
-		if err = (&vulnerabilityreport.KubescapeVulnerabilityManifestReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("KubescapeVulnerabilityReport"),
-			MaxJitterPercent: maxJitterPercent,
-			Scheme:           mgr.GetScheme(),
-			ShardHelper:      peerRing,
-			TargetLabels:     targetLabels,
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "KubescapeVulnerabilityReport")
+		supported, gvk, err := isObjectSupported(&kubescape.VulnerabilityManifest{}, mgr.GetScheme(), discoveryClient)
+		if err != nil {
+			setupLog.Error(err, "unable to discover API resource", "controller", "KubescapeVulnerabilityReport")
 			os.Exit(1)
+		}
+
+		if supported {
+			if err = (&vulnerabilityreport.KubescapeVulnerabilityManifestReconciler{
+				Client:           mgr.GetClient(),
+				Log:              ctrl.Log.WithName("controllers").WithName("KubescapeVulnerabilityReport"),
+				MaxJitterPercent: maxJitterPercent,
+				Scheme:           mgr.GetScheme(),
+				ShardHelper:      peerRing,
+				TargetLabels:     targetLabels,
+			}).SetupWithManager(mgr); err != nil {
+				setupLog.Error(err, "unable to create controller", "controller", "KubescapeVulnerabilityReport")
+				os.Exit(1)
+			}
+		} else {
+			setupLog.Info("requested API resource is not supported in this cluster, skipping controller", "controller", "KubescapeVulnerabilityReport", "resource", gvk.String())
 		}
 	}
 
@@ -320,4 +356,28 @@ func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vu
 	}
 
 	return result
+}
+
+func isObjectSupported(obj runtime.Object, scheme *runtime.Scheme, discoveryClient discovery.DiscoveryInterface) (bool, schema.GroupVersionKind, error) {
+	gvk, err := apiutil.GVKForObject(obj, scheme)
+	if err != nil {
+		return false, gvk, err
+	}
+
+	resources, err := discoveryClient.ServerResourcesForGroupVersion(gvk.GroupVersion().String())
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, gvk, nil
+		}
+
+		return false, gvk, err
+	}
+
+	for _, resource := range resources.APIResources {
+		if resource.Kind == gvk.Kind {
+			return true, gvk, nil
+		}
+	}
+
+	return false, gvk, nil
 }
