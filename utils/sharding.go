@@ -144,12 +144,34 @@ func updateAllEndpoints(informer cache.SharedIndexInformer, ring *ShardHelper, l
 	// We use the informer store to list EndpointSlices to reduce load on the API server.
 	list := informer.GetStore().List()
 
+	// Convert to EndpointSlice objects
+	slices := make([]*discoveryv1.EndpointSlice, 0, len(list))
+	for _, item := range list {
+		if item == nil {
+			continue
+		}
+
+		eps, err := toEndpointSlice(item)
+		if err != nil {
+			// We will log parsing errors but continue processing other EndpointSlices.
+			log.Error(err, "unable to parse endpoint slice from informer store")
+			continue
+		}
+		slices = append(slices, eps)
+	}
+
+	// Collect unique IPs across all EndpointSlices.
+	ipSet := endpointSlicesToIPv4Set(slices)
+	// Update ring members with the collected IPs.
+	ring.SetMembers(ipSet)
+	log.Info(fmt.Sprintf("updated peer list with %d endpoints: %v", len(ipSet), ipSet))
+}
+
+func endpointSlicesToIPv4Set(slices []*discoveryv1.EndpointSlice) map[string]struct{} {
 	// Collect unique IPs across all EndpointSlices.
 	ipSet := make(map[string]struct{})
-	for _, item := range list {
-		eps, err := toEndpointSlice(item, log)
-		if err != nil {
-			log.Error(err, "could not convert item to EndpointSlice")
+	for _, eps := range slices {
+		if eps == nil {
 			continue
 		}
 
@@ -169,16 +191,13 @@ func updateAllEndpoints(informer cache.SharedIndexInformer, ring *ShardHelper, l
 		}
 	}
 
-	// Update ring members with the collected IPs.
-	ring.SetMembers(ipSet)
-	log.Info(fmt.Sprintf("updated peer list with %d endpoints (from EndpointSlices)", len(ipSet)))
+	return ipSet
 }
 
-func toEndpointSlice(obj interface{}, log logr.Logger) (*discoveryv1.EndpointSlice, error) {
+func toEndpointSlice(obj interface{}) (*discoveryv1.EndpointSlice, error) {
 	eps := &discoveryv1.EndpointSlice{}
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), eps)
 	if err != nil {
-		log.Error(err, "could not convert obj to EndpointSlice")
 		return eps, err
 	}
 	return eps, nil
