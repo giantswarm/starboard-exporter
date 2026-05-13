@@ -1,27 +1,40 @@
 package utils
 
 import (
-	"strconv"
+	"hash/fnv"
 	"testing"
 
+	"github.com/buraksezer/consistent"
+	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"gotest.tools/assert"
 	discoveryv1 "k8s.io/api/discovery/v1"
 )
 
-func Test_endpointSlicesToIPv4Set(t *testing.T) {
+type testHasher struct{}
+
+func (h testHasher) Sum64(data []byte) uint64 {
+	hasher := fnv.New64a()
+	hasher.Write(data)
+	return hasher.Sum64()
+}
+
+func compareStringFn(a, b string) bool { return a < b }
+
+func Test_updateAllEndpoints(t *testing.T) {
 	ready := true
 	notReady := false
 
 	testCases := []struct {
 		name     string
-		slices   []*discoveryv1.EndpointSlice
+		previous []*discoveryv1.EndpointSlice
+		current  []*discoveryv1.EndpointSlice
 		expected []string
 	}{
 		{
 			name: "single ready ipv4 endpoint",
-			slices: []*discoveryv1.EndpointSlice{
+			current: []*discoveryv1.EndpointSlice{
 				{
 					AddressType: discoveryv1.AddressTypeIPv4,
 					Endpoints: []discoveryv1.Endpoint{
@@ -36,7 +49,7 @@ func Test_endpointSlicesToIPv4Set(t *testing.T) {
 		},
 		{
 			name: "nil ready is treated as ready",
-			slices: []*discoveryv1.EndpointSlice{
+			current: []*discoveryv1.EndpointSlice{
 				{
 					AddressType: discoveryv1.AddressTypeIPv4,
 					Endpoints: []discoveryv1.Endpoint{
@@ -51,7 +64,7 @@ func Test_endpointSlicesToIPv4Set(t *testing.T) {
 		},
 		{
 			name: "merges multiple slices and deduplicates addresses",
-			slices: []*discoveryv1.EndpointSlice{
+			current: []*discoveryv1.EndpointSlice{
 				{
 					AddressType: discoveryv1.AddressTypeIPv4,
 					Endpoints: []discoveryv1.Endpoint{
@@ -71,7 +84,7 @@ func Test_endpointSlicesToIPv4Set(t *testing.T) {
 		},
 		{
 			name: "ignores not ready and ipv6 endpoints",
-			slices: []*discoveryv1.EndpointSlice{
+			current: []*discoveryv1.EndpointSlice{
 				{
 					AddressType: discoveryv1.AddressTypeIPv4,
 					Endpoints: []discoveryv1.Endpoint{
@@ -94,13 +107,12 @@ func Test_endpointSlicesToIPv4Set(t *testing.T) {
 			expected: []string{"3.3.3.3"},
 		},
 		{
-			name:     "empty input returns empty set",
-			slices:   nil,
+			name:     "empty slices result in empty endpoints",
 			expected: []string{},
 		},
 		{
 			name: "nil slices are ignored",
-			slices: []*discoveryv1.EndpointSlice{
+			current: []*discoveryv1.EndpointSlice{
 				nil,
 				{
 					AddressType: discoveryv1.AddressTypeIPv4,
@@ -111,22 +123,120 @@ func Test_endpointSlicesToIPv4Set(t *testing.T) {
 			},
 			expected: []string{"10.0.0.1"},
 		},
+		{
+			name: "add multiple new endpoints to two previous endpoints",
+			previous: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"5.6.7.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+			},
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"8.8.8.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"8.8.4.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"5.6.7.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+			},
+			expected: []string{"8.8.4.4", "8.8.8.8", "1.2.3.4", "5.6.7.8"},
+		},
+		{
+			name: "remove multiple endpoints",
+			previous: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"8.8.4.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"8.8.8.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"5.6.7.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+			},
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"8.8.8.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+			},
+			expected: []string{"1.2.3.4", "8.8.8.8"},
+		},
+		{
+			name: "remove one and add one endpoint",
+			previous: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"1.1.1.1"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"2.2.2.2"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+			},
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"2.2.2.2"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"3.3.3.3"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+			},
+			expected: []string{"2.2.2.2", "3.3.3.3"},
+		},
 	}
 
-	for i, tc := range testCases {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			ipv4Set := endpointSlicesToIPv4Set(tc.slices)
-			t.Logf("case %v: ipv4Set: %v\n", tc, ipv4Set)
+	// Logger to pass to helper functions. Wraps testing.T.
+	log := testr.New(t)
 
-			// Convert the ipv4Set to a slice for comparison.
-			ips := make([]string, 0, len(ipv4Set))
-			for ip := range ipv4Set {
-				ips = append(ips, ip)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			testCfg := consistent.Config{
+				PartitionCount:    97,
+				ReplicationFactor: 20,
+				Load:              1.25,
+				Hasher:            testHasher{},
 			}
-			compareStringFunc := func(a, b string) bool { return a < b }
+			testRing := BuildPeerHashRing(testCfg, "10.0.0.1", "starboard-exporter", "default")
+
+			if tc.previous != nil {
+				updateAllEndpoints(tc.previous, testRing, log)
+			}
+
+			updateAllEndpoints(tc.current, testRing, log)
+
+			members := testRing.ring.GetMembers()
+			ips := make([]string, 0, len(members))
+			for _, member := range members {
+				ips = append(ips, member.String())
+			}
 
 			// Check IPs contain the expected items, ignoring order.
-			assert.Assert(t, cmp.Equal(tc.expected, ips, cmpopts.EquateEmpty(), cmpopts.SortSlices(compareStringFunc)), "test case %v failed.", tc.name)
+			assert.Assert(t, cmp.Equal(tc.expected, ips, cmpopts.EquateEmpty(), cmpopts.SortSlices(compareStringFn)), "test case %v failed.", tc.name)
 		})
 	}
 }

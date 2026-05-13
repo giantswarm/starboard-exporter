@@ -113,21 +113,22 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 		Group: "discovery.k8s.io", Version: "v1", Resource: "endpointslices"}).Informer()
 
 	// Set handlers for new/updated/deleted endpointslices.
+	// We use the informer store to list EndpointSlices to reduce load on the API server.
 	handlers := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			// Might be valid to add members based on just the added EndpointSlice.
 			// But to be safe we will update members based on all EndpointSlices.
-			updateAllEndpoints(informer, peerRing, log)
+			updateAllEndpoints(toEndpointSlices(informer.GetStore().List(), log), peerRing, log)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			// On update some of the endpoints may have been moved to a different EndpointSlice.
 			// We have to set members based on all EndpointSlices.
-			updateAllEndpoints(informer, peerRing, log)
+			updateAllEndpoints(toEndpointSlices(informer.GetStore().List(), log), peerRing, log)
 		},
 		DeleteFunc: func(obj interface{}) {
 			// On delete some of the endpoints may exist in other EndpointSlices.
 			// We have to set members based on all EndpointSlices.
-			updateAllEndpoints(informer, peerRing, log)
+			updateAllEndpoints(toEndpointSlices(informer.GetStore().List(), log), peerRing, log)
 		},
 	}
 
@@ -138,36 +139,8 @@ func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig 
 	return informer
 }
 
-// updateAllEndpoints lists all EndpointSlices for the configured service and updates the ring members.
-func updateAllEndpoints(informer cache.SharedIndexInformer, ring *ShardHelper, log logr.Logger) {
-	// List all EndpointSlices for the service.
-	// We use the informer store to list EndpointSlices to reduce load on the API server.
-	list := informer.GetStore().List()
-
-	// Convert to EndpointSlice objects
-	slices := make([]*discoveryv1.EndpointSlice, 0, len(list))
-	for _, item := range list {
-		if item == nil {
-			continue
-		}
-
-		eps, err := toEndpointSlice(item)
-		if err != nil {
-			// We will log parsing errors but continue processing other EndpointSlices.
-			log.Error(err, "unable to parse endpoint slice from informer store")
-			continue
-		}
-		slices = append(slices, eps)
-	}
-
-	// Collect unique IPs across all EndpointSlices.
-	ipSet := endpointSlicesToIPv4Set(slices)
-	// Update ring members with the collected IPs.
-	ring.SetMembers(ipSet)
-	log.Info(fmt.Sprintf("updated peer list with %d endpoints: %v", len(ipSet), ipSet))
-}
-
-func endpointSlicesToIPv4Set(slices []*discoveryv1.EndpointSlice) map[string]struct{} {
+// updateAllEndpoints from the provided list of EndpointSlices.
+func updateAllEndpoints(slices []*discoveryv1.EndpointSlice, ring *ShardHelper, log logr.Logger) {
 	// Collect unique IPs across all EndpointSlices.
 	ipSet := make(map[string]struct{})
 	for _, eps := range slices {
@@ -191,7 +164,23 @@ func endpointSlicesToIPv4Set(slices []*discoveryv1.EndpointSlice) map[string]str
 		}
 	}
 
-	return ipSet
+	// Update ring members with the collected IPs.
+	ring.SetMembers(ipSet)
+	log.Info(fmt.Sprintf("updated peer list with %d endpoints: %v", len(ipSet), ipSet))
+}
+
+func toEndpointSlices(objs []interface{}, log logr.Logger) []*discoveryv1.EndpointSlice {
+	results := make([]*discoveryv1.EndpointSlice, 0, len(objs))
+	for _, obj := range objs {
+		eps, err := toEndpointSlice(obj)
+		if err != nil {
+			// We will log parsing errors but continue processing other EndpointSlices.
+			log.Error(err, "unable to parse endpoint slice")
+			continue
+		}
+		results = append(results, eps)
+	}
+	return results
 }
 
 func toEndpointSlice(obj interface{}) (*discoveryv1.EndpointSlice, error) {
