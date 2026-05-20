@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Configure RBAC for only enabled controllers in Helm Chart.
+
 ## [1.0.3] - 2026-02-19
 
 ### Added
@@ -39,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - There is a breaking change to one of the CLI flags in this version. The `--vulnerability-scans-enabled` flag has been renamed to `--trivy-vulnerability-scans-enabled` in order to facilitate the new Kubescape scanner support. **Users installing via the Helm chart are not affected.**
 
 ### Added
+
 - Support for Kubescape vulnerability scanning via `VulnerabilityManifest` CR.
 - Scanner label (`scanner="trivy"` or `scanner="kubescape"`) to all vulnerability metrics to distinguish between scanning sources.
 - Command-line flag `--kubescape-vulnerability-scans-enabled`.
@@ -47,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added backwards compatibility for legacy `vulnerabilityReports.enabled` Helm value (now enables Trivy scanner)
 
 ### Changed
+
 - Renamed Trivy-specific functions and constants to include "Trivy" prefix to distinguish them from Kubescape components while maintaining shared metrics.
 - Command-line flag `--vulnerability-scans-enabled` to `--trivy-vulnerability-scans-enabled` (Breaking Change).
 
