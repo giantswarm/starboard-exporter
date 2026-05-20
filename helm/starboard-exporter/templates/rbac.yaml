@@ -5,17 +5,27 @@ metadata:
   labels:
     {{- include "labels.common" . | nindent 4 }}
 rules:
+  {{- $configAuditsEnabled := include "exporter.configAuditReportsEnabled" . | trim -}}
+  {{- $trivyEnabled := include "exporter.vulnerabilityReports.trivyEnabled" . | trim -}}
+  {{- $kubescapeEnabled := include "exporter.vulnerabilityReports.kubescapeEnabled" . | trim -}}
+  {{- if or (eq $trivyEnabled "true") (eq $configAuditsEnabled "true") }}
   - apiGroups:
       - aquasecurity.github.io
     resources:
+      {{- if eq $trivyEnabled "true" }}
       - vulnerabilityreports
+      {{- end }}
+      {{- if eq $configAuditsEnabled "true" }}
       - configauditreports
+      {{- end }}
     verbs:
       - get
       - list
       - watch
       - update
       - patch
+  {{- end }}
+  {{- if eq $kubescapeEnabled "true" }}
   - apiGroups:
       - spdx.softwarecomposition.kubescape.io
     resources:
@@ -26,6 +36,7 @@ rules:
       - watch
       - update
       - patch
+  {{- end }}
   - nonResourceURLs:
       - "/"
       - "/healthz"
