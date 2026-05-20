@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Configure RBAC for only enabled controllers in Helm Chart.
 
+### Added
+
+- Disable controllers for unsupported resource types to avoid errors in environments where these CRDs are not present.
+
 ## [1.0.3] - 2026-02-19
 
 ### Added
