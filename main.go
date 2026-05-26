@@ -195,6 +195,8 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "58aff8fc.giantswarm",
 		Cache: cache.Options{
+			// TODO: Remove this workaround when WatchList supported in kubescape
+			// https://github.com/kubescape/storage/issues/320
 			NewInformer: func(lw toolscache.ListerWatcher, obj runtime.Object, resyncPeriod time.Duration, indexers toolscache.Indexers) toolscache.SharedIndexInformer {
 				if _, ok := obj.(*kubescape.VulnerabilityManifest); ok {
 					lw = watchListSemanticsDisabledListerWatcherWrapper{lw}
