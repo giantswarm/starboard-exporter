@@ -8,6 +8,7 @@ rules:
   {{- $configAuditsEnabled := include "exporter.configAuditReportsEnabled" . | trim -}}
   {{- $trivyEnabled := include "exporter.vulnerabilityReports.trivyEnabled" . | trim -}}
   {{- $kubescapeEnabled := include "exporter.vulnerabilityReports.kubescapeEnabled" . | trim -}}
+  {{- $kubescapePolicyReportsEnabled := include "exporter.vulnerabilityReports.kubescapePolicyReportsEnabled" . | trim -}}
   {{- if or (eq $trivyEnabled "true") (eq $configAuditsEnabled "true") }}
   - apiGroups:
       - aquasecurity.github.io
@@ -25,17 +26,36 @@ rules:
       - update
       - patch
   {{- end }}
-  {{- if eq $kubescapeEnabled "true" }}
+  {{- if or (eq $kubescapeEnabled "true") (eq $kubescapePolicyReportsEnabled "true") }}
   - apiGroups:
       - spdx.softwarecomposition.kubescape.io
     resources:
       - vulnerabilitymanifests
+      {{- if eq $kubescapePolicyReportsEnabled "true" }}
+      - vulnerabilitymanifestsummaries
+      {{- end }}
     verbs:
       - get
       - list
       - watch
+      {{- if eq $kubescapeEnabled "true" }}
       - update
       - patch
+      {{- end }}
+  {{- end }}
+  {{- if eq $kubescapePolicyReportsEnabled "true" }}
+  - apiGroups:
+      - wgpolicyk8s.io
+    resources:
+      - policyreports
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
   {{- end }}
   - nonResourceURLs:
       - "/"

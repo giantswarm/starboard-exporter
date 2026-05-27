@@ -77,6 +77,8 @@ spec:
           - --config-audits-enabled={{ include "exporter.configAuditReportsEnabled" . | trim }}
           - --trivy-vulnerability-scans-enabled={{ include "exporter.vulnerabilityReports.trivyEnabled" . | trim }}
           - --kubescape-vulnerability-scans-enabled={{ include "exporter.vulnerabilityReports.kubescapeEnabled" . | trim }}
+          - --kubescape-policy-reports-enabled={{ include "exporter.vulnerabilityReports.kubescapePolicyReportsEnabled" . | trim }}
+          - --kubescape-namespace={{ include "exporter.vulnerabilityReports.kubescapePolicyReportsNamespace" . | trim }}
         {{- if .Values.exporter.requeueMaxJitterPercent }}
           - --max-jitter-percent={{ .Values.exporter.requeueMaxJitterPercent }}
         {{- end }}

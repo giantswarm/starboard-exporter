@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Optionally emit `wgpolicyk8s.io` PolicyReports from Kubescape `VulnerabilityManifestSummary` resources so vulnerability findings appear in the Policy Reporter UI. Opt-in via `exporter.vulnerabilityReports.scanners.kubescape.policyReports.enabled` (default `false`).
 - Disable controllers for unsupported resource types to avoid errors in environments where these CRDs are not present.
 
 ## [1.0.3] - 2026-02-19

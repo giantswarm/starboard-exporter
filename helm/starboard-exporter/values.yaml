@@ -69,6 +69,15 @@ exporter:
         enabled: true
       kubescape:
         enabled: false
+        # Emit wgpolicyk8s.io PolicyReports from Kubescape VulnerabilityManifestSummary
+        # resources so findings show up in the Policy Reporter UI. Independent of the
+        # metrics exporter above.
+        policyReports:
+          enabled: false
+          # Namespace where the Kubescape storage component keeps image-level
+          # VulnerabilityManifests. Summary references record the workload namespace,
+          # so manifests are resolved here.
+          namespace: kubescape
 
 monitoring:
   serviceMonitor:
