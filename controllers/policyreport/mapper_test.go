@@ -241,7 +241,14 @@ func Test_matchToResult(t *testing.T) {
 			"purl":             "pkg:deb/openssl@1.2.3",
 			"image":            "quay.io/kubescape/storage:v1",
 		},
-		Subjects: []corev1.ObjectReference{*subject},
+		Subjects: []corev1.ObjectReference{
+			*subject,
+			{
+				APIVersion: "image.giantswarm.io/v1",
+				Kind:       "Image",
+				Name:       "quay.io/kubescape/storage:v1",
+			},
+		},
 	}
 
 	got := matchToResult(match, subject, "quay.io/kubescape/storage:v1", timestamp)

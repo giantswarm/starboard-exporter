@@ -52,6 +52,12 @@ const (
 	// Annotation carrying the scanned image reference on the image-level VulnerabilityManifest.
 	kubescapeImageTagAnnotation = "kubescape.io/image-tag"
 
+	// Image is exposed as a synthetic subject on each result so the Policy Reporter
+	// UI's Resource filter surfaces images as a filterable axis. The GVK is a display
+	// marker under giantswarm.io and is not backed by a real CRD.
+	imageSubjectAPIVersion = "image.giantswarm.io/v1"
+	imageSubjectKind       = "Image"
+
 	// maxNameLength is the maximum length of a Kubernetes object name (RFC 1123 DNS subdomain).
 	maxNameLength = 253
 	// nameHashLength is the length of the hash suffix appended to truncated names.
@@ -231,10 +237,28 @@ func matchToResult(match kubescape.Match, subject *corev1.ObjectReference, image
 		Description: message,
 		Properties:  properties,
 	}
-	if subject != nil {
-		result.Subjects = []corev1.ObjectReference{*subject}
-	}
+	result.Subjects = resultSubjects(subject, image)
 	return result
+}
+
+// resultSubjects builds the per-result resources: the workload subject (if any)
+// plus a synthetic Image subject (apiVersion image.giantswarm.io/v1, kind Image)
+// whose Name is the full image reference. The Image subject is a display marker —
+// it makes images surface in the Policy Reporter UI's Resource filter but does not
+// resolve to a real Kubernetes object.
+func resultSubjects(workload *corev1.ObjectReference, image string) []corev1.ObjectReference {
+	subs := []corev1.ObjectReference{}
+	if workload != nil {
+		subs = append(subs, *workload)
+	}
+	if image != "" {
+		subs = append(subs, corev1.ObjectReference{
+			APIVersion: imageSubjectAPIVersion,
+			Kind:       imageSubjectKind,
+			Name:       image,
+		})
+	}
+	return subs
 }
 
 // summaryToReport builds the desired PolicyReport for a workload from its summary and the
