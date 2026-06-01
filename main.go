@@ -24,6 +24,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -41,6 +42,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
+	toolscache "k8s.io/client-go/tools/cache"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -64,6 +66,14 @@ var (
 )
 
 type hasher struct{}
+
+type watchListSemanticsDisabledListerWatcherWrapper struct {
+	toolscache.ListerWatcher
+}
+
+func (w watchListSemanticsDisabledListerWatcherWrapper) IsWatchListSemanticsUnSupported() bool {
+	return true
+}
 
 func (h hasher) Sum64(data []byte) uint64 {
 	// TODO: Investigate hash function options.
@@ -199,6 +209,16 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "58aff8fc.giantswarm",
+		Cache: cache.Options{
+			// TODO: Remove this workaround when WatchList supported in kubescape
+			// https://github.com/kubescape/storage/issues/320
+			NewInformer: func(lw toolscache.ListerWatcher, obj runtime.Object, resyncPeriod time.Duration, indexers toolscache.Indexers) toolscache.SharedIndexInformer {
+				if _, ok := obj.(*kubescape.VulnerabilityManifest); ok {
+					lw = watchListSemanticsDisabledListerWatcherWrapper{lw}
+				}
+				return toolscache.NewSharedIndexInformer(lw, obj, resyncPeriod, indexers)
+			},
+		},
 		NewCache: func(config *rest.Config, opts cache.Options) (cache.Cache, error) {
 			baseCache, err := cache.New(config, opts)
 			if err != nil {

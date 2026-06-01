@@ -5,16 +5,5 @@
     "github>giantswarm/renovate-presets:disable-vendir.json5"
   ],
   "packageRules": [
-    {
-      "description": "Automerge architect updates",
-      "matchFileNames": [
-        ".circleci/config.yml"
-      ],
-      "matchDepNames": [
-        "architect"
-      ],
-      "groupName": "Architect",
-      "automerge": true
-    }
   ]
 }
