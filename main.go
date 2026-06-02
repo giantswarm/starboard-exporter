@@ -50,9 +50,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	policyreportv1alpha2 "sigs.k8s.io/wg-policy-prototypes/policy-report/apis/wgpolicyk8s.io/v1alpha2"
 
 	"github.com/giantswarm/starboard-exporter/controllers"
 	"github.com/giantswarm/starboard-exporter/controllers/configauditreport"
+	"github.com/giantswarm/starboard-exporter/controllers/policyreport"
 	"github.com/giantswarm/starboard-exporter/controllers/vulnerabilityreport"
 	"github.com/giantswarm/starboard-exporter/utils"
 	//+kubebuilder:scaffold:imports
@@ -91,6 +93,11 @@ func init() {
 		setupLog.Error(err, fmt.Sprintf("error registering scheme: %s", err))
 	}
 
+	err = policyreportv1alpha2.AddToScheme(scheme)
+	if err != nil {
+		setupLog.Error(err, fmt.Sprintf("error registering scheme: %s", err))
+	}
+
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -105,6 +112,8 @@ func main() {
 	var serviceNamespace string
 	var trivyVulnerabilityScansEnabled bool
 	var kubescapeVulnerabilityScansEnabled bool
+	var kubescapePolicyReportsEnabled bool
+	var kubescapeNamespace string
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
@@ -156,6 +165,12 @@ func main() {
 
 	flag.BoolVar(&kubescapeVulnerabilityScansEnabled, "kubescape-vulnerability-scans-enabled", true,
 		"Enable metrics for KubescapeVulnerabilityReport resources.")
+
+	flag.BoolVar(&kubescapePolicyReportsEnabled, "kubescape-policy-reports-enabled", false,
+		"Emit wgpolicyk8s.io PolicyReports from Kubescape VulnerabilityManifestSummary resources.")
+
+	flag.StringVar(&kubescapeNamespace, "kubescape-namespace", "kubescape",
+		"Namespace where Kubescape stores image-level VulnerabilityManifests, used to resolve PolicyReport details.")
 
 	opts := zap.Options{
 		Development: false,
@@ -217,8 +232,15 @@ func main() {
 			}
 
 			return utils.NewHydratingCache(baseCache, apiReader, func(obj client.Object) bool {
-				manifest, ok := obj.(*kubescape.VulnerabilityManifest)
-				return ok && len(manifest.Spec.Payload.Matches) == 0
+				// The Kubescape storage apiserver returns stripped specs on list/watch
+				// (which populate the cache), so we re-fetch the full object on demand.
+				switch o := obj.(type) {
+				case *kubescape.VulnerabilityManifest:
+					return len(o.Spec.Payload.Matches) == 0
+				case *kubescape.VulnerabilityManifestSummary:
+					return o.Spec.Vulnerabilities.ImageVulnerabilitiesObj.Name == ""
+				}
+				return false
 			}, nil), nil
 		},
 	})
@@ -325,6 +347,30 @@ func main() {
 			}
 		} else {
 			setupLog.Info("requested API resource is not supported in this cluster, skipping controller", "controller", "KubescapeVulnerabilityReport", "resource", gvk.String())
+		}
+	}
+
+	if kubescapePolicyReportsEnabled {
+		supported, gvk, err := isObjectSupported(&kubescape.VulnerabilityManifestSummary{}, mgr.GetScheme(), discoveryClient)
+		if err != nil {
+			setupLog.Error(err, "unable to discover API resource", "controller", "KubescapePolicyReport")
+			os.Exit(1)
+		}
+
+		if supported {
+			if err = (&policyreport.KubescapePolicyReportReconciler{
+				Client:             mgr.GetClient(),
+				Log:                ctrl.Log.WithName("controllers").WithName("KubescapePolicyReport"),
+				MaxJitterPercent:   maxJitterPercent,
+				Scheme:             mgr.GetScheme(),
+				ShardHelper:        peerRing,
+				KubescapeNamespace: kubescapeNamespace,
+			}).SetupWithManager(mgr); err != nil {
+				setupLog.Error(err, "unable to create controller", "controller", "KubescapePolicyReport")
+				os.Exit(1)
+			}
+		} else {
+			setupLog.Info("requested API resource is not supported in this cluster, skipping controller", "controller", "KubescapePolicyReport", "resource", gvk.String())
 		}
 	}
 

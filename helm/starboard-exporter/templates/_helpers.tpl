@@ -80,3 +80,36 @@ Resolve a vulnerability report scanner flag.
 {{- define "exporter.vulnerabilityReports.kubescapeEnabled" -}}
 {{- include "exporter.vulnerabilityReports.scannerEnabled" (dict "Values" .Values "scanner" "kubescape") -}}
 {{- end -}}
+
+{{/*
+Resolve the Kubescape PolicyReports flag. Defaults to false when unset.
+*/}}
+{{- define "exporter.vulnerabilityReports.kubescapePolicyReportsEnabled" -}}
+{{- $enabled := false -}}
+{{- if hasKey .Values.exporter.vulnerabilityReports "scanners" -}}
+  {{- if hasKey .Values.exporter.vulnerabilityReports.scanners "kubescape" -}}
+    {{- $kubescape := .Values.exporter.vulnerabilityReports.scanners.kubescape -}}
+    {{- if and (hasKey $kubescape "policyReports") (hasKey $kubescape.policyReports "enabled") -}}
+      {{- $enabled = $kubescape.policyReports.enabled -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $enabled -}}
+{{- end -}}
+
+{{/*
+Resolve the namespace where Kubescape stores image-level VulnerabilityManifests.
+Defaults to "kubescape" when unset.
+*/}}
+{{- define "exporter.vulnerabilityReports.kubescapePolicyReportsNamespace" -}}
+{{- $namespace := "kubescape" -}}
+{{- if hasKey .Values.exporter.vulnerabilityReports "scanners" -}}
+  {{- if hasKey .Values.exporter.vulnerabilityReports.scanners "kubescape" -}}
+    {{- $kubescape := .Values.exporter.vulnerabilityReports.scanners.kubescape -}}
+    {{- if and (hasKey $kubescape "policyReports") (hasKey $kubescape.policyReports "namespace") -}}
+      {{- $namespace = $kubescape.policyReports.namespace -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $namespace -}}
+{{- end -}}

@@ -1,0 +1,16 @@
+# golangci-lint configuration.
+# https://golangci-lint.run/usage/configuration/
+version: "2"
+
+linters:
+  exclusions:
+    rules:
+      # corev1.Endpoints / corev1.EndpointSubset are deprecated in k8s v1.33+.
+      # The sharding peer informer still relies on them; migrating to
+      # discoveryv1.EndpointSlice is a behavioral change (watched resource,
+      # selector, and data shape all change) tracked as a separate follow-up.
+      # Suppress the deprecation warning (SA1019) here until that migration lands.
+      - path: utils/sharding(_test)?\.go
+        linters:
+          - staticcheck
+        text: SA1019

@@ -19,6 +19,7 @@ require (
 	k8s.io/apimachinery v0.36.1
 	k8s.io/client-go v0.36.1
 	sigs.k8s.io/controller-runtime v0.24.1
+	sigs.k8s.io/wg-policy-prototypes v0.0.0-20250521155141-ed0ca5a1c778
 )
 
 require (

@@ -66,6 +66,19 @@
                                     "properties": {
                                         "enabled": {
                                             "type": "boolean"
+                                        },
+                                        "policyReports": {
+                                            "type": "object",
+                                            "properties": {
+                                                "enabled": {
+                                                    "type": "boolean",
+                                                    "description": "Emit wgpolicyk8s.io PolicyReports from Kubescape VulnerabilityManifestSummary resources for the Policy Reporter UI."
+                                                },
+                                                "namespace": {
+                                                    "type": "string",
+                                                    "description": "Namespace where Kubescape stores image-level VulnerabilityManifests, used to resolve PolicyReport details."
+                                                }
+                                            }
                                         }
                                     }
                                 }
