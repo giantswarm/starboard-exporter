@@ -1,220 +1,242 @@
 package utils
 
 import (
-	"strconv"
+	"hash/fnv"
 	"testing"
 
+	"github.com/buraksezer/consistent"
 	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"gotest.tools/assert"
-	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 )
 
-func Test_getEndpointChanges(t *testing.T) {
+type testHasher struct{}
+
+func (h testHasher) Sum64(data []byte) uint64 {
+	hasher := fnv.New64a()
+	hasher.Write(data)
+	return hasher.Sum64()
+}
+
+func compareStringFn(a, b string) bool { return a < b }
+
+func Test_updateAllEndpoints(t *testing.T) {
+	ready := true
+	notReady := false
+
 	testCases := []struct {
-		name            string
-		current         *corev1.Endpoints
-		previous        *corev1.Endpoints
-		expectedAdded   []string
-		expectedKept    []string
-		expectedRemoved []string
+		name     string
+		previous []*discoveryv1.EndpointSlice
+		current  []*discoveryv1.EndpointSlice
+		expected []string
 	}{
 		{
-			name: "add one new endpoint with no previous state",
-			current: &corev1.Endpoints{
-				Subsets: []corev1.EndpointSubset{
-					{
-						Addresses: []corev1.EndpointAddress{
-							{
-								IP: "1.2.3.4",
-							},
+			name: "single ready ipv4 endpoint",
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{
+							Addresses:  []string{"1.2.3.4"},
+							Conditions: discoveryv1.EndpointConditions{Ready: &ready},
 						},
 					},
 				},
 			},
-			expectedAdded:   []string{"1.2.3.4"},
-			expectedKept:    []string{},
-			expectedRemoved: []string{},
+			expected: []string{"1.2.3.4"},
 		},
 		{
-			name: "add one new endpoint to one previous endpoint",
-			current: &corev1.Endpoints{
-				Subsets: []corev1.EndpointSubset{
-					{
-						Addresses: []corev1.EndpointAddress{
-							{
-								IP: "1.2.3.4",
-							},
-							{
-								IP: "5.6.7.8",
-							},
+			name: "nil ready is treated as ready",
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{
+							Addresses:  []string{"2.2.2.2"},
+							Conditions: discoveryv1.EndpointConditions{},
 						},
 					},
 				},
 			},
-			previous: &corev1.Endpoints{
-				Subsets: []corev1.EndpointSubset{
-					{
-						Addresses: []corev1.EndpointAddress{
-							{
-								IP: "1.2.3.4",
-							},
-						},
+			expected: []string{"2.2.2.2"},
+		},
+		{
+			name: "merges multiple slices and deduplicates addresses",
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"5.6.7.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"5.6.7.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"9.9.9.9"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
 					},
 				},
 			},
-			expectedAdded:   []string{"5.6.7.8"},
-			expectedKept:    []string{"1.2.3.4"},
-			expectedRemoved: []string{},
+			expected: []string{"1.2.3.4", "5.6.7.8", "9.9.9.9"},
+		},
+		{
+			name: "ignores not ready and ipv6 endpoints",
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &notReady}},
+					},
+				},
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"3.3.3.3"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+				{
+					AddressType: discoveryv1.AddressTypeIPv6,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"2001:db8::1"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+			},
+			expected: []string{"3.3.3.3"},
+		},
+		{
+			name:     "empty slices result in empty endpoints",
+			expected: []string{},
+		},
+		{
+			name: "nil slices are ignored",
+			current: []*discoveryv1.EndpointSlice{
+				nil,
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"10.0.0.1"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+			},
+			expected: []string{"10.0.0.1"},
 		},
 		{
 			name: "add multiple new endpoints to two previous endpoints",
-			current: &corev1.Endpoints{
-				Subsets: []corev1.EndpointSubset{
-					{
-						Addresses: []corev1.EndpointAddress{
-							{
-								IP: "8.8.8.8",
-							},
-							{
-								IP: "8.8.4.4",
-							},
-							{
-								IP: "1.2.3.4",
-							},
-							{
-								IP: "5.6.7.8",
-							},
-						},
+			previous: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"5.6.7.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
 					},
 				},
 			},
-			previous: &corev1.Endpoints{
-				Subsets: []corev1.EndpointSubset{
-					{
-						Addresses: []corev1.EndpointAddress{
-							{
-								IP: "1.2.3.4",
-							},
-							{
-								IP: "5.6.7.8",
-							},
-						},
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"8.8.8.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"8.8.4.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"5.6.7.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
 					},
 				},
 			},
-			expectedAdded:   []string{"8.8.4.4", "8.8.8.8"},
-			expectedKept:    []string{"1.2.3.4", "5.6.7.8"},
-			expectedRemoved: []string{},
+			expected: []string{"8.8.4.4", "8.8.8.8", "1.2.3.4", "5.6.7.8"},
 		},
 		{
 			name: "remove multiple endpoints",
-			current: &corev1.Endpoints{
-				Subsets: []corev1.EndpointSubset{
-					{
-						Addresses: []corev1.EndpointAddress{
-							{
-								IP: "8.8.8.8",
-							},
-							{
-								IP: "1.2.3.4",
-							},
-						},
+			previous: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"8.8.4.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"8.8.8.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"5.6.7.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
 					},
 				},
 			},
-			previous: &corev1.Endpoints{
-				Subsets: []corev1.EndpointSubset{
-					{
-						Addresses: []corev1.EndpointAddress{
-							{
-								IP: "8.8.8.8",
-							},
-							{
-								IP: "8.8.4.4",
-							},
-							{
-								IP: "1.2.3.4",
-							},
-							{
-								IP: "5.6.7.8",
-							},
-						},
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"8.8.8.8"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"1.2.3.4"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
 					},
 				},
 			},
-			expectedAdded:   []string{},
-			expectedKept:    []string{"1.2.3.4", "8.8.8.8"},
-			expectedRemoved: []string{"5.6.7.8", "8.8.4.4"},
+			expected: []string{"1.2.3.4", "8.8.8.8"},
 		},
 		{
-			name: "add and remove endpoints in one udpate",
-			current: &corev1.Endpoints{
-				Subsets: []corev1.EndpointSubset{
-					{
-						Addresses: []corev1.EndpointAddress{
-							{
-								IP: "8.8.4.4",
-							},
-							{
-								IP: "1.2.3.4",
-							},
-							{
-								IP: "5.6.7.8",
-							},
-						},
+			name: "remove one and add one endpoint",
+			previous: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"1.1.1.1"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+					},
+				},
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"2.2.2.2"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
 					},
 				},
 			},
-			previous: &corev1.Endpoints{
-				Subsets: []corev1.EndpointSubset{
-					{
-						Addresses: []corev1.EndpointAddress{
-							{
-								IP: "8.8.8.8",
-							},
-							{
-								IP: "1.2.3.4",
-							},
-						},
+			current: []*discoveryv1.EndpointSlice{
+				{
+					AddressType: discoveryv1.AddressTypeIPv4,
+					Endpoints: []discoveryv1.Endpoint{
+						{Addresses: []string{"2.2.2.2"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
+						{Addresses: []string{"3.3.3.3"}, Conditions: discoveryv1.EndpointConditions{Ready: &ready}},
 					},
 				},
 			},
-			expectedAdded:   []string{"5.6.7.8", "8.8.4.4"},
-			expectedKept:    []string{"1.2.3.4"},
-			expectedRemoved: []string{"8.8.8.8"},
+			expected: []string{"2.2.2.2", "3.3.3.3"},
 		},
 	}
 
 	// Logger to pass to helper functions. Wraps testing.T.
 	log := testr.New(t)
 
-	for i, tc := range testCases {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			var previous *corev1.Endpoints
-			{
-				previous = nil
-				if tc.previous != nil {
-					previous = tc.previous
-				}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			testCfg := consistent.Config{
+				PartitionCount:    97,
+				ReplicationFactor: 20,
+				Load:              1.25,
+				Hasher:            testHasher{},
+			}
+			testRing := BuildPeerHashRing(testCfg, "10.0.0.1", "starboard-exporter", "default")
+
+			if tc.previous != nil {
+				updateAllEndpoints(tc.previous, testRing, log)
 			}
 
-			// Calculate endpoint updates.
-			added, kept, removed, ok := getEndpointChanges(tc.current, previous, log)
+			updateAllEndpoints(tc.current, testRing, log)
 
-			t.Logf("case %v: added: %v, kept: %v, removed: %v\n", tc, added, kept, removed)
-
-			if !ok {
-				t.Fatalf("unable to parse endpoint changes for case %v: added: %s, kept: %s, removed: %s\n", tc, added, kept, removed)
+			members := testRing.ring.GetMembers()
+			ips := make([]string, 0, len(members))
+			for _, member := range members {
+				ips = append(ips, member.String())
 			}
 
-			compareStringFunc := func(a, b string) bool { return a < b }
-
-			// Check added, kept, and removed contain the expected items, ignoring order.
-			assert.Assert(t, cmp.Equal(tc.expectedAdded, added, cmpopts.EquateEmpty(), cmpopts.SortSlices(compareStringFunc)), "test case %v failed.", tc.name)
-			assert.Assert(t, cmp.Equal(tc.expectedKept, kept, cmpopts.EquateEmpty(), cmpopts.SortSlices(compareStringFunc)), "test case %v failed.", tc.name)
-			assert.Assert(t, cmp.Equal(tc.expectedRemoved, removed, cmpopts.EquateEmpty(), cmpopts.SortSlices(compareStringFunc)), "test case %v failed.", tc.name)
+			// Check IPs contain the expected items, ignoring order.
+			assert.Assert(t, cmp.Equal(tc.expected, ips, cmpopts.EquateEmpty(), cmpopts.SortSlices(compareStringFn)), "test case %v failed.", tc.name)
 		})
 	}
 }

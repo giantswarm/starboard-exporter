@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Configure RBAC for only enabled controllers in Helm Chart.
 - Disable `WatchList` semantics for kubescape VulnerabilityManifest.
+- Switch to EndpointSlices for peer discovery used by sharding.
 
 ### Added
 
