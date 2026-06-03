@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/eea19f200d7cfd27ded22474b787563bbfdb8ec4/pkg/gen/input/makefile/internal/file/Makefile.gen.app.mk.template
+#    https://github.com/giantswarm/devctl/blob/6f591879b95d03922e2283781cd0ac9d796d5a71/pkg/gen/input/makefile/internal/file/Makefile.gen.app.mk.template
 #
 
 ##@ App
@@ -11,7 +11,7 @@ YQ=docker run --rm -u $$(id -u) -v $${PWD}:/workdir mikefarah/yq:4.29.2
 HELM_DOCS=docker run --rm -u $$(id -u) -v $${PWD}:/helm-docs jnorwood/helm-docs:v1.11.0
 
 ifdef APPLICATION
-DEPS := $(shell find $(APPLICATION)/charts -maxdepth 2 -name "Chart.yaml" -printf "%h\n")
+DEPS := $(shell find helm/$(APPLICATION)/charts -maxdepth 2 -name "Chart.yaml" -printf "%h\n" 2>/dev/null)
 endif
 
 .PHONY: lint-chart check-env update-chart helm-docs update-deps $(DEPS)
@@ -32,15 +32,15 @@ update-chart: check-env ## Sync chart with upstream repo.
 	$(MAKE) update-deps
 
 update-deps: check-env $(DEPS) ## Update Helm dependencies.
-	cd $(APPLICATION) && helm dependency update
+	cd helm/$(APPLICATION) && helm dependency update
 
 $(DEPS): check-env ## Update main Chart.yaml with new local dep versions.
 	dep_name=$(shell basename $@) && \
-	new_version=`$(YQ) .version $(APPLICATION)/charts/$$dep_name/Chart.yaml` && \
-	$(YQ) -i e "with(.dependencies[]; select(.name == \"$$dep_name\") | .version = \"$$new_version\")" $(APPLICATION)/Chart.yaml
+	new_version=`$(YQ) .version helm/$(APPLICATION)/charts/$$dep_name/Chart.yaml` && \
+	$(YQ) -i e "with(.dependencies[]; select(.name == \"$$dep_name\") | .version = \"$$new_version\")" helm/$(APPLICATION)/Chart.yaml
 
 helm-docs: check-env ## Update $(APPLICATION) README.
-	$(HELM_DOCS) -c $(APPLICATION) -g $(APPLICATION)
+	$(HELM_DOCS) -c helm/$(APPLICATION) -g helm/$(APPLICATION)
 
 check-env:
 ifndef APPLICATION

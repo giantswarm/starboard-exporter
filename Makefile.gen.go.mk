@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/243afc98a2832b4f85f9b1d99b15fcd2af5dff06/pkg/gen/input/makefile/internal/file/Makefile.gen.go.mk.template
+#    https://github.com/giantswarm/devctl/blob/0a4b91f4aa7d4eceff967a333eadac0286a526b3/pkg/gen/input/makefile/internal/file/Makefile.gen.go.mk.template
 #
 
 APPLICATION    := $(shell go list -m | cut -d '/' -f 3)
@@ -13,13 +13,14 @@ MODULE         := $(shell go list -m)
 MAIN_SOURCE    := $(shell if test -e cmd/main.go; then echo cmd/main.go; else echo main.go; fi)
 OS             := $(shell go env GOOS)
 SOURCES        := $(shell find . -name '*.go')
-VERSION        := $(shell architect project version)
+VERSION        := $(shell gitsemver get)
 ifeq ($(OS), linux)
 EXTLDFLAGS := -static
 endif
 LDFLAGS        ?= -w -linkmode 'auto' -extldflags '$(EXTLDFLAGS)' \
-  -X '$(shell go list -m)/pkg/project.buildTimestamp=${BUILDTIMESTAMP}' \
-  -X '$(shell go list -m)/pkg/project.gitSHA=${GITSHA1}'
+  -X '$(MODULE)/pkg/project.version=$(VERSION)' \
+  -X '$(MODULE)/pkg/project.buildTimestamp=$(BUILDTIMESTAMP)' \
+  -X '$(MODULE)/pkg/project.gitSHA=$(GITSHA1)'
 
 .DEFAULT_GOAL := build
 
