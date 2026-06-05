@@ -14,6 +14,18 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
+Render the AppVersion as a valid Kubernetes label value. Dev builds can
+produce an AppVersion that exceeds the 63-character label limit or contains
+characters that are invalid in a label value (e.g. the "+" that precedes
+SemVer build metadata). Replace the "+", truncate to 63 characters,
+and strip any trailing non-alphanumeric characters.
+*/}}
+{{- define "labels.appVersion" -}}
+{{- $version := .Chart.AppVersion | toString | replace "+" "_" | trunc 63 -}}
+{{- regexReplaceAll "[^A-Za-z0-9]+$" $version "" -}}
+{{- end -}}
+
+{{/*
 Common labels
 */}}
 {{- define "labels.common" -}}
@@ -28,7 +40,7 @@ Monitoring labels
 app: {{ include "name" . | quote }}
 {{ include "labels.selector" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/version: {{ include "labels.appVersion" . | quote }}
 helm.sh/chart: {{ include "chart" . | quote }}
 {{- end -}}
 
