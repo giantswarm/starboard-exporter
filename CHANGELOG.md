@@ -7,15 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Disable controllers for unsupported resource types to avoid errors in environments where these CRDs are not present.
+
 ### Changed
 
 - Configure RBAC for only enabled controllers in Helm Chart.
 - Disable `WatchList` semantics for kubescape VulnerabilityManifest.
 - Switch to EndpointSlices for peer discovery used by sharding.
-
-### Added
-
-- Disable controllers for unsupported resource types to avoid errors in environments where these CRDs are not present.
+- Truncate the chart's `AppVersion` when it is used in Kubernetes labels.
 
 ## [1.0.3] - 2026-02-19
 
