@@ -11,7 +11,7 @@ require (
 	github.com/containers/image/v5 v5.36.2
 	github.com/go-logr/logr v1.4.3
 	github.com/google/go-cmp v0.7.0
-	github.com/kubescape/storage v0.0.278
+	github.com/kubescape/storage v0.0.281
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
 	gotest.tools v2.2.0+incompatible
@@ -107,7 +107,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/kubescape/go-logger v0.0.28 // indirect
-	github.com/kubescape/k8s-interface v0.0.206 // indirect
+	github.com/kubescape/k8s-interface v0.0.214 // indirect
 	github.com/mackerelio/go-osstat v0.2.5 // indirect
 	github.com/masahiro331/go-mvn-version v0.0.0-20260119054159-d21fcd2e7de1 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
