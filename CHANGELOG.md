@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add `vulnerability_published_date`, `vulnerability_target`, and `vulnerability_class` metric labels for Trivy VulnerabilityReports.
 - Disable controllers for unsupported resource types to avoid errors in environments where these CRDs are not present.
 
 ### Changed
