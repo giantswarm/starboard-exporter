@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Switch to EndpointSlices for peer discovery used by sharding.
 - Truncate the chart's `AppVersion` when it is used in Kubernetes labels.
 
+### Fixed
+
+- Sanitize the `helm.sh/chart` label so truncated versions cannot end with an invalid character (e.g. a trailing `.`).
+
 ## [1.0.3] - 2026-02-19
 
 ### Added
