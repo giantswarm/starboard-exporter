@@ -236,3 +236,13 @@ replace go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.18.0 => g
 replace go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.42.0 => go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.43.0
 
 replace go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.42.0 => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.43.0
+
+replace github.com/containernetworking/plugins v1.6.2 => github.com/containernetworking/plugins v1.9.1
+
+replace github.com/opencontainers/runc v1.2.6 => github.com/opencontainers/runc v1.4.2
+
+replace github.com/yuin/goldmark v1.3.5 => github.com/yuin/goldmark v1.8.2
+
+replace github.com/sigstore/fulcio v1.6.6 => github.com/sigstore/fulcio v1.8.7
+
+replace github.com/quic-go/quic-go v0.57.0 => github.com/quic-go/quic-go v0.60.0
