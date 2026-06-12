@@ -28,3 +28,4 @@ CVE-2026-39395 until=2026-07-12 # github.com/sigstore/cosign/v2@v2.6.2
 CVE-2023-46565 until=2026-07-12 # github.com/osrg/gobgp/v3@v3.35.0
 CVE-2025-7464 until=2026-07-12 # github.com/osrg/gobgp/v3@v3.35.0
 CVE-2026-7737 until=2026-07-12 # github.com/osrg/gobgp/v3@v3.35.0
+CVE-2022-3248 until=2026-07-12 # github.com/openshift/api@v0.0.0-20231025170628-b8a18fdc040d
