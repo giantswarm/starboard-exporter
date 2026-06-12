@@ -7,3 +7,4 @@ CVE-2026-39824 until=2026-06-28 # golang.org/x/sys@v0.43.0
 CVE-2026-39821 until=2026-06-28 # golang.org/x/net@v0.53.0
 CVE-2026-25680 until=2026-06-28 # golang.org/x/net@v0.53.0
 CVE-2026-10722 until=2026-07-05 # github.com/cilium/ebpf@v0.17.1
+CVE-2026-41178 until=2026-07-12 # go.opentelemetry.io/otel@v1.43.0
