@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/6a704f7e2a8b0f09e82b5bab88f17971af849711/pkg/gen/input/makefile/internal/file/Makefile.template
+#    https://github.com/giantswarm/devctl/blob/b540873228e4a6d285984243a906c636ba70e0be/pkg/gen/input/makefile/internal/file/Makefile.template
 #
 
 include Makefile.*.mk
