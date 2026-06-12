@@ -11,13 +11,13 @@ require (
 	github.com/containers/image/v5 v5.36.2
 	github.com/go-logr/logr v1.4.3
 	github.com/google/go-cmp v0.7.0
-	github.com/kubescape/storage v0.0.281
+	github.com/kubescape/storage v0.0.283
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
 	gotest.tools v2.2.0+incompatible
-	k8s.io/api v0.36.1
-	k8s.io/apimachinery v0.36.1
-	k8s.io/client-go v0.36.1
+	k8s.io/api v0.36.2
+	k8s.io/apimachinery v0.36.2
+	k8s.io/client-go v0.36.2
 	sigs.k8s.io/controller-runtime v0.24.1
 )
 
@@ -236,3 +236,13 @@ replace go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.18.0 => g
 replace go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.42.0 => go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.43.0
 
 replace go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.42.0 => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.43.0
+
+replace github.com/containernetworking/plugins v1.6.2 => github.com/containernetworking/plugins v1.9.1
+
+replace github.com/opencontainers/runc v1.2.6 => github.com/opencontainers/runc v1.4.2
+
+replace github.com/yuin/goldmark v1.3.5 => github.com/yuin/goldmark v1.8.2
+
+replace github.com/sigstore/fulcio v1.6.6 => github.com/sigstore/fulcio v1.8.7
+
+replace github.com/quic-go/quic-go v0.57.0 => github.com/quic-go/quic-go v0.60.0
