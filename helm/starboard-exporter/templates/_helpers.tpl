@@ -7,22 +7,30 @@ Expand the name of the chart.
 {{- end -}}
 
 {{/*
-Create chart name and version as used by the chart label.
+Render a string as a valid Kubernetes label value. Dev builds can produce
+version strings that exceed the 63-character label limit or contain
+characters that are invalid in a label value (e.g. the "+" that precedes
+SemVer build metadata, or a "." left at the truncation point). Replace the
+"+", truncate to 63 characters, and strip any trailing non-alphanumeric
+characters so the value always ends with an alphanumeric character.
 */}}
-{{- define "chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- define "labels.sanitizeValue" -}}
+{{- $value := . | toString | replace "+" "_" | trunc 63 -}}
+{{- regexReplaceAll "[^A-Za-z0-9]+$" $value "" -}}
 {{- end -}}
 
 {{/*
-Render the AppVersion as a valid Kubernetes label value. Dev builds can
-produce an AppVersion that exceeds the 63-character label limit or contains
-characters that are invalid in a label value (e.g. the "+" that precedes
-SemVer build metadata). Replace the "+", truncate to 63 characters,
-and strip any trailing non-alphanumeric characters.
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "chart" -}}
+{{- include "labels.sanitizeValue" (printf "%s-%s" .Chart.Name .Chart.Version) -}}
+{{- end -}}
+
+{{/*
+Render the AppVersion as a valid Kubernetes label value.
 */}}
 {{- define "labels.appVersion" -}}
-{{- $version := .Chart.AppVersion | toString | replace "+" "_" | trunc 63 -}}
-{{- regexReplaceAll "[^A-Za-z0-9]+$" $version "" -}}
+{{- include "labels.sanitizeValue" .Chart.AppVersion -}}
 {{- end -}}
 
 {{/*
