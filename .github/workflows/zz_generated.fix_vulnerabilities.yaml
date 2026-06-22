@@ -26,7 +26,7 @@ permissions: {}
 
 jobs:
   fix:
-    uses: giantswarm/github-workflows/.github/workflows/fix-vulnerabilities.yaml@main
+    uses: giantswarm/github-workflows/.github/workflows/fix-vulnerabilities.yaml@6a9ce4fcfb2ebc69342e77bca00be07c5d8d32a0
     permissions:
       contents: read
     with:
