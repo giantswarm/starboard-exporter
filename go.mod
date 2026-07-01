@@ -244,3 +244,7 @@ replace github.com/yuin/goldmark v1.3.5 => github.com/yuin/goldmark v1.8.2
 replace github.com/sigstore/fulcio v1.6.6 => github.com/sigstore/fulcio v1.8.7
 
 replace github.com/quic-go/quic-go v0.57.0 => github.com/quic-go/quic-go v0.60.0
+
+replace github.com/containerd/containerd/v2 v2.3.1 => github.com/containerd/containerd/v2 v2.3.2
+
+replace go.mongodb.org/mongo-driver v1.17.1 => go.mongodb.org/mongo-driver v1.17.9
