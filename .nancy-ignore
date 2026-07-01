@@ -27,3 +27,4 @@ CVE-2026-53488 until=2026-07-29 # github.com/containerd/containerd@v1.7.28
 CVE-2026-46602 until=2026-07-30 # golang.org/x/image@v0.0.0-20190802002840-cff245a6509b
 CVE-2026-46601 until=2026-07-30 # golang.org/x/image@v0.0.0-20190802002840-cff245a6509b
 CVE-2026-46604 until=2026-07-30 # golang.org/x/image@v0.0.0-20190802002840-cff245a6509b
+CVE-2026-49835 until=2026-07-31 # github.com/sigstore/timestamp-authority/v2@v2.0.6
