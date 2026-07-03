@@ -28,3 +28,7 @@ CVE-2026-46602 until=2026-07-30 # golang.org/x/image@v0.0.0-20190802002840-cff24
 CVE-2026-46601 until=2026-07-30 # golang.org/x/image@v0.0.0-20190802002840-cff245a6509b
 CVE-2026-46604 until=2026-07-30 # golang.org/x/image@v0.0.0-20190802002840-cff245a6509b
 CVE-2026-49835 until=2026-07-31 # github.com/sigstore/timestamp-authority/v2@v2.0.6
+CVE-2026-50162 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
+CVE-2026-50163 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
+CVE-2026-48978 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
+CVE-2026-50151 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
