@@ -25,14 +25,13 @@ workflows:
           tags:
             only: /^v.*/
 
-    # Branches: validate the image build without pushing anything (push: false
-    # keeps the buildx result in the BuildKit cache). Same hadolint lint and
-    # multi-arch build as the release job, so Dockerfile regressions surface
-    # on the PR instead of at tag time.
+    # Branch builds (opt-in): amd64 dev image to gsoci for PR validation,
+    # coupled with the branch chart push below. v9's push-to-registries always
+    # uses buildx; platforms is pinned to amd64 to keep branch builds fast.
     - architect/push-to-registries:
         context: architect
-        name: build-image
-        push: false
+        name: push-to-registries
+        platforms: linux/amd64
         requires:
         - go-build
         filters:
@@ -99,6 +98,7 @@ workflows:
         name: execute-chart-tests
         requires:
         - build-chart
+        - push-to-registries
         filters:
           branches:
             ignore:
@@ -116,6 +116,23 @@ workflows:
             only: /^v.*/
           branches:
             ignore: /.*/
+
+    # Branch chart push (opt-in): publish the dev chart after tests + the amd64
+    # branch image, coupled with push-to-registries above.
+    - architect/push-to-app-catalog:
+        executor: app-build-suite
+        context: architect
+        name: push-chart
+        app_catalog: default-catalog
+        app_catalog_test: default-test-catalog
+        chart: starboard-exporter
+        requires:
+        - execute-chart-tests
+        - push-to-registries
+        filters:
+          branches:
+            ignore:
+            - main
 
     # Tag: push chart after tests + the gsoci image. Intentionally does NOT
     # depend on sync-china-registry so the chart catalog can publish even if
