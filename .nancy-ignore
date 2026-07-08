@@ -32,3 +32,4 @@ CVE-2026-50162 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
 CVE-2026-50163 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
 CVE-2026-48978 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
 CVE-2026-50151 until=2026-08-02 # oras.land/oras-go/v2@v2.6.0
+CVE-2026-53935 until=2026-08-07 # github.com/cilium/cilium@v1.17.15
