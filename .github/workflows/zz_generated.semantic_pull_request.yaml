@@ -12,11 +12,12 @@ on:
       - opened
       - edited
       - synchronize
+  merge_group: {}
 
 permissions: {}
 
 jobs:
   semantic-pull-request:
-    uses: giantswarm/github-workflows/.github/workflows/semantic-pull-request.yaml@main
+    uses: giantswarm/github-workflows/.github/workflows/semantic-pull-request.yaml@b6fe399581a3f6118001f08ea855794d3cd61103
     permissions:
       pull-requests: read
