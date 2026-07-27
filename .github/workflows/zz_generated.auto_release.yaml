@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/27c057288502edd9923a520af3177d747980d9fd/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/e4220348ee816904c97c98b183b8d1d7386a71ae/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
 #
 # yamllint disable rule:truthy
 # Push-based release tagger + release-page publisher.
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0        # full history so git-cliff sees every commit
           fetch-tags: true      # ensure tags are present (shallow runners drop them by default)
