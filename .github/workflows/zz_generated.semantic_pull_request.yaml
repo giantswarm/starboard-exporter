@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/814a91071850fc945ec1d58f92b761156ad7edb4/pkg/gen/input/workflows/internal/file/semantic_pull_request.yaml.template
+#    https://github.com/giantswarm/devctl/blob/1e74e9b34eaee80c19dd433c7c298a67ab812605/pkg/gen/input/workflows/internal/file/semantic_pull_request.yaml.template
 #
 name: semantic-pull-request
 
@@ -18,6 +18,6 @@ permissions: {}
 
 jobs:
   semantic-pull-request:
-    uses: giantswarm/github-workflows/.github/workflows/semantic-pull-request.yaml@b6fe399581a3f6118001f08ea855794d3cd61103
+    uses: giantswarm/github-workflows/.github/workflows/semantic-pull-request.yaml@main
     permissions:
       pull-requests: read
