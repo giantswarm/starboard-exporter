@@ -1,0 +1,35 @@
+# .schema.yaml
+# yaml-language-server: $schema=https://github.com/losisin/helm-values-schema-json/raw/refs/heads/main/config.schema.json
+
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/f3a2cc57c7df97421d3f0b1772a3aa44143cdb43/pkg/gen/input/precommit/internal/file/schema.yaml.template
+#
+
+values:
+  - helm/starboard-exporter/values.yaml
+
+draft: 2020
+indent: 4
+output: helm/starboard-exporter/values.schema.json
+
+# We enable bundling as the Kubernetes schema is large, and helm only permits 15 seconds to fetch them.
+# We have seen cases where helm timed out before fully fetching the schema.
+# https://github.com/giantswarm/giantswarm/issues/36234
+bundle: true
+bundleRoot: ""
+bundleWithoutID: true
+
+k8sSchemaURL:
+  https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.33.1/
+k8sSchemaVersion: "v1.33.1"
+
+useHelmDocs: true
+
+noAdditionalProperties: true
+noDefaultGlobal: false
+
+schemaRoot:
+  additionalProperties: false

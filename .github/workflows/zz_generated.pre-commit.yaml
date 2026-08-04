@@ -1,0 +1,65 @@
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/0fd5aa1adbfdacdbd40b4fe49aca1cec0b364b7e/pkg/gen/input/precommit/internal/file/pre-commit-action.yaml.template
+#
+name: pre-commit
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - main
+      - master
+
+env:
+  HELM_VERSION: "3.21.3"
+  HELM_DOCS_VERSION: "1.14.2"
+  HELM_VALUES_SCHEMA_JSON_VERSION: "2.5.0"
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Python environment
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - name: Install helm-docs
+        uses: giantswarm/install-binary-action@5bef88f65012037dd836117c8d344b21bb559854 # v4.1.0
+        with:
+          binary: helm-docs
+          version: "${{ env.HELM_DOCS_VERSION }}"
+          download_url: "https://github.com/norwoodj/helm-docs/releases/download/v${version}/helm-docs_${version}_Linux_x86_64.tar.gz"
+          tarball_binary_path: "helm-docs"
+          smoke_test: "${binary} --version"
+      - name: Cache schema plugin
+        id: cache-schema
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /home/runner/.local/share/helm/plugins/helm-values-schema-json
+          key: ${{ runner.os }}-${{ env.HELM_VALUES_SCHEMA_JSON_VERSION }}-schema
+      - name: Install helm-values-schema-json
+        if: steps.cache-schema.outputs.cache-hit != 'true'
+        run: |
+          helm plugin install https://github.com/losisin/helm-values-schema-json \
+            --version $HELM_VALUES_SCHEMA_JSON_VERSION
+      - name: Set up Go environment
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.26"
+      - name: Install goimports
+        run: |
+          go install golang.org/x/tools/cmd/goimports@v0.48.0
+      - name: Install golangci-lint
+        uses: giantswarm/install-binary-action@5bef88f65012037dd836117c8d344b21bb559854 # v4.1.0
+        with:
+          binary: golangci-lint
+          version: "2.12.2"
+          download_url: "https://github.com/golangci/golangci-lint/releases/download/v${version}/${binary}-${version}-linux-amd64.tar.gz"
+      - name: Execute pre-commit hooks
+        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+        env:
+          GOGC: "20"
