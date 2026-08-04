@@ -28,8 +28,8 @@ k8sSchemaVersion: "v1.33.1"
 
 useHelmDocs: true
 
-noAdditionalProperties: true
+noAdditionalProperties: false
 noDefaultGlobal: false
 
 schemaRoot:
-  additionalProperties: false
+  additionalProperties: true

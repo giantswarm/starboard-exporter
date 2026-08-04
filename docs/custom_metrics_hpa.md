@@ -32,7 +32,7 @@
 
     ```bash
     export TEST_NAMESPACE=giantswarm
-    kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/$TEST_NAMESPACE/pods/*/scrapedurationseconds" 
+    kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/$TEST_NAMESPACE/pods/*/scrapedurationseconds"
     kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/$TEST_NAMESPACE/services/*/scrapedurationseconds" | jq -r .
     ```
 
