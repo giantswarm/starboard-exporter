@@ -166,18 +166,18 @@ require (
 	go.opentelemetry.io/contrib/bridges/otelslog v0.18.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.68.0 // indirect
 	go.opentelemetry.io/contrib/processors/minsev v0.16.0 // indirect
-	go.opentelemetry.io/otel v1.44.0 // indirect
+	go.opentelemetry.io/otel v1.45.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.19.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.43.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.44.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.43.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.43.0 // indirect
 	go.opentelemetry.io/otel/log v0.19.0 // indirect
-	go.opentelemetry.io/otel/metric v1.44.0 // indirect
+	go.opentelemetry.io/otel/metric v1.45.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.44.0 // indirect
 	go.opentelemetry.io/otel/sdk/log v0.19.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.44.0 // indirect
-	go.opentelemetry.io/otel/trace v1.44.0 // indirect
+	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
@@ -215,9 +215,13 @@ require (
 replace (
 	github.com/go-git/go-git/v5 v5.10.1 => github.com/go-git/go-git/v5 v5.11.0
 	github.com/go-git/go-git/v5 v5.12.0 => github.com/go-git/go-git/v5 v5.13.2
+	github.com/go-git/go-git/v5 v5.19.1 => github.com/go-git/go-git/v5 v5.19.2
 )
 
-replace github.com/moby/buildkit v0.12.3 => github.com/moby/buildkit v0.12.5
+replace (
+	github.com/moby/buildkit v0.12.3 => github.com/moby/buildkit v0.12.5
+	github.com/moby/buildkit v0.30.0 => github.com/moby/buildkit v0.32.2
+)
 
 replace github.com/hashicorp/go-getter v1.7.4 => github.com/hashicorp/go-getter v1.7.6
 
@@ -242,7 +246,10 @@ replace github.com/containernetworking/plugins v1.6.2 => github.com/containernet
 
 replace github.com/opencontainers/runc v1.2.6 => github.com/opencontainers/runc v1.4.2
 
-replace github.com/yuin/goldmark v1.3.5 => github.com/yuin/goldmark v1.8.2
+replace (
+	github.com/yuin/goldmark v1.3.5 => github.com/yuin/goldmark v1.8.2
+	github.com/yuin/goldmark v1.4.13 => github.com/yuin/goldmark v1.8.5
+)
 
 replace github.com/sigstore/fulcio v1.6.6 => github.com/sigstore/fulcio v1.8.7
 
@@ -251,3 +258,17 @@ replace github.com/quic-go/quic-go v0.57.0 => github.com/quic-go/quic-go v0.60.0
 replace github.com/containerd/containerd/v2 v2.3.1 => github.com/containerd/containerd/v2 v2.3.2
 
 replace go.mongodb.org/mongo-driver v1.17.1 => go.mongodb.org/mongo-driver v1.17.9
+
+replace github.com/cilium/ebpf v0.17.1 => github.com/cilium/ebpf v0.22.0
+
+replace github.com/gopacket/gopacket v1.3.1 => github.com/gopacket/gopacket v1.7.1
+
+replace oras.land/oras-go/v2 v2.6.1 => oras.land/oras-go/v2 v2.6.2
+
+replace golang.org/x/text v0.38.0 => golang.org/x/text v0.40.0
+
+replace golang.org/x/image v0.0.0-20190802002840-cff245a6509b => golang.org/x/image v0.44.0
+
+replace go.opentelemetry.io/otel v1.43.0 => go.opentelemetry.io/otel v1.45.0
+
+replace github.com/sigstore/sigstore-go v1.1.4 => github.com/sigstore/sigstore-go v1.3.0
