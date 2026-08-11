@@ -11,14 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix failing `pre-commit` CI check on `main` by explicitly discarding the never-failing `hash.Hash.Write` return value in the sharding test helper.
 
-### Changed
-
-- Raise the `golangci-lint` pre-commit hook timeout from 300s to 600s. This repo's lint run costs ~242s on GitHub-hosted runners, leaving too little headroom before the hook fails on time rather than on findings.
-
-### Added
-
-- Add `.golangci.yml` so `goconst` does not flag the Prometheus label name literals in `controllers/` or repeated fixture values in tests.
-
 ## [1.1.0] - 2026-06-18
 
 ### Added
