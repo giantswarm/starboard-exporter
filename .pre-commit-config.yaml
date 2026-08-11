@@ -34,8 +34,10 @@ repos:
           - -E=gosec
           - -E=goconst
           - -E=govet
-          # timeout is needed for CI
-          - --timeout=300s
+          # timeout is needed for CI. Raised above the 300s default: this
+          # repo's lint run costs ~242s on GitHub-hosted runners, leaving too
+          # little headroom before the hook fails on time rather than findings.
+          - --timeout=600s
           # List all issues found
           - --max-same-issues=0
           - --max-issues-per-linter=0
