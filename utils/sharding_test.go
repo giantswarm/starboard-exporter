@@ -16,7 +16,8 @@ type testHasher struct{}
 
 func (h testHasher) Sum64(data []byte) uint64 {
 	hasher := fnv.New64a()
-	hasher.Write(data)
+	// hash.Hash.Write never returns an error.
+	_, _ = hasher.Write(data)
 	return hasher.Sum64()
 }
 

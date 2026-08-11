@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix failing `pre-commit` CI check on `main` by explicitly discarding the never-failing `hash.Hash.Write` return value in the sharding test helper.
+
+### Added
+
+- Add `.golangci.yml` so `goconst` does not flag the Prometheus label name literals in `controllers/` or repeated fixture values in tests.
+
 ## [1.1.0] - 2026-06-18
 
 ### Added
