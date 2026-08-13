@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support GOMEMLIMIT configuration on startup to improve garbage collection on high memory usage.
+
 ### Fixed
 
 - Fix failing `pre-commit` CI check on `main` by explicitly discarding the never-failing `hash.Hash.Write` return value in the sharding test helper.

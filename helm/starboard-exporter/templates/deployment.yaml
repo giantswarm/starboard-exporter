@@ -71,6 +71,8 @@ spec:
           - --pod-ip=$(MY_POD_IP)
           - --service-name={{ include "resource.default.name"  . }}
           - --service-namespace={{ include "resource.default.namespace"  . }}
+          - --auto-mem-limit-enabled={{ .Values.autoMemoryLimit.enabled }}
+          - --auto-mem-limit-ratio={{ .Values.autoMemoryLimit.ratio }}
         {{- if .Values.exporter.vulnerabilityReports.targetLabels }}
           - --target-labels={{ .Values.exporter.vulnerabilityReports.targetLabels | join "," }}
         {{- end }}

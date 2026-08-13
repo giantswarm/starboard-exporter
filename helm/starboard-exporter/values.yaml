@@ -50,6 +50,10 @@ resources:
     cpu: 100m
     memory: 220Mi
 
+autoMemoryLimit:
+  enabled: true
+  ratio: 0.9
+
 exporter:
   requeueMaxJitterPercent: 10
 
