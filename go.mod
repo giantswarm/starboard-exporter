@@ -3,6 +3,7 @@ module github.com/giantswarm/starboard-exporter
 go 1.26.5
 
 require (
+	github.com/KimMachineGun/automemlimit v0.7.5
 	github.com/aquasecurity/trivy-operator v0.32.0
 	github.com/buraksezer/consistent v0.10.0
 	github.com/cespare/xxhash/v2 v2.3.0
@@ -120,6 +121,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/opencontainers/runtime-spec v1.3.0 // indirect
 	github.com/package-url/packageurl-go v0.1.6 // indirect
+	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.3.0 // indirect
 	github.com/petermattis/goid v0.0.0-20260330135022-df67b199bc81 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect

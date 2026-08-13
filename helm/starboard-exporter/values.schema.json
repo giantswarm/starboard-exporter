@@ -255,6 +255,17 @@
                 }
             }
         },
+        "autoMemoryLimit": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "ratio": {
+                    "type": "number"
+                }
+            }
+        },
         "securityContext": {
             "type": "object",
             "properties": {

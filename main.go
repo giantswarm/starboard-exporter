@@ -105,6 +105,8 @@ func main() {
 	var serviceNamespace string
 	var trivyVulnerabilityScansEnabled bool
 	var kubescapeVulnerabilityScansEnabled bool
+	var autoMemLimitEnabled bool
+	var autoMemLimitRatio float64
 	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
@@ -157,6 +159,12 @@ func main() {
 	flag.BoolVar(&kubescapeVulnerabilityScansEnabled, "kubescape-vulnerability-scans-enabled", true,
 		"Enable metrics for KubescapeVulnerabilityReport resources.")
 
+	flag.BoolVar(&autoMemLimitEnabled, "auto-mem-limit-enabled", true,
+		"Enable automatic GOMEMLIMIT configuration based on container or system memory.")
+
+	flag.Float64Var(&autoMemLimitRatio, "auto-mem-limit-ratio", 0.9,
+		"The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. Must be greater than 0 and less than or equal to 1.")
+
 	opts := zap.Options{
 		Development: false,
 	}
@@ -164,6 +172,13 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	if autoMemLimitEnabled {
+		if err := utils.SetupMemLimit(autoMemLimitRatio, setupLog); err != nil {
+			setupLog.Error(err, "unable to setup automatic GOMEMLIMIT")
+			os.Exit(1)
+		}
+	}
 
 	podIP := net.ParseIP(podIPString)
 	if podIP == nil {
