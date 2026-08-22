@@ -10,7 +10,7 @@ require (
 	github.com/containers/image/v5 v5.36.2
 	github.com/go-logr/logr v1.4.4
 	github.com/google/go-cmp v0.7.0
-	github.com/kubescape/storage v0.0.297
+	github.com/kubescape/storage v0.0.305
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.24.1
 	gotest.tools v2.2.0+incompatible
