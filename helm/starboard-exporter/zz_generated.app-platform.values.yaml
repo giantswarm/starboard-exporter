@@ -1,0 +1,30 @@
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/529e8924bb4b0b60fb205dbbfb874ffc09d73e09/pkg/gen/input/precommit/internal/file/app-platform-values.yaml.template
+#
+
+# Values the Giant Swarm app platform injects into every App deployed to a
+# workload cluster: flux/app-operator merge the <cluster>-cluster-values
+# ConfigMap into the App's values. The chart does not have to consume them;
+# this file only makes the generated values.schema.json accept them so an
+# App-deployed chart does not fail schema validation on install/upgrade
+# ("additional properties 'baseDomain', 'provider', ... not allowed").
+#
+# `helm schema` merges this file BEFORE the chart's values.yaml (see
+# .schema.yaml), so any of these keys the chart defines itself keeps its own
+# schema. Helm itself never reads this file; it only feeds schema generation.
+
+baseDomain: ""
+bootstrapMode: {}  # @schema skipProperties: true; additionalProperties: true
+chartOperator: {}  # @schema skipProperties: true; additionalProperties: true
+ciliumNetworkPolicy: {}  # @schema skipProperties: true; additionalProperties: true
+cluster: {}  # @schema skipProperties: true; additionalProperties: true
+clusterCA: ""
+clusterCIDR: ""
+clusterDNSIP: ""
+clusterID: ""
+gcpProject: ""
+provider: ""
+subscriptionID: ""

@@ -1,29 +1,40 @@
-# This file is maintained centrally at
-# https://github.com/giantswarm/github/blob/main/languages/go/.pre-commit-config.yaml
-
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/529e8924bb4b0b60fb205dbbfb874ffc09d73e09/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#
 minimum_pre_commit_version: '2.17'
+default_install_hook_types: [pre-commit, commit-msg]
 repos:
-  # shell scripts
-  - repo: https://github.com/detailyang/pre-commit-shell
-    rev: '1.0.5'
-    hooks:
-      - id: shell-lint
-        args: [ --format=json ]
-        exclude: ".*\\.template"
-
+  # base hooks
+  #
+  # helm/<chart>/charts/ holds vendored upstream subcharts (vendir-synced).
+  # Those files are not repo-authored: the auto-fixing hooks would rewrite
+  # them on every vendir bump and the next vendir sync would revert the fix,
+  # so the whitespace/shebang hooks skip the vendored subtree.
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
-      - id: check-added-large-files
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
+        exclude: "^helm/[^/]+/charts/.*"
       - id: detect-private-key
       - id: end-of-file-fixer
-        exclude: ".*testdata/.*"
+        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*)"
       - id: mixed-line-ending
+        exclude: "^helm/[^/]+/charts/.*"
       - id: trailing-whitespace
-        exclude: ".*testdata/.*"
+        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*)"
 
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [--strict]
+
+  # Go hooks
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: v0.5.1
     hooks:
@@ -34,12 +45,77 @@ repos:
           - -E=gosec
           - -E=goconst
           - -E=govet
-          # timeout is needed for CI. Raised above the 300s default: this
-          # repo's lint run costs ~242s on GitHub-hosted runners, leaving too
-          # little headroom before the hook fails on time rather than findings.
-          - --timeout=600s
+          # timeout is needed for CI
+          - --timeout=300s
           # List all issues found
           - --max-same-issues=0
           - --max-issues-per-linter=0
       - id: go-imports
         args: [ -local, github.com/giantswarm/starboard-exporter ]
+
+  # Helm chart schema for starboard-exporter: generate -> fix $ref -> normalize, as ONE hook.
+  #
+  # This single local hook deliberately runs the whole schema pipeline. pre-commit does
+  # NOT feed hooks into each other: it runs each hook independently against the file on
+  # disk and fails the run if any hook modified it. So for a multi-fixer setup to pass,
+  # all fixers must agree on ONE resting format. Splitting these steps into separate
+  # hooks gives them rival resting formats and `pre-commit run -a` can then never
+  # converge -- reruns just ping-pong between formats and one hook always fails:
+  #
+  #   * `helm schema` regenerates the schema from values.yaml wholesale, in the
+  #     generator's own key ordering, and does not preserve existing formatting.
+  #   * `schemalint normalize` rewrites it into schemalint's canonical key ordering
+  #     (and unicode escaping), which is NOT the generator's ordering.
+  #   * the $ref fix below rewrites the generator's output again.
+  #
+  # Chained here, `schemalint normalize` is always the LAST writer, so the normalized
+  # form is the single resting format and the committed file is a fixed point -- the
+  # hook is a no-op on an already-processed schema and the run is clean. Read-only
+  # `schemalint-verify` then checks that resting format (it never rewrites, so it is not
+  # part of the conflict). See giantswarm/giantswarm#37267.
+  #
+  # The `$ref` step works around a generator bug: with `noAdditionalProperties: true` it
+  # emits `additionalProperties: false` as a sibling of every bare `$ref`. Per JSON Schema
+  # 2020-12, `additionalProperties` only sees sibling `properties`/`patternProperties`
+  # -- NOT properties pulled in through `$ref` -- so it wrongly rejects every field the
+  # referenced schema defines (e.g. `helm template` fails with "additional properties
+  # 'podAntiAffinity' not allowed" for a k8s Affinity). The correct 2020-12 keyword is
+  # `unevaluatedProperties`, which DOES consider $ref-evaluated properties, but the tool
+  # cannot emit it and does not drop the bogus `additionalProperties` when annotated. So
+  # for every object that has both `$ref` and `additionalProperties: false` we drop
+  # `additionalProperties` and set `unevaluatedProperties: false`.
+  # Upstream bug: https://github.com/losisin/helm-values-schema-json/issues/317
+  #
+  # This replaces both the external `losisin/helm-values-schema-json` hook and the
+  # separate `schemalint-normalize` hook. `schemalint` is installed by the hook itself
+  # (`additional_dependencies`, hence `language: golang`); `helm schema` needs the `schema`
+  # helm plugin -- the same requirement the external hook had, installed in the pre-commit
+  # CI workflow. The external hook wrapped `helm schema` in a script that checked for the
+  # plugin first, so the leading `helm plugin list` guard below keeps that actionable
+  # message (a dev without the plugin would otherwise just get `unknown command "schema"`).
+  - repo: local
+    hooks:
+      - id: helm-schema-starboard-exporter
+        name: "generate + fix + normalize helm/starboard-exporter/values.schema.json"
+        language: golang
+        additional_dependencies: ['github.com/giantswarm/schemalint/v2@v2.6.3']
+        files: ^helm/starboard-exporter/(values\.yaml|\.schema\.yaml|values\.schema\.json|zz_generated\.app-platform\.values\.yaml)$
+        pass_filenames: false
+        require_serial: true
+        entry: sh -c
+        args:
+          - 'helm plugin list | grep -q "^schema[[:space:]]" || { echo "helm schema plugin missing, install it with: helm plugin install https://github.com/losisin/helm-values-schema-json"; exit 1; }; helm schema --config helm/starboard-exporter/.schema.yaml && python3 -c ''import json,sys; h=lambda o: {**{k:v for k,v in o.items() if k!="additionalProperties"},"unevaluatedProperties":False} if ("$ref" in o and o.get("additionalProperties") is False) else o; p=sys.argv[1]; f=open(p,encoding="utf-8"); d=json.load(f,object_hook=h); f.close(); f=open(p,"w",encoding="utf-8"); json.dump(d,f); f.close()'' helm/starboard-exporter/values.schema.json && schemalint normalize helm/starboard-exporter/values.schema.json -o helm/starboard-exporter/values.schema.json --force'
+  - repo: https://github.com/giantswarm/schemalint
+    rev: v2.6.3
+    hooks:
+      - id: schemalint-verify
+        pass_filenames: false
+        args:
+          - helm/starboard-exporter/values.schema.json
+  - repo: https://github.com/norwoodj/helm-docs
+    rev: "v1.14.2"
+    hooks:
+      - id: helm-docs
+        args:
+          - --chart-search-root=helm
+          - --sort-values-order=file
