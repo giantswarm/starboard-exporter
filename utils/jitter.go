@@ -21,7 +21,6 @@ func JitterRequeue(defaultDuration time.Duration, maxJitterPercent int, log logr
 	}
 
 	return ctrl.Result{
-		Requeue:      true,
 		RequeueAfter: after,
 	}
 }
