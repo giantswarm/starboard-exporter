@@ -107,7 +107,7 @@ func main() {
 	var kubescapeVulnerabilityScansEnabled bool
 	var autoMemLimitEnabled bool
 	var autoMemLimitRatio float64
-	targetLabels := []vulnerabilityreport.VulnerabilityLabel{}
+	var targetLabels []vulnerabilityreport.VulnerabilityLabel
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -195,7 +195,7 @@ func main() {
 
 	// Print Vulnerabilities target labels.
 	if len(targetLabels) > 0 {
-		tl := []string{}
+		var tl []string
 		for _, l := range targetLabels {
 			tl = append(tl, l.Name)
 		}
