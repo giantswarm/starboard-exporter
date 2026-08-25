@@ -26,21 +26,21 @@ type ShardHelper struct {
 	ring             *consistent.Consistent
 }
 
-// Returns the number of members/peers currently in the hash ring.
+// MemberCount returns the number of members/peers currently in the hash ring.
 func (r *ShardHelper) MemberCount() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return len(r.ring.GetMembers())
 }
 
-// Returns the name (IP) of the shard which should own a provided object name.
+// GetShardOwner returns the name (IP) of the shard which should own a provided object name.
 func (r *ShardHelper) GetShardOwner(input string) string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.ring.LocateKey([]byte(input)).String()
 }
 
-// Returns whether the current shard should own the object with the provided name.
+// ShouldOwn returns whether the current shard should own the object with the provided name.
 func (r *ShardHelper) ShouldOwn(input string) bool {
 	return r.GetShardOwner(input) == r.PodIP
 }
