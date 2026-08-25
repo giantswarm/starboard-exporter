@@ -115,17 +115,17 @@ func BuildPeerInformer(peerRing *ShardHelper, log logr.Logger) cache.SharedIndex
 	// Set handlers for new/updated/deleted endpointslices.
 	// We use the informer store to list EndpointSlices to reduce load on the API server.
 	handlers := cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
+		AddFunc: func(obj any) {
 			// Might be valid to add members based on just the added EndpointSlice.
 			// But to be safe we will update members based on all EndpointSlices.
 			updateAllEndpoints(toEndpointSlices(informer.GetStore().List(), log), peerRing, log)
 		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
+		UpdateFunc: func(oldObj, newObj any) {
 			// On update some of the endpoints may have been moved to a different EndpointSlice.
 			// We have to set members based on all EndpointSlices.
 			updateAllEndpoints(toEndpointSlices(informer.GetStore().List(), log), peerRing, log)
 		},
-		DeleteFunc: func(obj interface{}) {
+		DeleteFunc: func(obj any) {
 			// On delete some of the endpoints may exist in other EndpointSlices.
 			// We have to set members based on all EndpointSlices.
 			updateAllEndpoints(toEndpointSlices(informer.GetStore().List(), log), peerRing, log)
@@ -169,7 +169,7 @@ func updateAllEndpoints(slices []*discoveryv1.EndpointSlice, ring *ShardHelper, 
 	log.Info(fmt.Sprintf("updated peer list with %d endpoints: %v", len(ipSet), ipSet))
 }
 
-func toEndpointSlices(objs []interface{}, log logr.Logger) []*discoveryv1.EndpointSlice {
+func toEndpointSlices(objs []any, log logr.Logger) []*discoveryv1.EndpointSlice {
 	results := make([]*discoveryv1.EndpointSlice, 0, len(objs))
 	for _, obj := range objs {
 		eps, err := toEndpointSlice(obj)
@@ -183,7 +183,7 @@ func toEndpointSlices(objs []interface{}, log logr.Logger) []*discoveryv1.Endpoi
 	return results
 }
 
-func toEndpointSlice(obj interface{}) (*discoveryv1.EndpointSlice, error) {
+func toEndpointSlice(obj any) (*discoveryv1.EndpointSlice, error) {
 	eps := &discoveryv1.EndpointSlice{}
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.(*unstructured.Unstructured).UnstructuredContent(), eps)
 	if err != nil {
