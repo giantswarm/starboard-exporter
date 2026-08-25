@@ -259,7 +259,7 @@ func main() {
 	defer close(stopInformer)
 
 	informerLog := ctrl.Log.WithName("informer").WithName("Endpoints")
-	inf := utils.BuildPeerInformer(stopInformer, peerRing, consistentCfg, informerLog)
+	inf := utils.BuildPeerInformer(peerRing, informerLog)
 	go inf.Run(stopInformer)
 
 	// Wait for the ring to be synced for the first time so we can use it immediately.

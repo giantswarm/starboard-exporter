@@ -93,7 +93,7 @@ func BuildPeerHashRing(consistentCfg consistent.Config, podIP string, serviceNam
 	}
 }
 
-func BuildPeerInformer(stopper chan struct{}, peerRing *ShardHelper, ringConfig consistent.Config, log logr.Logger) cache.SharedIndexInformer {
+func BuildPeerInformer(peerRing *ShardHelper, log logr.Logger) cache.SharedIndexInformer {
 
 	dc, err := dynamic.NewForConfig(ctrl.GetConfigOrDie())
 	if err != nil {
