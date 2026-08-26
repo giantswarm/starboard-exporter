@@ -5,10 +5,13 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/f3a2cc57c7df97421d3f0b1772a3aa44143cdb43/pkg/gen/input/precommit/internal/file/schema.yaml.template
+#    https://github.com/giantswarm/devctl/blob/529e8924bb4b0b60fb205dbbfb874ffc09d73e09/pkg/gen/input/precommit/internal/file/schema.yaml.template
 #
 
+# The generated app-platform file goes first so keys the chart defines itself
+# in values.yaml keep their own schema on merge.
 values:
+  - helm/starboard-exporter/zz_generated.app-platform.values.yaml
   - helm/starboard-exporter/values.yaml
 
 draft: 2020
@@ -28,8 +31,8 @@ k8sSchemaVersion: "v1.33.1"
 
 useHelmDocs: true
 
-noAdditionalProperties: false
+noAdditionalProperties: true
 noDefaultGlobal: false
 
 schemaRoot:
-  additionalProperties: true
+  additionalProperties: false
