@@ -19,6 +19,7 @@ package configauditreport
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	aqua "github.com/aquasecurity/trivy-operator/pkg/apis/aquasecurity/v1alpha1"
 	"github.com/go-logr/logr"
@@ -86,7 +87,7 @@ func (r *ConfigAuditReportReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		// Publish summary and CVE metrics for this report.
 		publishSummaryMetrics(report)
 
-		if utils.SliceContains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
+		if slices.Contains(report.GetFinalizers(), ConfigAuditReportFinalizer) {
 			// Remove the finalizer if we're the shard owner.
 			ctrlutil.RemoveFinalizer(report, ConfigAuditReportFinalizer)
 			if err := r.Update(ctx, report); err != nil {

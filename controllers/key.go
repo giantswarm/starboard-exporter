@@ -7,4 +7,4 @@ const (
 	ShardOwnerLabel    = "starboard-exporter.giantswarm.io/shard-owner"
 )
 
-var DefaultRequeueDuration = (time.Minute * 5)
+var DefaultRequeueDuration = time.Minute * 5
