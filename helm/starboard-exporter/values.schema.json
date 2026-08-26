@@ -81,7 +81,7 @@
                 },
                 "vulnerabilityReports": {
                     "type": "object",
-                    "additionalProperties": false,
+                    "additionalProperties": true,
                     "properties": {
                         "scanners": {
                             "type": "object",
@@ -189,7 +189,7 @@
                         },
                         "labels": {
                             "type": "object",
-                            "additionalProperties": false
+                            "additionalProperties": true
                         },
                         "metricRelabelings": {
                             "type": "array"
@@ -224,7 +224,7 @@
         },
         "nodeSelector": {
             "type": "object",
-            "additionalProperties": false
+            "additionalProperties": true
         },
         "pod": {
             "type": "object",
@@ -252,11 +252,11 @@
         },
         "podAnnotations": {
             "type": "object",
-            "additionalProperties": false
+            "additionalProperties": true
         },
         "podLabels": {
             "type": "object",
-            "additionalProperties": false
+            "additionalProperties": true
         },
         "podSecurityContext": {
             "type": "object",
