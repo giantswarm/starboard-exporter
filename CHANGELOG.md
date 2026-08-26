@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix failing `pre-commit` CI check on `main` by explicitly discarding the never-failing `hash.Hash.Write` return value in the sharding test helper.
+- Accept user-defined keys in the free-form maps `monitoring.serviceMonitor.labels`, `nodeSelector`, `podAnnotations`, and `podLabels` again. Since 1.2.6 the generated `values.schema.json` gave these `additionalProperties: false` with no declared `properties`, which rejects *every* key, so any release setting e.g. `monitoring.serviceMonitor.labels` failed with `additional properties '...' not allowed`.
+- Accept the deprecated `exporter.vulnerabilityReports.enabled` value again. It is still honoured by `templates/_helpers.tpl` for backwards compatibility, but 1.2.6 dropped it from the schema and closed `additionalProperties` on its parent.
 
 ## [1.1.0] - 2026-06-18
 

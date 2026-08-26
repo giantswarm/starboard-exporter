@@ -18,11 +18,11 @@ pod:
   group:
     id: 1000
 
-nodeSelector: {}
+nodeSelector: {}  # @schema additionalProperties: true
 tolerations: []
 
 # Additional custom pod labels
-podLabels: {}
+podLabels: {}  # @schema additionalProperties: true
 
 # Pod securityContext
 podSecurityContext:
@@ -60,7 +60,10 @@ exporter:
   configAuditReports:
     enabled: true
 
-  vulnerabilityReports:
+  # additionalProperties is kept open so the deprecated `enabled` key (superseded by
+  # `scanners.trivy.enabled` in 1.0.0) still validates. _helpers.tpl continues to honour
+  # it, so rejecting it in the schema would break charts that still set it.
+  vulnerabilityReports:  # @schema additionalProperties: true
     # Shared configuration for all vulnerability scanners
     targetLabels: []
       # - image_namespace
@@ -77,7 +80,7 @@ exporter:
 monitoring:
   serviceMonitor:
     enabled: true
-    labels: {}
+    labels: {}  # @schema additionalProperties: true
     relabelings:
       - action: labeldrop
         regex: pod|service|container
@@ -90,7 +93,7 @@ monitoring:
 networkpolicy:
   enabled: true
 
-podAnnotations: {}
+podAnnotations: {}  # @schema additionalProperties: true
 
 minReplicas: &minReplicas 2
 maxReplicas: &maxReplicas 97  # The number of replicas is limited to 97 by the current sharding math. See https://www.giantswarm.io/blog/cveing-is-believing
