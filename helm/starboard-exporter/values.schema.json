@@ -1,22 +1,63 @@
 {
-    "$schema": "http://json-schema.org/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
-        "customMetricsHPA": {
+        "autoMemoryLimit": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "enabled": {
                     "type": "boolean"
                 },
-                "maxReplicas": {
-                    "type": "integer"
+                "ratio": {
+                    "type": "number"
+                }
+            }
+        },
+        "baseDomain": {
+            "type": "string"
+        },
+        "bootstrapMode": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "chartOperator": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "ciliumNetworkPolicy": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "cluster": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "clusterCA": {
+            "type": "string"
+        },
+        "clusterCIDR": {
+            "type": "string"
+        },
+        "clusterDNSIP": {
+            "type": "string"
+        },
+        "clusterID": {
+            "type": "string"
+        },
+        "customMetricsHPA": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
                 },
+                "maxReplicas": {},
                 "metricName": {
                     "type": "string"
                 },
-                "minReplicas": {
-                    "type": "integer"
-                },
+                "minReplicas": {},
                 "targetAverageValueSeconds": {
                     "type": "integer"
                 }
@@ -24,9 +65,11 @@
         },
         "exporter": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "configAuditReports": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "enabled": {
                             "type": "boolean"
@@ -38,31 +81,24 @@
                 },
                 "vulnerabilityReports": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
-                        "enabled": {
-                            "type": "boolean",
-                            "description": "Deprecated: Use scanners.trivy.enabled instead. Maintained for backwards compatibility."
-                        },
-                        "targetLabels": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "Shared labels to add to all vulnerability report metrics"
-                        },
                         "scanners": {
                             "type": "object",
+                            "additionalProperties": false,
                             "properties": {
-                                "trivy": {
+                                "kubescape": {
                                     "type": "object",
+                                    "additionalProperties": false,
                                     "properties": {
                                         "enabled": {
                                             "type": "boolean"
                                         }
                                     }
                                 },
-                                "kubescape": {
+                                "trivy": {
                                     "type": "object",
+                                    "additionalProperties": false,
                                     "properties": {
                                         "enabled": {
                                             "type": "boolean"
@@ -70,16 +106,24 @@
                                     }
                                 }
                             }
+                        },
+                        "targetLabels": {
+                            "type": "array"
                         }
                     }
                 }
             }
         },
+        "gcpProject": {
+            "type": "string"
+        },
         "global": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "podSecurityStandards": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "enforced": {
                             "type": "boolean"
@@ -90,8 +134,12 @@
         },
         "image": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "name": {
+                    "type": "string"
+                },
+                "tag": {
                     "type": "string"
                 }
             }
@@ -101,16 +149,13 @@
         },
         "kedaScaledObject": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "enabled": {
                     "type": "boolean"
                 },
-                "maxReplicas": {
-                    "type": "integer"
-                },
-                "minReplicas": {
-                    "type": "integer"
-                },
+                "maxReplicas": {},
+                "minReplicas": {},
                 "triggers": {
                     "type": "array"
                 }
@@ -124,9 +169,11 @@
         },
         "monitoring": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "grafanaDashboard": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "enabled": {
                             "type": "boolean"
@@ -135,12 +182,14 @@
                 },
                 "serviceMonitor": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "enabled": {
                             "type": "boolean"
                         },
                         "labels": {
-                            "type": "object"
+                            "type": "object",
+                            "additionalProperties": false
                         },
                         "metricRelabelings": {
                             "type": "array"
@@ -149,6 +198,7 @@
                             "type": "array",
                             "items": {
                                 "type": "object",
+                                "additionalProperties": false,
                                 "properties": {
                                     "action": {
                                         "type": "string"
@@ -165,6 +215,7 @@
         },
         "networkpolicy": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "enabled": {
                     "type": "boolean"
@@ -172,13 +223,16 @@
             }
         },
         "nodeSelector": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": false
         },
         "pod": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "group": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "id": {
                             "type": "integer"
@@ -187,6 +241,7 @@
                 },
                 "user": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "id": {
                             "type": "integer"
@@ -196,19 +251,23 @@
             }
         },
         "podAnnotations": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": false
         },
         "podLabels": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": false
         },
         "podSecurityContext": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "runAsNonRoot": {
                     "type": "boolean"
                 },
                 "seccompProfile": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "type": {
                             "type": "string"
@@ -217,8 +276,12 @@
                 }
             }
         },
+        "provider": {
+            "type": "string"
+        },
         "registry": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "domain": {
                     "type": "string"
@@ -230,9 +293,11 @@
         },
         "resources": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "limits": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "cpu": {
                             "type": "string"
@@ -244,6 +309,7 @@
                 },
                 "requests": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "cpu": {
                             "type": "string"
@@ -255,25 +321,16 @@
                 }
             }
         },
-        "autoMemoryLimit": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "ratio": {
-                    "type": "number"
-                }
-            }
-        },
         "securityContext": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "allowPrivilegeEscalation": {
                     "type": "boolean"
                 },
                 "capabilities": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "drop": {
                             "type": "array",
@@ -294,6 +351,7 @@
                 },
                 "seccompProfile": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                         "type": {
                             "type": "string"
@@ -302,8 +360,50 @@
                 }
             }
         },
+        "subscriptionID": {
+            "type": "string"
+        },
         "tolerations": {
             "type": "array"
+        },
+        "verticalPodAutoscaler": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "containerPolicies": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "maxAllowed": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "integer"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "minAllowed": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "cpu": {
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
         }
     }
 }
