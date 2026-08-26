@@ -3,7 +3,7 @@ module github.com/giantswarm/starboard-exporter
 go 1.26.5
 
 require (
-	github.com/KimMachineGun/automemlimit v0.7.5
+	github.com/KimMachineGun/automemlimit v1.0.0
 	github.com/aquasecurity/trivy-operator v0.33.0
 	github.com/buraksezer/consistent v1.0.0
 	github.com/cespare/xxhash/v2 v2.3.0

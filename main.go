@@ -174,7 +174,7 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	if autoMemLimitEnabled {
-		if err := utils.SetupMemLimit(autoMemLimitRatio, setupLog); err != nil {
+		if err := utils.SetupMemLimit(context.Background(), autoMemLimitRatio, setupLog); err != nil {
 			setupLog.Error(err, "unable to setup automatic GOMEMLIMIT")
 			os.Exit(1)
 		}
