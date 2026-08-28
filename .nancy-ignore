@@ -21,3 +21,7 @@ CVE-2023-46565 until=2026-09-09 # github.com/osrg/gobgp/v3@v3.35.0
 CVE-2025-7464 until=2026-09-09 # github.com/osrg/gobgp/v3@v3.35.0
 CVE-2026-5123 until=2026-09-09 # github.com/osrg/gobgp/v3@v3.35.0
 CVE-2026-5124 until=2026-09-09 # github.com/osrg/gobgp/v3@v3.35.0
+CVE-2026-17106 until=2026-09-27 # github.com/moby/go-archive@v0.2.0
+CVE-2026-56864 until=2026-09-27 # golang.org/x/mod@v0.38.0
+CVE-2026-56865 until=2026-09-27 # golang.org/x/mod@v0.38.0
+CVE-2026-46603 until=2026-09-27 # golang.org/x/image@v0.44.0
