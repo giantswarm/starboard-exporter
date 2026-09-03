@@ -30,3 +30,4 @@ CVE-2026-84303 until=2026-10-03 # google.golang.org/grpc@v1.82.1
 CVE-2026-84304 until=2026-10-03 # google.golang.org/grpc@v1.82.1
 CVE-2026-56854 until=2026-10-03 # golang.org/x/crypto@v0.54.0
 CVE-2026-81872 until=2026-10-03 # go.opentelemetry.io/otel/sdk/log@v0.19.0
+CVE-2022-3248 until=2026-10-03 # github.com/openshift/api@v0.0.0-20231025170628-b8a18fdc040d
