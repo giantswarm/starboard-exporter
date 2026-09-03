@@ -10,7 +10,7 @@ require (
 	github.com/containers/image/v5 v5.36.2
 	github.com/go-logr/logr v1.4.4
 	github.com/google/go-cmp v0.7.0
-	github.com/kubescape/storage v0.0.297
+	github.com/kubescape/storage v0.0.331
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.24.1
 	gotest.tools v2.2.0+incompatible
@@ -49,8 +49,8 @@ require (
 	github.com/briandowns/spinner v1.23.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
-	github.com/cilium/cilium v1.17.15 // indirect
-	github.com/cilium/ebpf v0.17.1 // indirect
+	github.com/cilium/cilium v1.17.16 // indirect
+	github.com/cilium/ebpf v0.22.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.6.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containers/common v0.63.0 // indirect
