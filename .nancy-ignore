@@ -25,3 +25,4 @@ CVE-2026-17106 until=2026-09-27 # github.com/moby/go-archive@v0.2.0
 CVE-2026-56864 until=2026-09-27 # golang.org/x/mod@v0.38.0
 CVE-2026-56865 until=2026-09-27 # golang.org/x/mod@v0.38.0
 CVE-2026-46603 until=2026-09-27 # golang.org/x/image@v0.44.0
+CVE-2022-3248 until=2026-10-03 # github.com/openshift/api@v0.0.0-20231025170628-b8a18fdc040d
