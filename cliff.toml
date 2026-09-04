@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/d8ce2f1314947fcce5168f4d2d23d826a6c47311/pkg/gen/input/workflows/internal/file/cliff.toml.template
+#    https://github.com/giantswarm/devctl/blob/75e181edbd4e6fea29d2d69fdcc5760cda298b56/pkg/gen/input/workflows/internal/file/cliff.toml.template
 #
 # git-cliff config for the push-based auto-release flow.
 #
@@ -83,15 +83,19 @@ commit_preprocessors = [
 # feat -> Added, fix -> Fixed, all "internal change" types -> Changed,
 # security -> Security.
 #
-# `style` is the only type marked skip.
-# Bump decision is unaffected by these group names: git-cliff only bumps on
-# feat / fix / breaking regardless.
+# `docs` and `style` are marked skip. git-cliff decides the bump from the
+# commits that are NOT skipped: a breaking change bumps the major, `feat` the
+# minor, every other type at least the patch. A skipped commit is left out of
+# the release notes and of the bump, so a docs-only or style-only push to main
+# computes the current version and the workflow tags nothing; the change
+# ships with the next release. `chore` and `ci` keep releasing: a
+# `chore(deps)` bump changes what ships, a `ci` change how it is built.
 commit_parsers = [
   { message = "^feat",     group = "Added" },
   { message = "^fix",      group = "Fixed" },
   { message = "^refactor", group = "Changed" },
   { message = "^perf",     group = "Changed" },
-  { message = "^docs",     group = "Changed" },
+  { message = "^docs",     skip = true },
   { message = "^chore",    group = "Changed" },
   { message = "^test",     group = "Changed" },
   { message = "^build",    group = "Changed" },
