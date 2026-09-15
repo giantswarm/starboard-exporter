@@ -5,7 +5,7 @@ go 1.26.5
 require (
 	github.com/KimMachineGun/automemlimit v1.0.0
 	github.com/aquasecurity/trivy-operator v0.33.0
-	github.com/buraksezer/consistent v1.0.0
+	github.com/buraksezer/consistent v1.1.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/containers/image/v5 v5.36.2
 	github.com/go-logr/logr v1.4.4
