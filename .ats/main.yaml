@@ -1,6 +1,6 @@
-smoke-tests-cluster-type: kind
-
+# app-test-suite (ATS >= 1.0) config for the generated execute-chart-tests job,
+# which creates the kind cluster itself; the ATS 0.x `*-cluster-type` keys are
+# unknown to ATS 1.x and fail the job ("unrecognized arguments").
 skip-steps: [functional]
 
-upgrade-tests-cluster-type: kind
 upgrade-tests-app-catalog-url: https://giantswarm.github.io/giantswarm-catalog
