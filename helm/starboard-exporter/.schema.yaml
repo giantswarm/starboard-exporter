@@ -5,7 +5,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/529e8924bb4b0b60fb205dbbfb874ffc09d73e09/pkg/gen/input/precommit/internal/file/schema.yaml.template
+#    https://github.com/giantswarm/devctl/blob/19d53497d2de1bfdea8df623fc2d4c96be521bf6/pkg/gen/input/precommit/internal/file/schema.yaml.template
 #
 
 # The generated app-platform file goes first so keys the chart defines itself

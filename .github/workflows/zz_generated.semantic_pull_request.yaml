@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/1e74e9b34eaee80c19dd433c7c298a67ab812605/pkg/gen/input/workflows/internal/file/semantic_pull_request.yaml.template
+#    https://github.com/giantswarm/devctl/blob/2f703bd6f38776affc0a48fe41da33d2cb37714d/pkg/gen/input/workflows/internal/file/semantic_pull_request.yaml.template
 #
 name: semantic-pull-request
 
@@ -21,3 +21,35 @@ jobs:
     uses: giantswarm/github-workflows/.github/workflows/semantic-pull-request.yaml@main
     permissions:
       pull-requests: read
+    with:
+      # The action's stock parser reads the type with `\w*`, which cannot match
+      # a hyphen, so feat-rc/fix-rc fail to parse whatever `types` allows.
+      # Widen the type group by exactly the -rc suffix and nothing else; the
+      # three capturing groups stay type, scope, subject, which is the
+      # correspondence the action already defaults to.
+      header_pattern: '^(\w*(?:-rc)?)(?:\((.*)\))?!?: (.*)$'
+      # `types` REPLACES the action's default list rather than extending it, so
+      # all eleven defaults from commitizen/conventional-commit-types are
+      # repeated here, plus the additions below. Entries are regexes the action
+      # wraps in `^ $`.
+      #
+      # feat-rc/fix-rc mark a release candidate for the auto-release flow. They
+      # are accepted everywhere but only act in repositories generated with
+      # --release-workflow=auto-release; in a legacy repository they are inert.
+      #
+      # `security` is not one of the action's defaults and has to be listed to
+      # be accepted at all. cliff.toml maps it to the Security changelog group,
+      # which no title can reach while the type is rejected.
+      types: |
+        feat(-rc)?
+        fix(-rc)?
+        docs
+        style
+        refactor
+        perf
+        test
+        build
+        ci
+        chore
+        revert
+        security
