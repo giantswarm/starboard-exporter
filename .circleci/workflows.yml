@@ -5,7 +5,7 @@
 # workflow in .circleci/config.yml merges into this file at pipeline runtime.
 version: 2.1
 orbs:
-  architect: giantswarm/architect@10.3.0
+  architect: giantswarm/architect@10.11.1
 
 workflows:
   build:
@@ -81,6 +81,17 @@ workflows:
         push_to_appcatalog: false
         push_to_oci_registry: false
         persist_chart_archive: true
+        # app-build-suite fails a chart whose gsoci image references the registry
+        # does not carry. build-chart runs before this pipeline pushes its own
+        # image (a branch without branchPublish never pushes it), so that image
+        # at the version the chart is stamped with is exempt here; every other
+        # reference, the mirrored third-party images included, is resolved.
+        # push-chart and push-chart-release require the image job and resolve
+        # all of them.
+        pre-steps:
+        - run:
+            name: Exempt this pipeline's own image from the image reference check
+            command: echo 'export ABS_HELM_IMAGE_REFERENCE_VALIDATOR_OWN_IMAGE=gsoci.azurecr.io/giantswarm/starboard-exporter' >> "$BASH_ENV"
         requires:
         - go-build
         filters:
@@ -93,10 +104,17 @@ workflows:
     # Branch: run chart tests after build-chart. When branchPublish pushes a dev
     # image, the test also waits on push-to-registries -- run-tests-with-ats
     # deploys the chart, which pulls that image from gsoci, and gating on the
-    # push avoids an ImagePullBackOff race.
+    # push avoids an ImagePullBackOff race. The architect context carries the
+    # registry credentials the job hands to its kind node, so the chart can pull
+    # private images (gsociprivate) without imagePullSecrets. The kind cluster
+    # the job creates takes its configuration (feature gates, runtime config,
+    # patches, extra nodes) from .ats/kind-config.yaml when the repo carries one
+    # -- repo-owned, like .ats/main.yaml -- and its resource class from
+    # gen.ci.atsResourceClass in giantswarm/github (the orb default is medium).
     - architect/run-tests-with-ats:
         name: execute-chart-tests
-        app-test-suite_container_tag: "1.0.2"
+        context: architect
+        app-test-suite_container_tag: "1.0.3"
         # app-test-suite 1.x provisions no cluster: the job creates the kind
         # cluster and runs the pinned image against its kubeconfig.
         create_kind_cluster: true

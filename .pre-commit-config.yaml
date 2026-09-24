@@ -2,17 +2,22 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/2114c414f1a6f2610afaead99a6870edc847ed98/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#    https://github.com/giantswarm/devctl/blob/aff5b7e2719defc485ea6448770935ca014c7cdc/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
 #
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
+# Protobuf-generated code (protoc, buf: *_pb.ts, *_pb.js, *_pb2.py,
+# *_pb2_grpc.py, *.pb.go, *_grpc.pb.go) belongs to its generator: a hook that
+# rewrote it (end-of-file-fixer, go-imports, ruff --fix) would be undone by
+# the next generation, so no hook reads it.
+exclude: "(_pb2?|\\.pb)(_grpc)?\\.[^/]+$"
 repos:
   # base hooks
   #
   # helm/<chart>/charts/ holds vendored upstream subcharts (vendir-synced).
   # Those files are not repo-authored: the auto-fixing hooks would rewrite
   # them on every vendir bump and the next vendir sync would revert the fix,
-  # so the whitespace/shebang hooks skip the vendored subtree.
+  # so the whitespace/shebang/private-key hooks skip the vendored subtree.
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -20,6 +25,10 @@ repos:
       - id: check-shebang-scripts-are-executable
         exclude: "^helm/[^/]+/charts/.*"
       - id: detect-private-key
+        # Upstream charts document key formats with placeholder PEM headers
+        # (redis-ha's restore.ssh.key example) that the hook cannot tell from
+        # a key; gitleaks stays the scanner of record for the vendored subtree.
+        exclude: "^helm/[^/]+/charts/.*"
       - id: end-of-file-fixer
         exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*)"
       - id: mixed-line-ending
@@ -53,26 +62,16 @@ repos:
       - id: go-imports
         args: [ -local, github.com/giantswarm/starboard-exporter ]
 
-  # Helm chart schema for starboard-exporter: generate -> fix $ref -> normalize, as ONE hook.
+  # Helm chart schema for starboard-exporter: verify helm/starboard-exporter/values.schema.json is up to date.
   #
-  # This single local hook deliberately runs the whole schema pipeline. pre-commit does
-  # NOT feed hooks into each other: it runs each hook independently against the file on
-  # disk and fails the run if any hook modified it. So for a multi-fixer setup to pass,
-  # all fixers must agree on ONE resting format. Splitting these steps into separate
-  # hooks gives them rival resting formats and `pre-commit run -a` can then never
-  # converge -- reruns just ping-pong between formats and one hook always fails:
-  #
-  #   * `helm schema` regenerates the schema from values.yaml wholesale, in the
-  #     generator's own key ordering, and does not preserve existing formatting.
-  #   * `schemalint normalize` rewrites it into schemalint's canonical key ordering
-  #     (and unicode escaping), which is NOT the generator's ordering.
-  #   * the $ref fix below rewrites the generator's output again.
-  #
-  # Chained here, `schemalint normalize` is always the LAST writer, so the normalized
-  # form is the single resting format and the committed file is a fixed point -- the
-  # hook is a no-op on an already-processed schema and the run is clean. Read-only
-  # `schemalint-verify` then checks that resting format (it never rewrites, so it is not
-  # part of the conflict). See giantswarm/giantswarm#37267.
+  # `devctl gen precommit` now generates and writes helm/starboard-exporter/values.schema.json itself
+  # (running the same generate -> fix $ref -> normalize pipeline in-process, see
+  # giantswarm/devctl#2195), so this hook is READ-ONLY: it reproduces that pipeline to a
+  # scratch file and diffs it against the committed one, but never writes the committed
+  # file. A hook that regenerated files in place used to fight `schemalint-verify` and
+  # itself over key ordering, because pre-commit runs each hook independently against the
+  # file on disk and fails the run if any hook modifies it (giantswarm/giantswarm#37267);
+  # a read-only check has no resting format to fight over.
   #
   # The `$ref` step works around a generator bug: with `noAdditionalProperties: true` it
   # emits `additionalProperties: false` as a sibling of every bare `$ref`. Per JSON Schema
@@ -86,25 +85,40 @@ repos:
   # `additionalProperties` and set `unevaluatedProperties: false`.
   # Upstream bug: https://github.com/losisin/helm-values-schema-json/issues/317
   #
-  # This replaces both the external `losisin/helm-values-schema-json` hook and the
-  # separate `schemalint-normalize` hook. `schemalint` is installed by the hook itself
-  # (`additional_dependencies`, hence `language: golang`); `helm schema` needs the `schema`
-  # helm plugin -- the same requirement the external hook had, installed in the pre-commit
-  # CI workflow. The external hook wrapped `helm schema` in a script that checked for the
-  # plugin first, so the leading `helm plugin list` guard below keeps that actionable
-  # message (a dev without the plugin would otherwise just get `unknown command "schema"`).
+  # BOTH binaries are installed and pinned by the hook itself (`additional_dependencies`,
+  # hence `language: golang`), at the exact versions devctl's own go.mod requires (stamped
+  # in by the generator, not hardcoded here), so this reproduction runs the same versions
+  # devctl used to write the committed file.
+  #
+  # `helm-values-schema-json` is the module behind the `helm schema` plugin -- the very
+  # same binary, called directly, so nothing here depends on a helm plugin. It used to:
+  # the hook called a bare `helm schema`, resolved from whatever the developer had in
+  # their global helm plugin dir, while CI pinned a version in a different file. The old
+  # guard only checked that *a* plugin existed, never which version, so a wrong version
+  # printed "Passed" locally while rewriting the committed schema (v2.6.0 alone strips 41
+  # lines from hello-world-app's) and CI then rejected it.
   - repo: local
     hooks:
       - id: helm-schema-starboard-exporter
-        name: "generate + fix + normalize helm/starboard-exporter/values.schema.json"
+        name: "verify helm/starboard-exporter/values.schema.json is up to date"
         language: golang
-        additional_dependencies: ['github.com/giantswarm/schemalint/v2@v2.6.3']
+        additional_dependencies: ['github.com/giantswarm/schemalint/v2@v2.6.3', 'github.com/losisin/helm-values-schema-json/v2@v2.6.0']
         files: ^helm/starboard-exporter/(values\.yaml|\.schema\.yaml|values\.schema\.json|zz_generated\.app-platform\.values\.yaml)$
         pass_filenames: false
         require_serial: true
         entry: sh -c
         args:
-          - 'helm plugin list | grep -q "^schema[[:space:]]" || { echo "helm schema plugin missing, install it with: helm plugin install https://github.com/losisin/helm-values-schema-json"; exit 1; }; helm schema --config helm/starboard-exporter/.schema.yaml && python3 -c ''import json,sys; h=lambda o: {**{k:v for k,v in o.items() if k!="additionalProperties"},"unevaluatedProperties":False} if ("$ref" in o and o.get("additionalProperties") is False) else o; p=sys.argv[1]; f=open(p,encoding="utf-8"); d=json.load(f,object_hook=h); f.close(); f=open(p,"w",encoding="utf-8"); json.dump(d,f); f.close()'' helm/starboard-exporter/values.schema.json && schemalint normalize helm/starboard-exporter/values.schema.json -o helm/starboard-exporter/values.schema.json --force'
+          - |
+            set -e
+            tmp=$(mktemp)
+            trap 'rm -f "$tmp"' EXIT
+            helm-values-schema-json --config helm/starboard-exporter/.schema.yaml -o "$tmp"
+            python3 -c 'import json,sys; h=lambda o: {**{k:v for k,v in o.items() if k!="additionalProperties"},"unevaluatedProperties":False} if ("$ref" in o and o.get("additionalProperties") is False) else o; p=sys.argv[1]; f=open(p,encoding="utf-8"); d=json.load(f,object_hook=h); f.close(); f=open(p,"w",encoding="utf-8"); json.dump(d,f); f.close()' "$tmp"
+            schemalint normalize "$tmp" -o "$tmp" --force
+            if ! diff -u helm/starboard-exporter/values.schema.json "$tmp"; then
+              echo "helm/starboard-exporter/values.schema.json is out of date -- run 'devctl gen precommit' and commit the result" >&2
+              exit 1
+            fi
   - repo: https://github.com/giantswarm/schemalint
     rev: v2.6.3
     hooks:

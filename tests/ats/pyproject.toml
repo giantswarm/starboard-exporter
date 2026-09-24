@@ -7,17 +7,18 @@
 # github>giantswarm/renovate-presets:tests-ats.json5.
 #
 # ATS runs `uv sync` in this directory and `uv run pytest -m <scenario>`. Pins
-# are exact == and chosen to resolve together: pytest is held below 9 so it
-# stays compatible with pytest-helm-charts (which requires pytest<9).
+# are exact == and chosen to resolve together: pytest must satisfy the pytest
+# range pytest-helm-charts declares (1.3.5 requires pytest>=9.0.2,<10); uv.lock
+# is resolved from this file (`uv lock` here) and proves the set resolves.
 [project]
 name = "ats-tests"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "pytest-helm-charts==1.3.4",
-    "pytest==8.4.2",
+    "pytest-helm-charts==1.3.5",
+    "pytest==9.1.1",
     "pykube-ng==23.6.0",
-    "pytest-rerunfailures==16.3",
+    "pytest-rerunfailures==16.6.1",
     "requests==2.34.2",
 ]
 

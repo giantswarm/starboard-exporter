@@ -17,9 +17,9 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "pykube-ng", specifier = "==23.6.0" },
-    { name = "pytest", specifier = "==8.4.2" },
-    { name = "pytest-helm-charts", specifier = "==1.3.4" },
-    { name = "pytest-rerunfailures", specifier = "==16.3" },
+    { name = "pytest", specifier = "==9.1.1" },
+    { name = "pytest-helm-charts", specifier = "==1.3.5" },
+    { name = "pytest-rerunfailures", specifier = "==16.6.1" },
     { name = "requests", specifier = "==2.34.2" },
 ]
 
@@ -245,7 +245,7 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "8.4.2"
+version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -254,36 +254,36 @@ dependencies = [
     { name = "pluggy" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/5c/00a0e072241553e1a7496d638deababa67c5058571567b92a7eaa258397c/pytest-8.4.2.tar.gz", hash = "sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01", size = 1519618, upload-time = "2025-09-04T14:34:22.711Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/47/b9efed96c114afcfa3c9d3fe98a76a1d14c74a9e266d397cf6eb64be5e01/pytest-9.1.1.tar.gz", hash = "sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313", size = 1636369, upload-time = "2026-06-19T10:58:32.857Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl", hash = "sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79", size = 365750, upload-time = "2025-09-04T14:34:20.226Z" },
+    { url = "https://files.pythonhosted.org/packages/24/25/1de2678b631f5a49215c6c96fff41ba892b0a34df68d6d80292b1b48aa7f/pytest-9.1.1-py3-none-any.whl", hash = "sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c", size = 386536, upload-time = "2026-06-19T10:58:31.347Z" },
 ]
 
 [[package]]
 name = "pytest-helm-charts"
-version = "1.3.4"
+version = "1.3.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "deprecated" },
     { name = "pykube-ng" },
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/19/0113b54b8799f42a4848de8501c14ff95c2d5533ce6c2feeeb12f8e74358/pytest_helm_charts-1.3.4.tar.gz", hash = "sha256:08261ece312d2dae9577098d06a6da3de5dee7aafad0b7d372b4e000f86b3ad4", size = 31532, upload-time = "2025-12-23T12:20:36.071Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7b/23/6a6cad43c09219fbd727be1da619d4c4df07a59968e4879603d7308f43d7/pytest_helm_charts-1.3.5.tar.gz", hash = "sha256:977ca141a09763de84f018236dcbd2c8b533c7adde97898b8c2a19537b44c872", size = 31586, upload-time = "2026-09-10T12:37:18.959Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e4/e6/ccc9b38b80df85c56877f0d1c615185912ba7db2f14aa35a3bd221ff91fd/pytest_helm_charts-1.3.4-py3-none-any.whl", hash = "sha256:c8284c36f8c135274e76c6495cf011a5b02a0106a964549901e317dad556e688", size = 50599, upload-time = "2025-12-23T12:20:37.213Z" },
+    { url = "https://files.pythonhosted.org/packages/62/12/17e1b4fb9598b97d96b90de155725b67615c946717d2f5a396cdb7c7240b/pytest_helm_charts-1.3.5-py3-none-any.whl", hash = "sha256:e5b3db4418dc9560fc01c19b81b8e34bb8c5d749eaebf2fa9cb7dc3ec952300c", size = 50688, upload-time = "2026-09-10T12:37:17.709Z" },
 ]
 
 [[package]]
 name = "pytest-rerunfailures"
-version = "16.3"
+version = "16.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4d/f0/74f8e685be7ecd1572c1256132f18fce3a665d7e07649a3f23b7eb2d3bec/pytest_rerunfailures-16.3.tar.gz", hash = "sha256:37c9b1231c8083e9f4e724f50f7a21241822f9516c15c700ebbf218d6452355c", size = 34148, upload-time = "2026-05-22T06:51:22.292Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/ce/065fde089d5a7f46fe8372c3f340c7aaa8708734d2e8ae3032f0c29a4b1d/pytest_rerunfailures-16.6.1.tar.gz", hash = "sha256:20ac38d31f9319c4e8f43fe0d0e9c22755508e8e7987a88de6d7fd93fc6bdabb", size = 47719, upload-time = "2026-09-03T06:50:07.893Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f8/98/58a71d68d3126d7f6a6ed1944c37ec207a4ff3dc66cad3bed7b59d38df61/pytest_rerunfailures-16.3-py3-none-any.whl", hash = "sha256:6bdfb8ffb46c46072e6c16bdedee38b6c13eac620d9415ed5b63152cbf283170", size = 15396, upload-time = "2026-05-22T06:51:20.547Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/0d/4da1860f933e271569405fd8adef7f3e7f1c2bd1b544d2ee83a8e0acf1d2/pytest_rerunfailures-16.6.1-py3-none-any.whl", hash = "sha256:0c38d314a0a7e32795f2dbdeeb2b3d141ecf3d3abe10c8c32dae223d45ac7b3d", size = 21035, upload-time = "2026-09-03T06:50:06.601Z" },
 ]
 
 [[package]]

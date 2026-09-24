@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/75e181edbd4e6fea29d2d69fdcc5760cda298b56/pkg/gen/input/workflows/internal/file/cliff.toml.template
+#    https://github.com/giantswarm/devctl/blob/222eaeb41d8eac44c7b6862c0df057e840da8e1f/pkg/gen/input/workflows/internal/file/cliff.toml.template
 #
 # git-cliff config for the push-based auto-release flow.
 #
@@ -49,21 +49,30 @@ sort_commits = "oldest"
 #      `use_branch_tags`, git-cliff only considers tags reachable from the
 #      checked-out branch, so the 2.x line correctly bumps from v2.8.0.
 #
-#   2. Stray tags on side branches. A pre-release/preview tag created on an
-#      unmerged branch (e.g. someone tags v1.2.9-dev.0 on a `bump/*` branch)
-#      is the global semver max but is NOT reachable from main. Without this,
-#      it silently becomes the baseline for every subsequent main release and,
-#      because bumping a pre-release only increments the pre-release counter,
-#      a real `feat:` on main produces v1.2.9-dev.1 instead of v1.3.0.
+#   2. Stray tags on side branches. A tag created on an unmerged branch
+#      (e.g. someone tags v9.0.0 while testing a release on a `bump/*`
+#      branch) is the global semver max but is NOT reachable from main.
+#      Without this it silently becomes the baseline for every subsequent
+#      main release, and a `feat:` on a v1.2.8 line produces v9.1.0.
 #      Branch-scoped tags exclude it.
 use_branch_tags = true
 
-# Belt-and-suspenders for the pre-release case above: drop `-dev`/`-rc`/etc.
-# tags from `--bump`'s consideration entirely. `use_branch_tags` only excludes
-# a stray pre-release tag when it lives on a SIDE branch; if one is ever
-# created directly on a release branch it would be reachable, and only this
-# filter keeps it from poisoning the version line.
-ignore_tags = '.*-(dev|rc|alpha|beta)\..*'
+# Only vX.Y.Z is a release. git-cliff applies this before everything else, so
+# a tag that does not match is not a boundary for `--unreleased`, not a
+# baseline for `--bump` and not a release in the changelog. That is what keeps
+# a candidate cycle one range: the auto-release flow cuts vX.Y.Z-rc.N tags on
+# the branch head, and counting those as releases would cut every later
+# candidate, and the stable release that closes the cycle, from a partial
+# delta -- a cycle a `feat-rc` put on a minor falls back to a patch. The price
+# is that candidate notes are cumulative: rc.2 lists what rc.1 listed, plus
+# what is new.
+#
+# It also keeps a pre-release or preview tag off the version line wherever it
+# lives, which `use_branch_tags` alone only does on a SIDE branch: such a name
+# always carries a suffix, so it can never match. The workflow's
+# `git describe --match='v*.*.*' --exclude='*-*' --exclude='*+*'` baseline
+# selects the same tags, and the two have to stay in step.
+tag_pattern = '^v[0-9]+\.[0-9]+\.[0-9]+$'
 
 # Strip the trailing " (#N)" that GitHub appends to squash-merge commit
 # messages. Our template renders the PR link explicitly via cliff's GitHub
@@ -75,8 +84,14 @@ ignore_tags = '.*-(dev|rc|alpha|beta)\..*'
 # commit text -- git-cliff's default regex mode is single-line). This
 # anchoring keeps `(#N)` references that appear inside commit bodies
 # untouched.
+#
+# feat-rc/fix-rc mark a release candidate. The auto-release workflow reads the
+# raw subjects to spot them; git-cliff must see the plain type, because
+# `features_always_bump_minor` keys off the type being exactly "feat" and an
+# un-normalised feat-rc would bump patch instead of minor.
 commit_preprocessors = [
   { pattern = '(?m) \(#\d+\)$', replace = "" },
+  { pattern = '^(feat|fix)-rc', replace = "${1}" },
 ]
 
 # Map commit types to changelog groups (Keep-a-Changelog convention):
