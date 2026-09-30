@@ -82,15 +82,16 @@ require (
 	github.com/go-openapi/strfmt v0.26.4 // indirect
 	github.com/go-openapi/swag v0.26.1 // indirect
 	github.com/go-openapi/swag/cmdutils v0.26.1 // indirect
-	github.com/go-openapi/swag/conv v0.26.1 // indirect
+	github.com/go-openapi/swag/conv v0.29.2 // indirect
 	github.com/go-openapi/swag/fileutils v0.26.1 // indirect
 	github.com/go-openapi/swag/jsonname v0.26.1 // indirect
 	github.com/go-openapi/swag/jsonutils v0.26.1 // indirect
 	github.com/go-openapi/swag/loading v0.26.1 // indirect
 	github.com/go-openapi/swag/mangling v0.26.1 // indirect
 	github.com/go-openapi/swag/netutils v0.26.1 // indirect
+	github.com/go-openapi/swag/pools v0.29.2 // indirect
 	github.com/go-openapi/swag/stringutils v0.26.1 // indirect
-	github.com/go-openapi/swag/typeutils v0.26.1 // indirect
+	github.com/go-openapi/swag/typeutils v0.29.2 // indirect
 	github.com/go-openapi/swag/yamlutils v0.26.1 // indirect
 	github.com/go-openapi/validate v0.26.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
@@ -227,11 +228,15 @@ replace github.com/hashicorp/go-getter v1.7.4 => github.com/hashicorp/go-getter 
 
 replace github.com/open-policy-agent/opa v0.65.0 => github.com/open-policy-agent/opa v0.70.0
 
-replace golang.org/x/crypto v0.28.0 => golang.org/x/crypto v0.36.0
+replace (
+	golang.org/x/crypto v0.28.0 => golang.org/x/crypto v0.36.0
+	golang.org/x/crypto v0.54.0 => golang.org/x/crypto v0.57.0
+)
 
 replace (
 	github.com/containerd/containerd v1.7.23 => github.com/containerd/containerd v1.7.27
 	github.com/containerd/containerd v1.7.25 => github.com/containerd/containerd v1.7.27
+	github.com/containerd/containerd v1.7.28 => github.com/containerd/containerd v1.7.36
 )
 
 replace helm.sh/helm/v3 v3.17.1 => helm.sh/helm/v3 v3.17.3
@@ -255,9 +260,15 @@ replace github.com/sigstore/fulcio v1.6.6 => github.com/sigstore/fulcio v1.8.7
 
 replace github.com/quic-go/quic-go v0.57.0 => github.com/quic-go/quic-go v0.60.0
 
-replace github.com/containerd/containerd/v2 v2.3.1 => github.com/containerd/containerd/v2 v2.3.2
+replace (
+	github.com/containerd/containerd/v2 v2.3.1 => github.com/containerd/containerd/v2 v2.3.2
+	github.com/containerd/containerd/v2 v2.3.3 => github.com/containerd/containerd/v2 v2.4.1
+)
 
-replace go.mongodb.org/mongo-driver v1.17.1 => go.mongodb.org/mongo-driver v1.17.9
+replace (
+	go.mongodb.org/mongo-driver v1.17.1 => go.mongodb.org/mongo-driver v1.17.9
+	go.mongodb.org/mongo-driver v1.17.7 => go.mongodb.org/mongo-driver v1.17.10
+)
 
 replace github.com/cilium/ebpf v0.17.1 => github.com/cilium/ebpf v0.22.0
 
@@ -274,3 +285,11 @@ replace go.opentelemetry.io/otel v1.43.0 => go.opentelemetry.io/otel v1.45.0
 replace github.com/sigstore/sigstore-go v1.1.4 => github.com/sigstore/sigstore-go v1.3.0
 
 replace go.opentelemetry.io/otel/sdk v1.44.0 => go.opentelemetry.io/otel/sdk v1.46.0
+
+replace github.com/go-openapi/swag/jsonutils v0.26.1 => github.com/go-openapi/swag/jsonutils v0.29.2
+
+replace github.com/moby/sys/user v0.4.0 => github.com/moby/sys/user v0.4.1
+
+replace golang.org/x/mod v0.38.0 => golang.org/x/mod v0.41.0
+
+replace helm.sh/helm/v4 v4.2.3 => helm.sh/helm/v4 v4.3.0
