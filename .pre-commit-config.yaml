@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/aff5b7e2719defc485ea6448770935ca014c7cdc/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#    https://github.com/giantswarm/devctl/blob/9a048de85505c3accd94b9665f6a154bc8429f07/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
 #
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
@@ -30,11 +30,11 @@ repos:
         # a key; gitleaks stays the scanner of record for the vendored subtree.
         exclude: "^helm/[^/]+/charts/.*"
       - id: end-of-file-fixer
-        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*)"
+        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*|.*.patch)"
       - id: mixed-line-ending
-        exclude: "^helm/[^/]+/charts/.*"
+        exclude: "(^helm/[^/]+/charts/.*|.*.patch)"
       - id: trailing-whitespace
-        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*)"
+        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*|.*.patch)"
 
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
@@ -54,8 +54,8 @@ repos:
           - -E=gosec
           - -E=goconst
           - -E=govet
-          # timeout is needed for CI
-          - --timeout=300s
+          # No --timeout: golangci-lint v2 has none by default and a flag would
+          # override a repo's `run.timeout` in .golangci.yml, its place to set one.
           # List all issues found
           - --max-same-issues=0
           - --max-issues-per-linter=0
@@ -126,10 +126,15 @@ repos:
         pass_filenames: false
         args:
           - helm/starboard-exporter/values.schema.json
+  # helm-docs finds every chart below helm/, the vendored subcharts under
+  # helm/<chart>/charts/ included; --chart-to-generate limits the README it
+  # writes to the repo's own charts, so the vendored subtree stays untouched
+  # like it does for the base hooks above.
   - repo: https://github.com/norwoodj/helm-docs
     rev: "v1.14.2"
     hooks:
       - id: helm-docs
         args:
           - --chart-search-root=helm
+          - --chart-to-generate=helm/starboard-exporter
           - --sort-values-order=file
