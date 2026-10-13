@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/036b157e504dc6465752a13be901b7a2e306392a/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#    https://github.com/giantswarm/devctl/blob/af30d32bc1f9d9864f0efd2078843c952fbfba8f/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
 #
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
@@ -61,6 +61,18 @@ repos:
           - --max-issues-per-linter=0
       - id: go-imports
         args: [ -local, github.com/giantswarm/starboard-exporter ]
+
+  # Renovate's gomod manager reads a require line's trailing comment as one
+  # word (`// indirect`); a line whose comment has more words is skipped
+  # without a PR or a dashboard entry, so the dependency silently stops being
+  # updated. The explanation goes on a comment line above the require instead.
+  - repo: local
+    hooks:
+      - id: go-mod-require-comment
+        name: "go.mod require comment is one word (Renovate skips the line otherwise; move the explanation to a comment line above it)"
+        language: pygrep
+        files: (^|/)go\.mod$
+        entry: '^\s*(require\s+)?[A-Za-z0-9][^\s,]*[./][^\s,]*\s+v[0-9]\S*\s*//\s*\S+\s+\S'
 
   # Helm chart schema for starboard-exporter: verify helm/starboard-exporter/values.schema.json is up to date.
   #
