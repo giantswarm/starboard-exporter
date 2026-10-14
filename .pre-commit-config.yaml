@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/af30d32bc1f9d9864f0efd2078843c952fbfba8f/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#    https://github.com/giantswarm/devctl/blob/8f633b8ebe3132677b60fc6b0a5fdee946339bc7/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
 #
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
@@ -85,17 +85,31 @@ repos:
   # file on disk and fails the run if any hook modifies it (giantswarm/giantswarm#37267);
   # a read-only check has no resting format to fight over.
   #
-  # The `$ref` step works around a generator bug: with `noAdditionalProperties: true` it
-  # emits `additionalProperties: false` as a sibling of every bare `$ref`. Per JSON Schema
-  # 2020-12, `additionalProperties` only sees sibling `properties`/`patternProperties`
-  # -- NOT properties pulled in through `$ref` -- so it wrongly rejects every field the
-  # referenced schema defines (e.g. `helm template` fails with "additional properties
-  # 'podAntiAffinity' not allowed" for a k8s Affinity). The correct 2020-12 keyword is
-  # `unevaluatedProperties`, which DOES consider $ref-evaluated properties, but the tool
-  # cannot emit it and does not drop the bogus `additionalProperties` when annotated. So
-  # for every object that has both `$ref` and `additionalProperties: false` we drop
-  # `additionalProperties` and set `unevaluatedProperties: false`.
-  # Upstream bug: https://github.com/losisin/helm-values-schema-json/issues/317
+  # The `$ref` step repairs a JSON Schema 2020-12 defect: `additionalProperties: false` as
+  # a sibling of a `$ref`. `additionalProperties` only sees sibling
+  # `properties`/`patternProperties` -- NOT properties pulled in through `$ref` -- so such
+  # a node rejects every field the referenced schema defines (e.g. `helm template` fails
+  # with "additional properties 'podAntiAffinity' not allowed" for a k8s Affinity). The
+  # correct keyword is `unevaluatedProperties`, which DOES consider $ref-evaluated
+  # properties. So for every object that has both `$ref` and `additionalProperties: false`
+  # we drop `additionalProperties` and set `unevaluatedProperties: false`.
+  #
+  # The generator itself no longer produces this. It did until v2.6.0, which shipped
+  # https://github.com/losisin/helm-values-schema-json/pull/378 (fixing #317): at draft
+  # 2019 or later, with `noAdditionalProperties: true`, it now closes applicator-bearing
+  # nodes with `unevaluatedProperties` instead. devctl sets `draft: 2020`, so that holds
+  # here. Under v2.6.0 the step is a no-op on generated output -- measured over every
+  # repository that DECLARES the `helmchart` pre-commit flavour. The hook reaches more
+  # repositories than that: `helmchart` is also the default flavour for any repository
+  # with a `helm/` directory, so re-measure over those too before you act on the number.
+  #
+  # It stays for schemas the generator BUNDLES rather than generates. `bundle: true`
+  # inlines a `# @schema $ref: <file>` target verbatim, defect included, and the tool
+  # cannot be expected to rewrite third-party content. One repo depends on this today:
+  # security-profiles-operator-app vendors the upstream chart's own `values.schema.json`,
+  # whose `daemon.tolerations` items close a `$ref`ed k8s Toleration with
+  # `additionalProperties: false` and so reject `value` and `tolerationSeconds`.
+  # Before removing this step, re-run that measurement -- do not assume it is dead.
   #
   # BOTH binaries are installed and pinned by the hook itself (`additional_dependencies`,
   # hence `language: golang`), at the exact versions devctl's own go.mod requires (stamped
