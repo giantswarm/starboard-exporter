@@ -293,3 +293,5 @@ replace github.com/moby/sys/user v0.4.0 => github.com/moby/sys/user v0.4.1
 replace golang.org/x/mod v0.38.0 => golang.org/x/mod v0.41.0
 
 replace helm.sh/helm/v4 v4.2.3 => helm.sh/helm/v4 v4.3.0
+
+replace github.com/containerd/stargz-snapshotter/estargz v0.18.2 => github.com/containerd/stargz-snapshotter/estargz v0.19.0
