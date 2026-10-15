@@ -81,10 +81,16 @@ monitoring:
   serviceMonitor:
     enabled: true
     labels: {}  # @schema additionalProperties: true
-    relabelings:
+    # values.schema.json validates `relabelings` and `metricRelabelings` items
+    # against the Prometheus Operator RelabelConfig (ServiceMonitor v1 schema from
+    # datreeio/CRDs-catalog, pinned to a commit so the generated schema is
+    # reproducible; bump the commit to pick up a newer operator). Without this the
+    # generator infers the item schema from the defaults below and closes it, so
+    # e.g. `targetLabel` was rejected.
+    relabelings:  # @schema itemProperties: {}; itemRef: https://raw.githubusercontent.com/datreeio/CRDs-catalog/63669a570e231d4f1f8396d229a1de512bcf0a34/monitoring.coreos.com/servicemonitor_v1.json#/properties/spec/properties/endpoints/items/properties/relabelings/items
       - action: labeldrop
         regex: pod|service|container
-    metricRelabelings: []
+    metricRelabelings: []  # @schema itemRef: https://raw.githubusercontent.com/datreeio/CRDs-catalog/63669a570e231d4f1f8396d229a1de512bcf0a34/monitoring.coreos.com/servicemonitor_v1.json#/properties/spec/properties/endpoints/items/properties/relabelings/items
 
   grafanaDashboard:
     enabled: true
@@ -92,6 +98,10 @@ monitoring:
 
 networkpolicy:
   enabled: true
+
+psp:
+  # -- Deprecated since chart 0.7.8 and ignored. PodSecurityPolicy creation is controlled by `global.podSecurityStandards.enforced`. Declared only so values that still set it keep validating against the schema.
+  enabled: false  # @schema deprecated
 
 podAnnotations: {}  # @schema additionalProperties: true
 

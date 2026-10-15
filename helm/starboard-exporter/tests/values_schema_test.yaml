@@ -1,0 +1,91 @@
+suite: values schema
+templates:
+  - servicemonitor.yaml
+capabilities:
+  apiVersions:
+    - monitoring.coreos.com/v1
+tests:
+  - it: accepts a replace relabeling with targetLabel and replacement and renders it
+    set:
+      monitoring.serviceMonitor.relabelings:
+        - action: replace
+          replacement: my-cluster
+          targetLabel: cluster
+    asserts:
+      - notFailedTemplate: {}
+      - equal:
+          path: spec.endpoints[0].relabelings[0]
+          value:
+            action: replace
+            replacement: my-cluster
+            targetLabel: cluster
+
+  - it: accepts sourceLabels and modulus
+    set:
+      monitoring.serviceMonitor.metricRelabelings:
+        - action: hashmod
+          sourceLabels: [__address__, instance]
+          modulus: 4
+          targetLabel: __tmp_hash
+          separator: ";"
+    asserts:
+      - notFailedTemplate: {}
+      - equal:
+          path: spec.endpoints[0].metricRelabelings[0].modulus
+          value: 4
+
+  - it: accepts capitalised action names
+    set:
+      monitoring.serviceMonitor.relabelings:
+        - action: Replace
+          targetLabel: cluster
+          replacement: x
+        - action: LabelDrop
+          regex: tmp_.*
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: renders the default relabelings unchanged
+    asserts:
+      - equal:
+          path: spec.endpoints[0].relabelings
+          value:
+            - action: labeldrop
+              regex: pod|service|container
+
+  - it: rejects an unknown key in a relabeling
+    set:
+      monitoring.serviceMonitor.relabelings:
+        - action: replace
+          targetLabels: cluster
+    asserts:
+      - failedTemplate:
+          errorPattern: "additional properties 'targetLabels' not allowed"
+
+  - it: rejects an unknown relabel action in metricRelabelings
+    set:
+      monitoring.serviceMonitor.metricRelabelings:
+        - action: bogus
+    asserts:
+      - failedTemplate:
+          errorPattern: "metricRelabelings/0/action.*value must be one of"
+
+  - it: accepts the deprecated psp.enabled key
+    set:
+      psp.enabled: false
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: accepts an empty psp block
+    set:
+      psp: {}
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: still rejects unknown top-level keys
+    set:
+      podSecurityPolicy:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorPattern: "additional properties 'podSecurityPolicy' not allowed"
