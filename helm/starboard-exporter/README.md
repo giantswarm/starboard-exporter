@@ -45,7 +45,7 @@ A Helm chart for starboard-exporter, which exposes Prometheus metrics from Aqua 
 | monitoring.serviceMonitor.metricRelabelings | list | `[]` |  |
 | monitoring.grafanaDashboard.enabled | bool | `true` |  |
 | networkpolicy.enabled | bool | `true` |  |
-| psp.enabled | bool | `false` | Deprecated since chart 0.8.0 and ignored. PodSecurityPolicy creation is controlled by `global.podSecurityStandards.enforced`. Declared only so values that still set it keep validating against the schema. |
+| psp.enabled | bool | `false` | Deprecated since chart 0.7.8 and ignored. PodSecurityPolicy creation is controlled by `global.podSecurityStandards.enforced`. Declared only so values that still set it keep validating against the schema. |
 | podAnnotations | object | `{}` |  |
 | minReplicas | int | `2` |  |
 | maxReplicas | int | `97` |  |
