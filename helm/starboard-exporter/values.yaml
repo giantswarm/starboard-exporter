@@ -99,6 +99,10 @@ monitoring:
 networkpolicy:
   enabled: true
 
+psp:
+  # -- Deprecated since chart 0.8.0 and ignored. PodSecurityPolicy creation is controlled by `global.podSecurityStandards.enforced`. Declared only so values that still set it keep validating against the schema.
+  enabled: false  # @schema deprecated
+
 podAnnotations: {}  # @schema additionalProperties: true
 
 minReplicas: &minReplicas 2

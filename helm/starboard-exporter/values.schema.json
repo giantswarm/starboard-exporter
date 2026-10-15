@@ -1478,6 +1478,17 @@
         "provider": {
             "type": "string"
         },
+        "psp": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Deprecated since chart 0.8.0 and ignored. PodSecurityPolicy creation is controlled by `global.podSecurityStandards.enforced`. Declared only so values that still set it keep validating against the schema.",
+                    "deprecated": true
+                }
+            }
+        },
         "registry": {
             "type": "object",
             "additionalProperties": false,

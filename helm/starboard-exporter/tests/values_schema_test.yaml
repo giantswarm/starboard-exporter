@@ -69,3 +69,23 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "metricRelabelings/0/action.*value must be one of"
+
+  - it: accepts the deprecated psp.enabled key
+    set:
+      psp.enabled: false
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: accepts an empty psp block
+    set:
+      psp: {}
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: still rejects unknown top-level keys
+    set:
+      podSecurityPolicy:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorPattern: "additional properties 'podSecurityPolicy' not allowed"
