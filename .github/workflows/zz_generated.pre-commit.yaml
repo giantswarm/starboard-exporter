@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/1607fb958d582f3f6fb2db45a022dddef0f1c2b5/pkg/gen/input/precommit/internal/file/pre-commit-action.yaml.template
+#    https://github.com/giantswarm/devctl/blob/866c0ff22d3282e555359a97edc9ab4c9fcab1fd/pkg/gen/input/precommit/internal/file/pre-commit-action.yaml.template
 #
 name: pre-commit
 
@@ -20,6 +20,7 @@ env:
 jobs:
   pre-commit:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -37,6 +38,20 @@ jobs:
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: "1.27"
+          cache: false
+      # setup-go restores its cache only on an exact go.sum match. The
+      # restore-keys prefix lets a PR that changes go.sum start from the
+      # latest cache instead of a cold build.
+      - name: Restore Go caches
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/.cache/golangci-lint
+          key: pre-commit-go-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            pre-commit-go-${{ runner.os }}-
       - name: Install goimports
         run: |
           go install golang.org/x/tools/cmd/goimports@v0.50.0

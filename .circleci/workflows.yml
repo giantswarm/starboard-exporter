@@ -5,7 +5,70 @@
 # workflow in .circleci/config.yml merges into this file at pipeline runtime.
 version: 2.1
 orbs:
-  architect: giantswarm/architect@10.13.6
+  architect: giantswarm/architect@10.13.9
+
+commands:
+  # Pre-steps of the chart-test jobs: pull the images run-tests-with-ats starts
+  # (app-test-suite, the kind node) before the orb does, so `docker run` and
+  # `kind create cluster` find them locally. The pull is logged in with the
+  # registry's credentials from the architect context: ACR throttles all
+  # anonymous pulls of a registry together as one identity, an authenticated
+  # pull has its own budget. A transient `toomanyrequests` (or any failed pull)
+  # is retried with backoff; ACR's Retry-After counts down to the end of its
+  # throttling period, at most about a minute, which the longer delays cover.
+  pull-chart-test-images:
+    parameters:
+      registry:
+        type: string
+      images:
+        description: Images to pull, space-separated.
+        type: string
+    steps:
+    - run:
+        name: Pull chart-test images (logged in, with retry)
+        environment:
+          PULL_REGISTRY: << parameters.registry >>
+          PULL_IMAGES: << parameters.images >>
+        command: |
+          delays="15 30 60 60 60"
+          retry() {
+            for delay in $delays ""; do
+              if "$@"; then return 0; fi
+              [ -n "$delay" ] || return 1
+              echo "Attempt failed, retrying in ${delay}s: $*"
+              sleep "$delay"
+            done
+          }
+
+          # Same input as architect/image-login-to-registries: one registry per
+          # line, "visibility registry username_envvar password_envvar push_dev".
+          # No xtrace: the loop resolves the password.
+          set +x
+          username_val=""
+          password_val=""
+          while read -r _ reg username password _; do
+            [ "$reg" = "$PULL_REGISTRY" ] && [ -n "$username" ] && [ -n "$password" ] || continue
+            case "$username$password" in *[!a-zA-Z0-9_]*) echo "Invalid credential variable name for $reg" >&2; exit 1 ;; esac
+            eval "username_val=\${$username:-}"
+            eval "password_val=\${$password:-}"
+          done \<<EOF
+          $(printf '%s' "${REGISTRIES_DATA_BASE64:-}" | base64 -d)
+          EOF
+          login() {
+            printf '%s' "$password_val" | docker login "$PULL_REGISTRY" --username "$username_val" --password-stdin
+          }
+          if [ -z "$username_val" ] || [ -z "$password_val" ]; then
+            echo "No $PULL_REGISTRY credentials in the job's context: pulling anonymously."
+          elif ! retry login; then
+            echo "Login to $PULL_REGISTRY failed: pulling anonymously."
+          fi
+
+          for image in $PULL_IMAGES; do
+            if ! retry docker pull "$image"; then
+              echo "Pulling $image failed after every retry." >&2
+              exit 1
+            fi
+          done
 
 workflows:
   build:
@@ -113,6 +176,8 @@ workflows:
     # patches, extra nodes) from .ats/kind-config.yaml when the repo carries one
     # -- repo-owned, like .ats/main.yaml -- and its resource class from
     # gen.ci.atsResourceClass in giantswarm/github (the orb default is medium).
+    # Its pre-steps pull the images it starts logged in and with retry (see
+    # pull-chart-test-images above).
     - architect/run-tests-with-ats:
         name: execute-chart-tests
         context: architect
@@ -120,6 +185,11 @@ workflows:
         # app-test-suite 1.x provisions no cluster: the job creates the kind
         # cluster and runs the pinned image against its kubeconfig.
         create_kind_cluster: true
+        kind_node_image: "gsoci.azurecr.io/giantswarm/kind-node:v1.37.0"
+        pre-steps:
+        - pull-chart-test-images:
+            registry: gsoci.azurecr.io
+            images: "gsoci.azurecr.io/giantswarm/app-test-suite:1.0.3 gsoci.azurecr.io/giantswarm/kind-node:v1.37.0"
         requires:
         - build-chart
         - push-to-registries
