@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/a4f557107ba40ca35ad94ca5b28360277914b2cb/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/48d8219323be4cd05f2eccad7ccfc71118b3ae82/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
 #
 # yamllint disable rule:truthy
 # Push-based release tagger + release-page publisher.
@@ -76,6 +76,8 @@ jobs:
       pull-requests: read
       # The stable run reads the commit statuses of the candidate it promotes.
       statuses: read
+    outputs:
+      tag: ${{ steps.decide.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -127,7 +129,9 @@ jobs:
           # pre-release is created with the tag, and the pipelines that build
           # and publish it report on its commit: a failed or still running one
           # refuses the promotion. A commit no pipeline reports on has nothing
-          # to wait for.
+          # to wait for. A failed CircleCI job the release does not require
+          # (advisory_jobs, the rule `devctl release wait` and `devctl release
+          # promote` apply) is a warning, not a refusal.
           if ! prerelease=$(gh release view "$rc" --json isPrerelease --jq .isPrerelease 2>/dev/null); then
             echo "::error title=Candidate not released::${rc} has no GitHub release; the run that cut it did not finish. Cut a new candidate."
             exit 1
@@ -138,13 +142,14 @@ jobs:
           fi
           # The API now and then answers with an empty or truncated body or a
           # 5xx: the read is retried with backoff, and only a failure on every
-          # try refuses the promotion.
+          # try refuses the promotion. The answer's first line is the number
+          # of contexts, every further one a context's latest
+          # "<state> <context>".
           request="repos/${GH_REPO}/commits/${rc}/status"
           tries=4
           for try in $(seq 1 "$tries"); do
-            if status=$(gh api "$request" --jq '"\(.state) \(.total_count)"') \
-              && read -r state count <<<"$status" \
-              && [ -n "$state" ] && [[ "$count" =~ ^[0-9]+$ ]]; then
+            if statuses=$(gh api -X GET "$request" -F per_page=100 --jq '.total_count, (.statuses[] | "\(.state) \(.context)")') \
+              && count=$(head -n 1 <<<"$statuses") && [[ "$count" =~ ^[0-9]+$ ]]; then
               break
             fi
             if [ "$try" = "$tries" ]; then
@@ -154,10 +159,35 @@ jobs:
             echo "GET ${request} failed (try ${try} of ${tries}), retrying in $((2 ** try))s"
             sleep $((2 ** try))
           done
-          if [ "$count" != 0 ] && [ "$state" != success ]; then
-            echo "::error title=Candidate not built::the commit statuses of ${rc} are ${state}: https://github.com/${GH_REPO}/commit/$(git rev-parse "${rc}^{commit}"). Promote it once its pipelines passed."
+          advisory_jobs=" sync-china-registry "
+          failed=() running=() advisory=()
+          while read -r state context; do
+            case "$state" in
+              success) ;;
+              failure | error)
+                if [[ "$context" == "ci/circleci: "* && "$advisory_jobs" == *" ${context#ci/circleci: } "* ]]; then
+                  advisory+=("$context")
+                else
+                  failed+=("${context} (${state})")
+                fi
+                ;;
+              *) running+=("$context") ;;
+            esac
+          done < <(tail -n +2 <<<"$statuses")
+          commit="https://github.com/${GH_REPO}/commit/$(git rev-parse "${rc}^{commit}")"
+          if [ "${#failed[@]}" != 0 ]; then
+            printf -v list '%s, ' "${failed[@]}"
+            echo "::error title=Candidate not built::the commit statuses of ${rc} are failure: ${list%, } on ${commit}. Promote it once its pipelines passed."
             exit 1
           fi
+          if [ "${#running[@]}" != 0 ]; then
+            printf -v list '%s, ' "${running[@]}"
+            echo "::error title=Candidate not built::the commit statuses of ${rc} are pending: ${list%, } on ${commit}. Promote it once its pipelines passed."
+            exit 1
+          fi
+          for context in "${advisory[@]}"; do
+            echo "::warning title=Advisory status failed::the commit status ${context} of ${rc} failed; the release does not require it, so the candidate is judged without it."
+          done
 
           after=$(git log --format='%h %s' "${rc}..HEAD")
           git checkout -q --detach "$rc"
@@ -325,6 +355,41 @@ jobs:
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
           echo "prerelease=${is_rc}" >> "$GITHUB_OUTPUT"
           echo "target=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # One commit releases one version: the release tags of two versions on
+      # one commit give two answers to "which version is this", and every
+      # reader (a release wait, a rollout, a person) picks its own. A
+      # candidate and its promoted stable share a commit by design, and an
+      # upstream pre-release outside the release pattern names no release of
+      # this repository. The tags are read from the remote, not from this
+      # checkout: the fork baseline step may move one here, and a run on
+      # another branch may have tagged the commit since the checkout.
+      - name: Refuse another version's tag on the commit
+        id: one-version
+        if: steps.decide.outputs.tag != ''
+        env:
+          TAG: ${{ steps.decide.outputs.tag }}
+          TARGET: ${{ steps.decide.outputs.target }}
+        run: |
+          set -euo pipefail
+          release='^v?([0-9]+\.[0-9]+\.[0-9]+)(-rc\.[0-9]+)?$'
+          [[ "$TAG" =~ $release ]]
+          version=${BASH_REMATCH[1]}
+          # An annotated tag is listed twice, its peeled commit under ^{}:
+          # only that line matches the commit.
+          conflicts=()
+          while read -r sha ref; do
+            tag=${ref#refs/tags/}
+            tag=${tag%'^{}'}
+            if [ "$sha" = "$TARGET" ] && [[ "$tag" =~ $release ]] && [ "${BASH_REMATCH[1]}" != "$version" ]; then
+              conflicts+=("$tag")
+            fi
+          done < <(git ls-remote --tags origin)
+          if [ "${#conflicts[@]}" -gt 0 ]; then
+            echo "::error title=Another version on the commit::${TAG} would land on ${TARGET:0:8}, which already carries the release tag of another version: ${conflicts[*]}. One commit releases one version: no tag and no release are cut. Merge a change to cut the next candidate on a commit of its own."
+            exit 1
+          fi
+          echo "${TARGET:0:8} carries no other version's release tag: ${TAG} is its only version"
 
       # A stable release can carry rules only the repository knows (a fork
       # line's pins, its release ledger). Checked in the tag's own pipeline
@@ -536,3 +601,87 @@ jobs:
               exit 1
               ;;
           esac
+
+  # The entries a merged pull request added under Unreleased in CHANGELOG.md
+  # are part of the release just cut, and the release's CHANGELOG.md still
+  # lists them under Unreleased. `devctl changelog cut` moves every entry a
+  # release carried into that release's section, and this job opens the cut as
+  # a pull request against the released branch and arms auto-merge on it. The
+  # branch head is cut, not the promoted candidate: the cut lands on top of
+  # what merged since. The pull request is `docs`, which git-cliff skips, so
+  # merging it cuts no release of its own. The Changelog workflow fails a pull
+  # request while released entries remain under Unreleased.
+  #
+  # The pull request is opened as taylorbot (TAYLORBOT_GITHUB_ACTION): a pull
+  # request opened with GITHUB_TOKEN runs no workflow, so its required checks
+  # would never report. A fork line carries upstream's CHANGELOG.md, which its
+  # releases do not cut, and has no such job.
+  changelog:
+    name: Cut the CHANGELOG
+    needs: tag
+    if: needs.tag.outputs.tag != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0        # every tag's CHANGELOG.md says what it released
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Cut released entries out of Unreleased
+        id: cut
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ ! -f CHANGELOG.md ]; then
+            echo "no CHANGELOG.md: nothing to cut"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh release download --repo giantswarm/devctl --pattern devctl-linux-amd64 --output "${RUNNER_TEMP}/devctl"
+          chmod +x "${RUNNER_TEMP}/devctl"
+          "${RUNNER_TEMP}/devctl" changelog cut
+          if git diff --quiet -- CHANGELOG.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up git identity
+        run: |
+          git config --local user.email "dev@giantswarm.io"
+          git config --local user.name "taylorbot"
+
+      - name: Open the cut as a pull request
+        if: steps.cut.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.TAYLORBOT_GITHUB_ACTION }}
+          TAG: ${{ needs.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning title=CHANGELOG not cut::no TAYLORBOT_GITHUB_ACTION secret to open the pull request with; run \`devctl changelog cut\` and commit CHANGELOG.md."
+            exit 0
+          fi
+          # One cut pull request per released branch, rebuilt from the branch
+          # head on every release: it never carries a stale cut.
+          branch="changelog-cut/${GITHUB_REF_NAME}"
+          title="docs(changelog): cut released entries out of Unreleased"
+          git checkout -q -B "$branch"
+          git commit -q -m "$title" -- CHANGELOG.md
+          gh auth setup-git
+          git push --force origin "HEAD:refs/heads/${branch}"
+          pr=$(gh pr list --head "$branch" --base "$GITHUB_REF_NAME" --state open --json url --jq '.[0].url // empty')
+          if [ -z "$pr" ]; then
+            pr=$(gh pr create --base "$GITHUB_REF_NAME" --head "$branch" --title "$title" \
+              --body "Moves the CHANGELOG.md entries ${TAG} and the releases before it carried out of Unreleased into their release sections (\`devctl changelog cut\`). Opened by the Auto-release workflow.")
+          fi
+          echo "cut pull request: ${pr}"
+          if ! gh pr merge "$pr" --auto --squash; then
+            echo "::warning title=Auto-merge not armed::${pr} waits for a merge: auto-merge could not be armed."
+          fi

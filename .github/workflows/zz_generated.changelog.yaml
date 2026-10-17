@@ -1,0 +1,46 @@
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/48d8219323be4cd05f2eccad7ccfc71118b3ae82/pkg/gen/input/workflows/internal/file/changelog.yaml.template
+#
+# yamllint disable rule:truthy
+# Fails a pull request while CHANGELOG.md lists, under Unreleased, an entry a
+# release already carried: `devctl changelog check` reads every release tag's
+# CHANGELOG.md. The Auto-release workflow opens the cut as a pull request after
+# every release; merging it, or running `devctl changelog cut` and committing
+# CHANGELOG.md, clears the check.
+name: Changelog
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  released-entries:
+    name: No released entries under Unreleased
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0        # every tag's CHANGELOG.md says what it released
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Check CHANGELOG.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ ! -f CHANGELOG.md ]; then
+            echo "no CHANGELOG.md: nothing to check"
+            exit 0
+          fi
+          gh release download --repo giantswarm/devctl --pattern devctl-linux-amd64 --output "${RUNNER_TEMP}/devctl"
+          chmod +x "${RUNNER_TEMP}/devctl"
+          "${RUNNER_TEMP}/devctl" changelog check
