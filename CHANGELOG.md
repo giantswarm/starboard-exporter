@@ -7,17 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.25-rc.12] - 2026-10-15
+
+### Fixed
+
+- Accept every field of a Prometheus Operator `RelabelConfig` (`sourceLabels`, `separator`, `targetLabel`, `regex`, `modulus`, `replacement`, `action`) in `monitoring.serviceMonitor.relabelings` and `metricRelabelings`. The generated `values.schema.json` only declared the two keys used by the chart defaults (`action`, `regex`) and closed the item object, so e.g. a `targetLabel: cluster` relabeling failed with `additional properties 'targetLabel', 'replacement' not allowed`. Items are now validated against the Prometheus Operator's own `RelabelConfig` schema (ServiceMonitor v1 from the kubeconform CRD catalog, bundled at generation time), so unknown keys and unknown actions are still rejected.
+- Accept the deprecated `psp.enabled` value again. It has been ignored since 0.7.8 (`global.podSecurityStandards.enforced` replaced it) and absent from the schema since then, but 1.2.6 closed the schema root (`additionalProperties: false`), so any release still carrying it failed with `additional properties 'psp' not allowed`. It is now declared, marked `deprecated` in the schema, and still has no effect.
+
+## [1.2.9] - 2026-08-26
+
+### Fixed
+
+- Accept user-defined keys in the free-form maps `monitoring.serviceMonitor.labels`, `nodeSelector`, `podAnnotations`, and `podLabels` again. Since 1.2.6 the generated `values.schema.json` gave these `additionalProperties: false` with no declared `properties`, which rejects *every* key, so any release setting e.g. `monitoring.serviceMonitor.labels` failed with `additional properties '...' not allowed`.
+- Accept the deprecated `exporter.vulnerabilityReports.enabled` value again. It is still honoured by `templates/_helpers.tpl` for backwards compatibility, but 1.2.6 dropped it from the schema and closed `additionalProperties` on its parent.
+
+## [1.2.0] - 2026-08-13
+
 ### Added
 
 - Support GOMEMLIMIT configuration on startup to improve garbage collection on high memory usage.
 
+## [1.1.9] - 2026-08-11
+
 ### Fixed
 
 - Fix failing `pre-commit` CI check on `main` by explicitly discarding the never-failing `hash.Hash.Write` return value in the sharding test helper.
-- Accept user-defined keys in the free-form maps `monitoring.serviceMonitor.labels`, `nodeSelector`, `podAnnotations`, and `podLabels` again. Since 1.2.6 the generated `values.schema.json` gave these `additionalProperties: false` with no declared `properties`, which rejects *every* key, so any release setting e.g. `monitoring.serviceMonitor.labels` failed with `additional properties '...' not allowed`.
-- Accept the deprecated `exporter.vulnerabilityReports.enabled` value again. It is still honoured by `templates/_helpers.tpl` for backwards compatibility, but 1.2.6 dropped it from the schema and closed `additionalProperties` on its parent.
-- Accept every field of a Prometheus Operator `RelabelConfig` (`sourceLabels`, `separator`, `targetLabel`, `regex`, `modulus`, `replacement`, `action`) in `monitoring.serviceMonitor.relabelings` and `metricRelabelings`. The generated `values.schema.json` only declared the two keys used by the chart defaults (`action`, `regex`) and closed the item object, so e.g. a `targetLabel: cluster` relabeling failed with `additional properties 'targetLabel', 'replacement' not allowed`. Items are now validated against the Prometheus Operator's own `RelabelConfig` schema (ServiceMonitor v1 from the kubeconform CRD catalog, bundled at generation time), so unknown keys and unknown actions are still rejected.
-- Accept the deprecated `psp.enabled` value again. It has been ignored since 0.7.8 (`global.podSecurityStandards.enforced` replaced it) and absent from the schema since then, but 1.2.6 closed the schema root (`additionalProperties: false`), so any release still carrying it failed with `additional properties 'psp' not allowed`. It is now declared, marked `deprecated` in the schema, and still has no effect.
 
 ## [1.1.0] - 2026-06-18
 
@@ -348,7 +362,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `image_vulnerabilities` metric per-CVE per-image and `image_vulnerabilities_count` metric for summaries.
 - Add ServiceMonitor to scrape metrics.
 
-[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/giantswarm/starboard-exporter/compare/v1.2.25-rc.12...HEAD
+[1.2.25-rc.12]: https://github.com/giantswarm/starboard-exporter/compare/v1.2.9...v1.2.25-rc.12
+[1.2.9]: https://github.com/giantswarm/starboard-exporter/compare/v1.2.0...v1.2.9
+[1.2.0]: https://github.com/giantswarm/starboard-exporter/compare/v1.1.9...v1.2.0
+[1.1.9]: https://github.com/giantswarm/starboard-exporter/compare/v1.1.0...v1.1.9
 [1.1.0]: https://github.com/giantswarm/starboard-exporter/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/giantswarm/starboard-exporter/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/giantswarm/starboard-exporter/compare/v1.0.1...v1.0.2
