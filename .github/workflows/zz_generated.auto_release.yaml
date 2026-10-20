@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/88a5399393f41a2aacc8da4ed639e5a0107d85e9/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/df4163c9a760d590c48c5770cd3b660545abe8a5/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
 #
 # yamllint disable rule:truthy
 # Push-based release tagger + release-page publisher.
@@ -367,7 +367,17 @@ jobs:
                 exit 0
               fi
             fi
-            tag="${NEXT}-rc.$(( ${n:-0} + 1 ))"
+            # The next number skips a name a tag already holds off this
+            # branch: a candidate tagged by hand on a pull request's branch to
+            # prove it, whose commits a rebase merge rewrote. The release is
+            # created through the API by its tag name, and GitHub attaches it
+            # to an existing tag's commit instead of creating the tag here.
+            n=${n:-0}
+            while git rev-parse -q --verify "refs/tags/${NEXT}-rc.$(( n + 1 ))" >/dev/null; do
+              echo "${NEXT}-rc.$(( n + 1 )) is taken by $(git rev-parse --short "${NEXT}-rc.$(( n + 1 ))^{commit}"), not on ${GITHUB_REF_NAME}; skipping the number"
+              n=$(( n + 1 ))
+            done
+            tag="${NEXT}-rc.$(( n + 1 ))"
           elif [ "$WANT" != stable ]; then
             tag="${NEXT}"
           else

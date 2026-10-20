@@ -17,10 +17,12 @@
     // without an ats/ Pipfile, so it is safe to extend for all generated-CI repos.
     'github>giantswarm/renovate-presets:tests-ats.json5',
   ],
-  // Two of our own bots commit onto Renovate branches. taylorbot
-  // <dev@giantswarm.io> pushes what the generated workflows produce
+  // Our own bots commit onto Renovate branches. The giantswarm-release
+  // GitHub App pushes what the generated workflows produce
   // (zz_generated.helm-docs-regen.yaml, the update-chart and
-  // sync-from-upstream flows). giantswarm-marge[bot] writes the bot PR's
+  // sync-from-upstream flows); taylorbot <dev@giantswarm.io> did so before
+  // it and still does in repositories whose workflows are not regenerated
+  // yet. giantswarm-marge[bot] writes the bot PR's
   // changelog entry during the sweep, in the repositories that still cut a
   // release from CHANGELOG.md. Renovate treats a branch whose last commit is
   // by anyone else as edited by a human: it stops rebasing it and, on
@@ -28,6 +30,7 @@
   // the authors here makes those commits Renovate's own. Renovate compares
   // the author email, so these are the bare addresses.
   gitIgnoredAuthors: [
+    '342014845+giantswarm-release[bot]@users.noreply.github.com',
     'dev@giantswarm.io',
     '329428426+giantswarm-marge[bot]@users.noreply.github.com',
   ],
