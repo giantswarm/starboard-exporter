@@ -18,7 +18,7 @@ dependencies = [
     "pytest-helm-charts==1.3.5",
     "pytest==9.1.1",
     "pykube-ng==23.6.0",
-    "pytest-rerunfailures==16.6.1",
+    "pytest-rerunfailures==16.7",
     "requests==2.34.2",
 ]
 
