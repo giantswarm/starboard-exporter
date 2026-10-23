@@ -5,7 +5,7 @@
 # workflow in .circleci/config.yml merges into this file at pipeline runtime.
 version: 2.1
 orbs:
-  architect: giantswarm/architect@10.14.13
+  architect: giantswarm/architect@10.15.1
 
 commands:
   # Pre-steps of the chart-test jobs: pull the images run-tests-with-ats starts
