@@ -2,6 +2,9 @@ version: "2"
 run:
   allow-parallel-runners: true
 linters:
+  enable:
+    - gosec
+    - goconst
   exclusions:
     generated: lax
     rules:

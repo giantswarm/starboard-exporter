@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/df4163c9a760d590c48c5770cd3b660545abe8a5/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/c370873410de970a09ddbfb5ee72adf11259d8f4/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
 #
 # yamllint disable rule:truthy
 # Push-based release tagger + release-page publisher.
@@ -76,7 +76,7 @@ concurrency:
 jobs:
   tag:
     name: Tag
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write       # push tags and create the GitHub Release
       # git-cliff's GitHub API lookups (commit.remote.pr_number / username
