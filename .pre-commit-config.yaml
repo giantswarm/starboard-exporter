@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/8f633b8ebe3132677b60fc6b0a5fdee946339bc7/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#    https://github.com/giantswarm/devctl/blob/c64a781d7ee888be4af92da9cce27c321300a589/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
 #
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
@@ -51,9 +51,6 @@ repos:
       - id: go-mod-tidy
       - id: golangci-lint
         args:
-          - -E=gosec
-          - -E=goconst
-          - -E=govet
           # No --timeout: golangci-lint v2 has none by default and a flag would
           # override a repo's `run.timeout` in .golangci.yml, its place to set one.
           # List all issues found
