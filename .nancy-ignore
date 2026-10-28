@@ -3,7 +3,7 @@ CVE-2026-37236 until=2026-11-06 # github.com/grpc-ecosystem/grpc-gateway@v1.16.0
 CVE-2026-84303 until=2026-10-30 # google.golang.org/grpc@v1.82.1
 CVE-2026-84304 until=2026-10-30 # google.golang.org/grpc@v1.82.1
 CVE-2026-56742 until=2026-10-30 # github.com/cilium/cilium@v1.17.16
-CVE-2026-79699 until=2026-10-30 # github.com/containers/storage@v1.59.1
+CVE-2026-79699 until=2026-11-27 # github.com/containers/storage@v1.59.1 since=2026-10-28
 CVE-2026-88922 until=2026-11-13 # github.com/hashicorp/go-getter@v1.8.6
 CVE-2026-14362 until=2026-10-30 # github.com/hashicorp/memberlist@v0.3.0
 CVE-2026-17106 until=2026-10-30 # github.com/moby/go-archive@v0.2.0
@@ -29,10 +29,16 @@ CVE-2026-93318 until=2026-11-06 # github.com/moby/buildkit@v0.31.2
 CVE-2026-93319 until=2026-11-06 # github.com/moby/buildkit@v0.31.2
 CVE-2026-93321 until=2026-11-06 # github.com/moby/buildkit@v0.31.2
 CVE-2026-81872 until=2026-11-06 # go.opentelemetry.io/otel/sdk/log@v0.19.0
-CVE-2026-81870 until=2026-11-06 # go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@v1.43.0
+CVE-2026-81870 until=2026-11-27 # go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@v1.38.0 since=2026-10-28
 CVE-2026-78669 until=2026-11-13 # golang.org/x/net@v0.59.0
 CVE-2026-97032 until=2026-11-13 # golang.org/x/net@v0.59.0
 CVE-2026-78659 until=2026-11-13 # golang.org/x/net@v0.59.0
 CVE-2026-78660 until=2026-11-13 # golang.org/x/net@v0.59.0
 CVE-2026-78663 until=2026-11-13 # golang.org/x/net@v0.59.0
 CVE-2026-19585 until=2026-11-13 # github.com/hashicorp/go-getter@v1.8.6
+CVE-2026-95839 until=2026-11-27 # github.com/containerd/containerd/v2@v2.4.1 since=2026-10-28
+CVE-2026-71482 until=2026-11-27 # github.com/containerd/stargz-snapshotter/estargz@v0.16.3 since=2026-10-28
+CVE-2025-11395 until=2026-11-27 # github.com/containers/storage@v1.59.1 since=2026-10-28
+CVE-2026-114236 until=2026-11-27 # github.com/containers/storage@v1.59.1 since=2026-10-28
+CVE-2026-39882 until=2026-11-27 # go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@v1.38.0 since=2026-10-28
+CVE-2025-52881 until=2026-11-27 # github.com/opencontainers/selinux@v1.12.0 since=2026-10-28
