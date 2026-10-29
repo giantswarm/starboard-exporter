@@ -2,19 +2,23 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/529e8924bb4b0b60fb205dbbfb874ffc09d73e09/pkg/gen/input/precommit/internal/file/app-platform-values.yaml.template
+#    https://github.com/giantswarm/devctl/blob/12478a89f85e3768f1f25e2f60172fa03430425b/pkg/gen/input/precommit/internal/file/app-platform-values.yaml.template
 #
 
-# Values the Giant Swarm app platform injects into every App deployed to a
-# workload cluster: flux/app-operator merge the <cluster>-cluster-values
-# ConfigMap into the App's values. The chart does not have to consume them;
+# Values the Giant Swarm app platform injects into Apps: flux/app-operator
+# merge the <cluster>-cluster-values ConfigMap, the catalog config and the
+# App's extraConfigs into its values. The chart does not have to consume them;
 # this file only makes the generated values.schema.json accept them so an
 # App-deployed chart does not fail schema validation on install/upgrade
 # ("additional properties 'baseDomain', 'provider', ... not allowed").
 #
 # `helm schema` merges this file BEFORE the chart's values.yaml (see
-# .schema.yaml), so any of these keys the chart defines itself keeps its own
-# schema. Helm itself never reads this file; it only feeds schema generation.
+# .schema.yaml): the chart's properties are added and its `@schema`
+# annotations win, but an object the chart defines without an
+# `additionalProperties` annotation stays as open as it is declared here.
+# `global` is open for the same reason, since subcharts and the platform share
+# it; a chart that wants it closed says so on its own `global`. Helm itself
+# never reads this file; it only feeds schema generation.
 
 baseDomain: ""
 bootstrapMode: {}  # @schema skipProperties: true; additionalProperties: true
@@ -25,6 +29,17 @@ clusterCA: ""
 clusterCIDR: ""
 clusterDNSIP: ""
 clusterID: ""
+# Set by cluster-apps-operator for private and vSphere clusters only.
+externalDNSIP: ""
 gcpProject: ""
+# -- Global values shared between all subcharts and the platform.
+global:  # @schema type: [object, null]; additionalProperties: true
+  # From the legacy psp-removal-patch extraConfig, which app-admission-controller
+  # attached to App CRs before v2.1.0. Existing App CRs still carry it.
+  podSecurityStandards: {}  # @schema skipProperties: true; additionalProperties: true
+# Set by cluster-apps-operator on the management cluster's own cluster values only.
+helm: {}  # @schema skipProperties: true; additionalProperties: true
+# From the catalog config (e.g. the giantswarm-catalog ConfigMap).
+managementCluster: ""
 provider: ""
 subscriptionID: ""
