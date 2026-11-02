@@ -5,7 +5,7 @@
 # workflow in .circleci/config.yml merges into this file at pipeline runtime.
 version: 2.1
 orbs:
-  architect: giantswarm/architect@10.15.1
+  architect: giantswarm/architect@10.16.7
 
 commands:
   # Pre-steps of the chart-test jobs: pull the images run-tests-with-ats starts
@@ -73,6 +73,16 @@ commands:
 workflows:
   build:
     jobs:
+    # Resolve the version once, at the start of the workflow, and persist it to
+    # the workspace (.pipeline_version). Every image and chart job requires
+    # this job and builds with that version instead of resolving its own, so a
+    # stable tag landing while the workflow runs (a promote) cannot give the
+    # image and the chart that references it different versions.
+    - architect/pin-version:
+        name: pin-version
+        filters:
+          tags:
+            only: /^v.*/
     - architect/go-build:
         name: go-build
         binary: starboard-exporter
@@ -96,6 +106,7 @@ workflows:
         name: push-to-registries
         platforms: linux/amd64
         requires:
+        - pin-version
         - go-build
         filters:
           branches:
@@ -111,6 +122,7 @@ workflows:
         name: push-to-registries-release
         split-china-push: true
         requires:
+        - pin-version
         - go-build
         filters:
           tags:
@@ -145,6 +157,9 @@ workflows:
         push_to_appcatalog: false
         push_to_oci_registry: false
         persist_chart_archive: true
+        # The version pin-version persisted (every chart job attaches the
+        # workspace for it).
+        attach_workspace: true
         # app-build-suite fails a chart whose gsoci image references the registry
         # does not carry. build-chart runs before this pipeline pushes its own
         # image (a branch without branchPublish never pushes it), so that image
@@ -157,6 +172,7 @@ workflows:
             name: Exempt this pipeline's own image from the image reference check
             command: echo 'export ABS_HELM_IMAGE_REFERENCE_VALIDATOR_OWN_IMAGE=gsoci.azurecr.io/giantswarm/starboard-exporter' >> "$BASH_ENV"
         requires:
+        - pin-version
         - go-build
         filters:
           tags:
@@ -208,7 +224,9 @@ workflows:
         app_catalog: default-catalog
         app_catalog_test: default-test-catalog
         chart: starboard-exporter
+        attach_workspace: true
         requires:
+        - pin-version
         - execute-chart-tests
         - push-to-registries
         filters:
@@ -232,7 +250,9 @@ workflows:
         app_catalog: default-catalog
         app_catalog_test: default-test-catalog
         chart: starboard-exporter
+        attach_workspace: true
         requires:
+        - pin-version
         - build-chart
         - push-to-registries-release
         filters:
