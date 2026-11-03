@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/c370873410de970a09ddbfb5ee72adf11259d8f4/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/e1815b6d5c229bcb04d97e68566da30380a1d92f/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
 #
 # yamllint disable rule:truthy
 # Push-based release tagger + release-page publisher.
@@ -82,7 +82,8 @@ jobs:
       # git-cliff's GitHub API lookups (commit.remote.pr_number / username
       # in release notes) need PR read access via GITHUB_TOKEN.
       pull-requests: read
-      # The stable run reads the commit statuses of the candidate it promotes.
+      # The stable run reads the commit statuses of the candidate it promotes,
+      # and every run with a tag those of the tag's CircleCI build.
       statuses: read
     steps:
       - name: Checkout
@@ -528,116 +529,99 @@ jobs:
       # published. GitHub delivers the tag-push webhook exactly once and never
       # retries it; on 2026-09-04 ~22:00 UTC CircleCI's receiver answered
       # three of ~55 tag pushes with an empty HTTP 400 and those releases had
-      # no pipeline until somebody noticed. So ask CircleCI directly: poll its
-      # pipeline list for this tag and, if nothing shows up, trigger the
-      # pipeline through the API.
+      # no pipeline until somebody noticed. So watch for the tag's build: a
+      # CircleCI commit status on the tag's commit from a workflow that
+      # started after the release. The commit's statuses are the commit's,
+      # not the tag's: the branch build of the same commit posts the same
+      # contexts, and keeps posting when its jobs finish after the tag, but
+      # its workflows started before the release.
       #
-      # CIRCLECI_API_TOKEN is an org-level secret holding a CircleCI personal
-      # API token (a machine account's -- CircleCI's v2 API accepts no other
-      # kind for triggering, and needs one to read private projects). Without
-      # it the step still reads public projects and stays a detector: a
-      # missing pipeline fails the run with the exact command to fix it by
-      # hand. Private projects and repos without a CircleCI project both read
-      # as 404 unauthenticated, so without the token that case is a warning.
-      #
-      # Only a positively observed empty list (HTTP 200) triggers: a CircleCI
-      # API outage fails the step instead of risking a second pipeline on the
-      # tag, which would race the image and chart pushes.
+      # This step reads GitHub with the workflow's own token and holds no
+      # CircleCI credential, so it detects and never triggers: CircleCI has
+      # no service accounts, and a pipeline started through its API is a
+      # person's. The fix is a person's `devctl repo follow-circleci`, which
+      # runs an unbuilt latest release on the GitHub App pipeline (and sets
+      # that pipeline up when it is missing). A commit without any CircleCI
+      # status has no pipeline building the repository yet -- a new
+      # repository before its creator's set-up -- and is a warning.
       - name: Verify CircleCI picked up the tag
         if: steps.decide.outputs.tag != '' && hashFiles('.circleci/config.yml') != ''
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.decide.outputs.tag }}
-          CIRCLECI_API_TOKEN: ${{ secrets.CIRCLECI_API_TOKEN }}
-          # A healthy CircleCI creates the pipeline 1-2 s after the tag push.
-          CIRCLECI_PIPELINE_WAIT_SECONDS: "120"
+          TARGET: ${{ steps.decide.outputs.target }}
+          # A healthy CircleCI posts the first status 1-10 s after the tag push.
+          CIRCLECI_STATUS_WAIT_SECONDS: "120"
         run: |
           set -euo pipefail
-          api="https://circleci.com/api/v2/project/gh/${GITHUB_REPOSITORY}/pipeline"
-          auth=()
-          if [ -n "${CIRCLECI_API_TOKEN}" ]; then
-            auth=(-H "Circle-Token: ${CIRCLECI_API_TOKEN}")
-          fi
-          manual="curl -X POST -H 'Circle-Token: <token>' -H 'Content-Type: application/json' -d '{\"tag\":\"${TAG}\"}' ${api}"
-
-          deadline=$((SECONDS + CIRCLECI_PIPELINE_WAIT_SECONDS))
-          last_code=""
-          found=""
+          fix="devctl repo follow-circleci ${GITHUB_REPOSITORY}"
+          # counts: "<CircleCI statuses on the commit> <of them the GitHub App
+          # pipeline's> <tag pipelines started since the release>". Only the
+          # App pipeline's statuses (circleci-app[bot]) are judged: they link
+          # their workflow (…/workflow/<id>/job/<id>), while an OAuth
+          # follow's link a job alone, which tells a branch job from the
+          # tag's no better than its time. A generated (dynamic) pipeline
+          # starts with one setup workflow, so its setup workflows started
+          # since the release are the tag's; the branch build's continuation,
+          # started after its own setup, never counts. A commit without any
+          # setup status (a static configuration) counts every App workflow
+          # started since the release.
+          counts() {
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/commits/${TARGET}/statuses?per_page=100" \
+              --jq '[.[] | select(.context | startswith("ci/circleci"))]' |
+              jq -rs --argjson since "$since" '
+                add // [] |
+                def wf: (.target_url // "") as $u | (($u | capture("/workflows?/(?<id>[^/]+)")? | .id) // $u);
+                (length) as $all |
+                (map(select((.creator.login // "") != "" and .creator.login != "circleci-app[bot]" and (.created_at | fromdateiso8601) >= $since)) | length) as $oauth |
+                map(select(.creator.login == "circleci-app[bot]")) |
+                (length) as $app |
+                (if any(.[]; .context == "ci/circleci: setup") then map(select(.context == "ci/circleci: setup")) else . end) as $starts |
+                ($starts | group_by(wf) | map(min_by(.created_at)) | map(select((.created_at | fromdateiso8601) >= $since)) | length) as $tag |
+                "\($all) \($app) \($tag) \($oauth)"'
+          }
+          deadline=$((SECONDS + CIRCLECI_STATUS_WAIT_SECONDS))
+          since="" all="" app="" tag="" oauth=""
           while :; do
-            # Newest first; the tag pipeline is created within seconds of the
-            # push, so two pages (40 pipelines) cover even a merge burst.
-            url="$api"
-            pages=0
-            while [ -n "$url" ] && [ "$pages" -lt 2 ]; do
-              resp=$(curl -sS ${auth[@]+"${auth[@]}"} -w '\n%{http_code}' "$url" || printf '\n000')
-              last_code=${resp##*$'\n'}
-              body=${resp%$'\n'*}
-              [ "$last_code" = "200" ] || break
-              found=$(jq -r --arg tag "$TAG" '[.items[] | select(.vcs.tag == $tag)][0] | select(. != null) | .number' <<<"$body")
-              [ -z "$found" ] || break
-              next=$(jq -r '.next_page_token // empty' <<<"$body")
-              url=${next:+"${api}?page-token=${next}"}
-              pages=$((pages + 1))
-            done
-            if [ -n "$found" ]; then
-              echo "CircleCI pipeline #${found} exists for ${TAG}: https://app.circleci.com/pipelines/github/${GITHUB_REPOSITORY}/${found}"
-              exit 0
+            # A failed read (rate limit, a 502) is retried within the wait;
+            # only a wait without one good read fails the step.
+            if [ -z "$since" ] && published=$(gh release view "$TAG" --json publishedAt --jq .publishedAt); then
+              since=$(jq -rn --arg at "$published" '($at | fromdateiso8601) - 10')
             fi
-            case "$last_code" in
-              200) ;;                       # positively empty; keep waiting
-              404|401|403) break ;;         # will not change by waiting
-            esac
-            if [ "$SECONDS" -ge "$deadline" ]; then
-              break
-            fi
-            echo "no CircleCI pipeline for ${TAG} yet (HTTP ${last_code}); retrying in 10 s"
-            sleep 10
-          done
-
-          case "$last_code" in
-            200)
-              if [ -z "${CIRCLECI_API_TOKEN}" ]; then
-                echo "::error::CircleCI never built ${TAG}: no pipeline ${CIRCLECI_PIPELINE_WAIT_SECONDS} s after the tag push" \
-                  "(GitHub delivers the webhook once and never retries) and no CIRCLECI_API_TOKEN secret to trigger one." \
-                  "Fix by hand: ${manual}"
-                exit 1
-              fi
-              echo "CircleCI never built ${TAG}; triggering the pipeline through the API"
-              resp=$(curl -sS ${auth[@]+"${auth[@]}"} -w '\n%{http_code}' -X POST -H 'Content-Type: application/json' -d "{\"tag\":\"${TAG}\"}" "$api" || printf '\n000')
-              code=${resp##*$'\n'}
-              body=${resp%$'\n'*}
-              if [ "$code" != "201" ]; then
-                echo "::error::triggering the CircleCI pipeline for ${TAG} failed (HTTP ${code}): ${body}"
-                exit 1
-              fi
-              number=$(jq -r .number <<<"$body")
-              echo "triggered CircleCI pipeline #${number} for ${TAG}: https://app.circleci.com/pipelines/github/${GITHUB_REPOSITORY}/${number}"
-              ;;
-            404)
-              if [ -z "${CIRCLECI_API_TOKEN}" ]; then
-                echo "::warning::cannot verify that CircleCI built ${TAG}: ${api} answers 404 without a token" \
-                  "(private project, or no CircleCI project for this repo)." \
-                  "Set the CIRCLECI_API_TOKEN org secret to make this check real."
+            if [ -n "$since" ] && out=$(counts); then
+              read -r all app tag oauth <<<"$out"
+              if [ "$tag" -gt 0 ]; then
+                echo "CircleCI builds ${TAG}: ${tag} pipeline(s) on ${TARGET:0:8} started after the release"
                 exit 0
               fi
-              # The first tag of a repository created pull-request-last lands
-              # before the repository set-up reconciler follows the project on
-              # CircleCI; the reconciler reports the missed tag build and never
-              # rebuilds a tag. Following takes an administrator's token this
-              # workflow does not hold, so this is not the workflow's to fix.
-              echo "::warning::${TAG} is released; CircleCI does not follow this project yet." \
-                "The repository set-up reconciler follows it and reports the missed tag build —" \
-                "cut the next tag, or trigger this tag's pipeline by hand once the project is followed: https://app.circleci.com/pipelines/github/${GITHUB_REPOSITORY}"
-              exit 0
-              ;;
-            401|403)
-              echo "::error::CircleCI rejected CIRCLECI_API_TOKEN (HTTP ${last_code}); cannot verify that ${TAG} was built."
-              exit 1
-              ;;
-            *)
-              echo "::error::could not reach the CircleCI API (last HTTP ${last_code}) within ${CIRCLECI_PIPELINE_WAIT_SECONDS} s;" \
-                "cannot verify that ${TAG} was built. Not triggering blindly (a second pipeline on the tag would race" \
-                "the image and chart pushes). Check https://app.circleci.com/pipelines/github/${GITHUB_REPOSITORY}" \
-                "and, if the tag is missing: ${manual}"
-              exit 1
-              ;;
-          esac
+              # An OAuth follow's statuses after the release settle nothing
+              # by waiting when the App pipeline builds nothing here. Where it
+              # builds too (an OAuth trigger left in place), its tag build may
+              # be seconds behind the OAuth one: keep waiting for it.
+              [ "$oauth" -eq 0 ] || [ "$app" -gt 0 ] || break
+              echo "no CircleCI status of ${TAG}'s build yet"
+            else
+              echo "reading the release or the commit statuses of ${TARGET:0:8} failed"
+            fi
+            [ "$SECONDS" -lt "$deadline" ] || break
+            echo "retrying in 10 s"
+            sleep 10
+          done
+          if [ -z "$all" ]; then
+            echo "::error::could not read the release or the commit statuses of ${TARGET:0:8} within ${CIRCLECI_STATUS_WAIT_SECONDS} s; cannot tell whether CircleCI built ${TAG}." \
+              "Check https://app.circleci.com/pipelines/github/${GITHUB_REPOSITORY} and, if the tag is missing: ${fix}"
+            exit 1
+          fi
+          if [ "$all" -eq 0 ]; then
+            echo "::warning::${TAG} is released and no CircleCI pipeline builds this repository yet: ${TARGET:0:8} carries no CircleCI status at all." \
+              "Set the GitHub App pipeline up as you, which also runs ${TAG}: ${fix}"
+            exit 0
+          fi
+          if [ "$app" -eq 0 ] || [ "$oauth" -gt 0 ]; then
+            echo "::warning::${TAG}: an OAuth follow builds ${TARGET:0:8} without the GitHub App pipeline's build of the tag, and its statuses cannot tell the tag's build from a branch build; not verified." \
+              "Move the repository to the GitHub App pipeline as you: ${fix} --migrate"
+            exit 0
+          fi
+          echo "::error::CircleCI never built ${TAG}: no CircleCI status on ${TARGET:0:8} from a workflow started in the ${CIRCLECI_STATUS_WAIT_SECONDS} s after the release" \
+            "(GitHub delivers the webhook once and never retries). Run it as you: ${fix}"
+          exit 1
