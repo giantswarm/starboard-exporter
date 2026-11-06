@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/95d98f7c606e2f51e53c284b5f1410044b36ea20/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#    https://github.com/giantswarm/devctl/blob/70705527cb6300cabe9bd3ba6af5bdf9bf0ae1dd/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
 #
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
@@ -51,6 +51,8 @@ repos:
       - id: go-mod-tidy
       - id: golangci-lint
         args:
+          # Let independent sessions and worktrees lint at the same time.
+          - --allow-parallel-runners
           # No --timeout: golangci-lint v2 has none by default and a flag would
           # override a repo's `run.timeout` in .golangci.yml, its place to set one.
           # List all issues found
@@ -139,7 +141,7 @@ repos:
             python3 -c 'import json,sys; h=lambda o: {**{k:v for k,v in o.items() if k!="additionalProperties"},"unevaluatedProperties":False} if ("$ref" in o and o.get("additionalProperties") is False) else o; p=sys.argv[1]; f=open(p,encoding="utf-8"); d=json.load(f,object_hook=h); f.close(); f=open(p,"w",encoding="utf-8"); json.dump(d,f); f.close()' "$tmp"
             schemalint normalize "$tmp" -o "$tmp" --force
             if ! diff -u helm/starboard-exporter/values.schema.json "$tmp"; then
-              echo "helm/starboard-exporter/values.schema.json is out of date -- run 'devctl gen precommit' and commit the result" >&2
+              printf '%s\n' "helm/starboard-exporter/values.schema.json is out of date; run from the repository root and commit the result:" 'devctl gen precommit --language='"'"'go'"'"' --repo-name='"'"'github.com/giantswarm/starboard-exporter'"'"' --flavors='"'"'helmchart'"'"' --k8s-schema-version='"'"'v1.33.1'"'"'' >&2
               exit 1
             fi
   - repo: https://github.com/giantswarm/schemalint
@@ -157,6 +159,10 @@ repos:
     rev: "v1.14.2"
     hooks:
       - id: helm-docs
+        # The upstream script hook uses helm-docs from PATH. Build this rev
+        # in pre-commit's isolated Go environment so local and CI runs agree.
+        language: golang
+        entry: helm-docs
         args:
           - --chart-search-root=helm
           - --chart-to-generate=helm/starboard-exporter

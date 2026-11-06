@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/88a5399393f41a2aacc8da4ed639e5a0107d85e9/pkg/gen/input/workflows/internal/file/cliff.toml.template
+#    https://github.com/giantswarm/devctl/blob/1fe81de8e59667b8a9aa1f3f55beae176492f6a9/pkg/gen/input/workflows/internal/file/cliff.toml.template
 #
 # git-cliff config for the push-based auto-release flow.
 #
@@ -96,9 +96,10 @@ commit_preprocessors = [
 # ships. git-cliff decides the bump from the commits that are NOT skipped: a
 # breaking change bumps the major, `feat` the minor, every other type at least
 # the patch. A skipped commit is left out of the release notes and of the
-# bump, so a docs-, style- or test-only push to main computes the current
-# version and the workflow tags nothing; the change ships with the next
-# release. `chore` and `ci` keep releasing: a `chore(deps)` bump changes what
+# bump, so a docs-, style- or test-only push outside a candidate cycle computes
+# the current version and the workflow tags nothing. During a cycle the workflow
+# lets a new test commit advance an existing candidate without changing its
+# version or notes. `chore` and `ci` keep releasing: a `chore(deps)` bump changes what
 # ships, a `ci` change how it is built.
 commit_parsers = [
   { message = "^feat",     group = "Added" },
