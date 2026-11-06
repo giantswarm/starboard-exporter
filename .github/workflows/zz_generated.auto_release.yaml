@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/e1815b6d5c229bcb04d97e68566da30380a1d92f/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/32940f296e152fd291e36a4c579e8c491c14e820/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
 #
 # yamllint disable rule:truthy
 # Push-based release tagger + release-page publisher.
@@ -25,6 +25,13 @@
 # `release-type: stable`, which promotes the latest release candidate, or
 # the one `version` names: the stable tag lands on that candidate's commit,
 # so what ships is what was tested.
+#
+# Tags and releases are created with the giantswarm-release GitHub App token,
+# so GitHub Actions workflows listening on push.tags or release can start.
+# Requires the App installed on this repository with Contents write and the
+# RELEASE_BOT_CLIENT_ID / RELEASE_BOT_PRIVATE_KEY secrets available to this
+# workflow. Missing or unusable App credentials fail before creating a release;
+# there is no GITHUB_TOKEN fallback, whose events cannot start those workflows.
 #
 # The tag push then triggers downstream publishing (for chart/service/CLI
 # repos, this is the CircleCI architect pipeline firing on the same /^v.*/
@@ -78,7 +85,7 @@ jobs:
     name: Tag
     runs-on: ubuntu-26.04
     permissions:
-      contents: write       # push tags and create the GitHub Release
+      contents: read        # checkout and fetch; the App creates tags/releases
       # git-cliff's GitHub API lookups (commit.remote.pr_number / username
       # in release notes) need PR read access via GITHUB_TOKEN.
       pull-requests: read
@@ -230,7 +237,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          # Single expensive call: walks commits, queries the GitHub API for
+          # One context read: walks commits, queries the GitHub API for
           # per-commit PR lookups, emits the JSON context for ONLY the bumped
           # release.
           #
@@ -247,7 +254,27 @@ jobs:
           # Without either filter, --bump --context returns the full release
           # history in JSON and the render step below would concatenate every
           # past release into each new release's notes.
-          git-cliff --unreleased --bump --context > cliff-context.json
+          # GitHub metadata reads can fail on a transient timeout, truncated
+          # response or 5xx. Retry with bounded backoff. Keep stderr in the
+          # log, including the final cause, and replace any partial context
+          # on each attempt before downstream steps can use it.
+          cliff_context() {
+            local try tries=3 status
+            for ((try=1; try<=tries; try++)); do
+              if git-cliff "$@" > cliff-context.json; then
+                return 0
+              else
+                status=$?
+              fi
+              if [ "$try" -eq "$tries" ]; then
+                echo "::error title=git-cliff failed::git-cliff failed after ${tries} attempts (exit ${status}); see its error above." >&2
+                return "$status"
+              fi
+              echo "git-cliff failed (attempt ${try} of ${tries}, exit ${status}); retrying in $((2 ** try))s" >&2
+              sleep $((2 ** try))
+            done
+          }
+          cliff_context --unreleased --bump --context
           NEXT=$(jq -r '.[0].version // empty' cliff-context.json)
           echo "next computed: ${NEXT:-<empty>}"
           echo "version=${NEXT}" >> "$GITHUB_OUTPUT"
@@ -354,12 +381,19 @@ jobs:
             # cliff-context.json holds exactly the commits git-cliff counted
             # for this release, so intersecting it with the range since the
             # last candidate needs no second copy of cliff.toml's skip rules.
+            # A new conventional `test:` commit is also enough once this
+            # target has a candidate: a test fix must be able to replace a
+            # red candidate. It opens no cycle and changes no version or notes.
             if [ -n "${n}" ]; then
               counted=$(jq -r '.[0].commits[].id' "$CLIFF_CONTEXT")
               since=$(git rev-list "${NEXT}-rc.${n}..HEAD")
               fresh=0
               if [ -n "$counted" ] && [ -n "$since" ]; then
                 fresh=$(printf '%s\n' "$since" | { grep -cxF "$counted" || true; })
+              fi
+              if [ "$fresh" -eq 0 ]; then
+                fresh=$(git log --format='%s' "${NEXT}-rc.${n}..HEAD" \
+                  | { grep -cE '^test(\([^)]*\))?!?: ' || true; })
               fi
               if [ "$fresh" -eq 0 ]; then
                 echo "No releasable commits since ${NEXT}-rc.${n}; skipping tag."
@@ -482,6 +516,17 @@ jobs:
           # create --notes-file expects.
           git-cliff --from-context cliff-context.tagged.json --strip all --output release-notes.md
 
+      # Mint just before publishing, after the release guards have passed.
+      # With owner/repositories unset, the token is scoped to this repository.
+      - name: Generate the giantswarm-release token
+        id: release-token
+        if: steps.decide.outputs.tag != ''
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.RELEASE_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          permission-contents: write
+
       # Create the tag AND the GitHub Release in one atomic API call. GitHub's
       # release-create endpoint accepts a tag_name + target_commitish and, if
       # the tag doesn't already exist, creates it pointing at that commitish
@@ -498,7 +543,7 @@ jobs:
         id: release
         if: steps.decide.outputs.tag != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.release-token.outputs.token }}
           GH_REPO: ${{ github.repository }}
           TAG: ${{ steps.decide.outputs.tag }}
           PRERELEASE: ${{ steps.decide.outputs.prerelease }}
