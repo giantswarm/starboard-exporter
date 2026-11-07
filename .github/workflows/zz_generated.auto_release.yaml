@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/32940f296e152fd291e36a4c579e8c491c14e820/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/d01d7de9700b8090d285e0ccbe4afb8cc277e20c/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
 #
 # yamllint disable rule:truthy
 # Push-based release tagger + release-page publisher.
@@ -92,6 +92,13 @@ jobs:
       # The stable run reads the commit statuses of the candidate it promotes,
       # and every run with a tag those of the tag's CircleCI build.
       statuses: read
+      # A promotion queues an auto run for commits left on the branch.
+      actions: write
+    outputs:
+      # The stable tag this run released, empty for a candidate or no release.
+      # Read from the release step, so a failure of the CircleCI check after
+      # it still reaches the changelog job.
+      stable: ${{ steps.release.outcome == 'success' && steps.decide.outputs.prerelease == 'false' && steps.decide.outputs.tag || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -568,6 +575,122 @@ jobs:
             --notes-file release-notes.md \
             --target "$TARGET" \
             ${flags[@]+"${flags[@]}"}
+
+      # The stable tag is on the promoted candidate, not the branch head.
+      # A push already handled before that tag used the previous stable as
+      # its baseline, so its candidate may now be older than the new stable.
+      # Re-run auto against the branch with the new baseline without waiting
+      # for another push. Fetch the branch again: it may have advanced during
+      # promotion. Queue this before the CircleCI check, whose failure must
+      # not strand commits after an already published stable release.
+      - name: Queue releases for commits after the promoted candidate
+        id: catch-up
+        if: inputs.release-type == 'stable' && steps.release.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TARGET: ${{ steps.decide.outputs.target }}
+          STABLE: ${{ steps.decide.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "refs/heads/${GITHUB_REF_NAME}"
+          head=$(git rev-parse 'FETCH_HEAD^{commit}')
+          if ! git merge-base --is-ancestor "$TARGET" "$head"; then
+            echo "::error::${GITHUB_REF_NAME} no longer contains the promoted commit ${TARGET}; inspect the branch before releasing it."
+            exit 1
+          fi
+          if [ "$head" = "$TARGET" ]; then
+            echo "${GITHUB_REF_NAME} has no commits after the promoted candidate; nothing to queue."
+            exit 0
+          fi
+          # A superseded RC on the head cannot acquire another version's
+          # tag. Land a preparation PR through the normal checks instead:
+          # its merge supplies the new commit and triggers auto-release.
+          # Read remote tags, including peeled annotated tags, as the guard
+          # does; the checkout can predate the branch's latest candidate.
+          rc='^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$'
+          tags=$(git ls-remote --tags origin)
+          while read -r sha ref; do
+            tag=${ref#refs/tags/}
+            tag=${tag%'^{}'}
+            if [ "$sha" = "$head" ] && [[ "$tag" =~ $rc ]] && [ "${tag%-rc.*}" = "$STABLE" ]; then
+              echo "${tag} already tags ${head:0:8}; preparing a checked catch-up PR."
+              echo "prepare=true" >> "$GITHUB_OUTPUT"
+              echo "head=$head" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done <<<"$tags"
+          echo "Queuing auto-release for commits on ${GITHUB_REF_NAME} after the promoted candidate:"
+          git log --format='%h %s' "${TARGET}..${head}"
+          gh workflow run zz_generated.auto_release.yaml --ref "$GITHUB_REF_NAME" -f release-type=auto
+
+      # The release App bypasses the review rule for its generated PRs,
+      # never the required checks. Its push/merge triggers CI, unlike a
+      # GITHUB_TOKEN push. No write to the protected branch happens here.
+      - name: Generate the release token for catch-up
+        id: catch-up-token
+        if: steps.catch-up.outputs.prepare == 'true'
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.RELEASE_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Check out the catch-up head
+        if: steps.catch-up.outputs.prepare == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.catch-up.outputs.head }}
+          fetch-depth: 0
+          token: ${{ steps.catch-up-token.outputs.token }}
+          # Keep the promoted checkout for its CircleCI verification below.
+          path: .release-catch-up-worktree
+      - name: Prepare a new commit for catch-up through a checked PR
+        id: catch-up-pr
+        if: steps.catch-up.outputs.prepare == 'true'
+        working-directory: .release-catch-up-worktree
+        env:
+          GH_TOKEN: ${{ steps.catch-up-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          STABLE: ${{ steps.decide.outputs.tag }}
+          CATCH_UP_HEAD: ${{ steps.catch-up.outputs.head }}
+          GIT_AUTHOR_NAME: giantswarm-release[bot]
+          GIT_AUTHOR_EMAIL: giantswarm-release[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: giantswarm-release[bot]
+          GIT_COMMITTER_EMAIL: giantswarm-release[bot]@users.noreply.github.com
+        run: |
+          set -euo pipefail
+          branch="release/catch-up-${STABLE}-${CATCH_UP_HEAD:0:12}"
+          # A rerun reuses the same PR, including one already merged. Never
+          # rewrite its head or cut a second preparation commit for it.
+          pr=$(gh pr list --head "$branch" --base "$GITHUB_REF_NAME" --state all --json url --jq '.[0].url // empty')
+          if [ -z "$pr" ]; then
+            # The branch push can succeed before PR creation fails. Reuse
+            # that branch on a retry, without a force push.
+            remote=$(git ls-remote --heads origin "refs/heads/${branch}")
+            if [ -z "$remote" ]; then
+              git checkout -q --detach "$CATCH_UP_HEAD"
+              mkdir -p .github
+              printf 'stable=%s\nhead=%s\n' "$STABLE" "$CATCH_UP_HEAD" > .github/release-catch-up
+              git add .github/release-catch-up
+              git commit -m "docs(release): resume releases after ${STABLE}"
+              git push origin "HEAD:refs/heads/${branch}"
+            fi
+            pr=$(gh pr create --head "$branch" --base "$GITHUB_REF_NAME" \
+              --title "docs(release): resume releases after ${STABLE}" \
+              --body "Promotion of ${STABLE} left a superseded candidate on the branch head. This marker gives catch-up its own commit, preserving one version per commit. Merge after required checks; the merge triggers auto-release for the remaining changes.")
+          fi
+          state=$(gh pr view "$pr" --json state --jq .state)
+          if [ "$state" = MERGED ]; then
+            echo "Catch-up PR already merged: ${pr}"
+          elif [ "$state" = OPEN ]; then
+            gh pr merge "$pr" --auto --squash
+            echo "Catch-up waits for the required checks: ${pr}"
+          else
+            echo "::error::Catch-up PR was closed without merging: ${pr}; reopen it to resume releases."
+            exit 1
+          fi
+          echo "Catch-up PR: ${pr}" >> "$GITHUB_STEP_SUMMARY"
 
       # A tag that never reaches CircleCI is a silent failure: the GitHub
       # Release above exists and looks finished, but nothing gets built or
