@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/70705527cb6300cabe9bd3ba6af5bdf9bf0ae1dd/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#    https://github.com/giantswarm/devctl/blob/1ba1e0875923fe3ea4885057e902a51f81a64e22/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
 #
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
@@ -124,6 +124,61 @@ repos:
   # lines from hello-world-app's) and CI then rejected it.
   - repo: local
     hooks:
+      # The schema generator drops a description continuation containing --.
+      # Keep real helm-docs annotations, but name prose that needs rewording.
+      - id: helm-docs-description-starboard-exporter
+        name: "check helm/starboard-exporter/values.yaml description continuations"
+        language: python
+        additional_dependencies: ['PyYAML==6.0.3']
+        files: ^helm/starboard-exporter/values\.yaml$
+        entry: python -c
+        args:
+          - |
+            import re
+            import sys
+            import yaml
+            # Match the description opener accepted by helm-values-schema-json v2.6.0,
+            # including an optional path and type. Only continuation lines lose text.
+            opener = re.compile(r'^#\s+(?:"[^"]*"|[^@\-\s]*)(?:\.(?:"[^"]*"|[^\s.]*))*\s*--')
+            annotations = {"@default", "@notationType", "@section"}
+            failed = False
+            for path in sys.argv[1:]:
+                with open(path, encoding="utf-8") as source:
+                    text = source.read()
+                # A line beginning with '#' inside a YAML scalar is data, not a comment.
+                # Scanning tokens also handles quoted multiline strings and block scalars.
+                try:
+                    scalars = iter(token for token in yaml.scan(text) if isinstance(token, yaml.ScalarToken))
+                    scalar = next(scalars, None)
+                    offset = 0
+                    active = False
+                    for number, line in enumerate(text.splitlines(keepends=True), 1):
+                        comment = line.lstrip(" \t")
+                        start = offset + len(line) - len(comment)
+                        offset += len(line)
+                        while scalar is not None and scalar.end_mark.index <= start:
+                            scalar = next(scalars, None)
+                        if not comment.startswith("#") or (
+                            scalar is not None and scalar.start_mark.index <= start < scalar.end_mark.index
+                        ):
+                            active = False
+                            continue
+                        if not active:
+                            active = opener.match(comment) is not None
+                            continue
+                        annotation, separator, _ = comment[1:].strip().partition("--")
+                        if separator and annotation.strip() not in annotations:
+                            print(
+                                f"{path}:{number}: '--' in a helm-docs description continuation is "
+                                "silently dropped by helm-values-schema-json; reword this line "
+                                "(for example, use an em dash).",
+                                file=sys.stderr,
+                            )
+                            failed = True
+                except yaml.YAMLError as error:
+                    print(f"{path}: {error}", file=sys.stderr)
+                    failed = True
+            sys.exit(1 if failed else 0)
       - id: helm-schema-starboard-exporter
         name: "verify helm/starboard-exporter/values.schema.json is up to date"
         language: golang
