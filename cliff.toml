@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/1fe81de8e59667b8a9aa1f3f55beae176492f6a9/pkg/gen/input/workflows/internal/file/cliff.toml.template
+#    https://github.com/giantswarm/devctl/blob/ca98afc7bd0a436e9847fb799aacc102a523b453/pkg/gen/input/workflows/internal/file/cliff.toml.template
 #
 # git-cliff config for the push-based auto-release flow.
 #
@@ -92,25 +92,26 @@ commit_preprocessors = [
 # feat -> Added, fix -> Fixed, all "internal change" types -> Changed,
 # security -> Security.
 #
-# `docs`, `style` and `test` are marked skip: none of them changes what
+# `ci`, `chore`, `docs`, `style` and `test` are marked skip: none of them changes what
 # ships. git-cliff decides the bump from the commits that are NOT skipped: a
 # breaking change bumps the major, `feat` the minor, every other type at least
 # the patch. A skipped commit is left out of the release notes and of the
-# bump, so a docs-, style- or test-only push outside a candidate cycle computes
-# the current version and the workflow tags nothing. During a cycle the workflow
-# lets a new test commit advance an existing candidate without changing its
-# version or notes. `chore` and `ci` keep releasing: a `chore(deps)` bump changes what
-# ships, a `ci` change how it is built.
+# bump, so a push containing only skipped types outside a candidate cycle
+# computes the current version and the workflow tags nothing; the changes ship
+# with the next releasable commit. During a cycle the workflow lets a new test
+# commit advance an existing candidate without changing its version or notes.
+# Use `fix` or `feat` when a dependency or build change needs a release of its
+# own.
 commit_parsers = [
   { message = "^feat",     group = "Added" },
   { message = "^fix",      group = "Fixed" },
   { message = "^refactor", group = "Changed" },
   { message = "^perf",     group = "Changed" },
   { message = "^docs",     skip = true },
-  { message = "^chore",    group = "Changed" },
+  { message = "^chore",    skip = true },
   { message = "^test",     skip = true },
   { message = "^build",    group = "Changed" },
-  { message = "^ci",       group = "Changed" },
+  { message = "^ci",       skip = true },
   { message = "^security", group = "Security" },
   { message = "^style",    skip = true },
 ]
