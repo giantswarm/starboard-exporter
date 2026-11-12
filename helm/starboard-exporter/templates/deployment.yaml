@@ -24,13 +24,8 @@ spec:
         {{- toYaml .Values.podLabels | nindent 8 }}
         {{- end }}
     spec:
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- . | toYaml | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- . | toYaml | nindent 8 }}
+      {{- with include "starboard-exporter.podScheduling" . }}
+      {{- . | nindent 6 }}
       {{- end }}
       affinity:
         podAntiAffinity:
@@ -49,10 +44,6 @@ spec:
                     operator: In
                     values:
                       - linux
-                  - key: kubernetes.io/arch
-                    operator: In
-                    values:
-                      - amd64
       serviceAccountName: {{ include "resource.default.name"  . }}
       securityContext:
         runAsUser: {{ .Values.pod.user.id }}

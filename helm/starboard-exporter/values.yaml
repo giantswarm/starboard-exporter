@@ -18,6 +18,18 @@ pod:
   group:
     id: 1000
 
+# @schema enum:["", amd64, arm64]
+# -- Target CPU architecture for this workload. Empty imposes no constraint.
+# `arm64` pins the pod to arm64 nodes, adding both the `kubernetes.io/arch`
+# node selector and the toleration for the `kubernetes.io/arch=arm64:NoSchedule`
+# taint that Giant Swarm arm64 node pools carry. Both are required, so this
+# single value sets both. Requires a multi-arch container image; an amd64-only
+# image will crash-loop with `exec format error` on an arm64 node. Do not also
+# constrain `kubernetes.io/arch` through `affinity`: a `nodeAffinity` is ANDed
+# with the node selector and is not visible to this value, so a contradicting
+# one leaves the pod Pending.
+architecture: ""
+
 nodeSelector: {}  # @schema additionalProperties: true
 tolerations: []
 
