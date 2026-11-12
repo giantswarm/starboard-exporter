@@ -16,7 +16,7 @@ A Helm chart for starboard-exporter, which exposes Prometheus metrics from Aqua 
 | global.podSecurityStandards.enforced | bool | `true` |  |
 | pod.user.id | int | `1000` |  |
 | pod.group.id | int | `1000` |  |
-| architecture | string | `""` | Target CPU architecture for this workload. Empty imposes no constraint. `arm64` pins the pod to arm64 nodes, adding both the `kubernetes.io/arch` node selector and the toleration for the `kubernetes.io/arch=arm64:NoSchedule` taint that Giant Swarm arm64 node pools carry. Both are required, so this single value sets both. Requires a multi-arch container image; an amd64-only image will crash-loop with `exec format error` on an arm64 node. Do not also constrain `kubernetes.io/arch` through `affinity`: a `nodeAffinity` is ANDed with the node selector and is not visible to this value, so a contradicting one leaves the pod Pending. |
+| architecture | string | `""` | CPU architecture of nodes to schedule on; empty means any. |
 | nodeSelector | object | `{}` |  |
 | tolerations | list | `[]` |  |
 | podLabels | object | `{}` |  |
