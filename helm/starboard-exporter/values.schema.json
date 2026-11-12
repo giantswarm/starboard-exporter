@@ -1206,6 +1206,15 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "architecture": {
+            "type": "string",
+            "description": "CPU architecture of nodes to schedule on; empty means any.",
+            "enum": [
+                "",
+                "amd64",
+                "arm64"
+            ]
+        },
         "autoMemoryLimit": {
             "type": "object",
             "additionalProperties": false,

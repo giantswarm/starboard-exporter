@@ -16,6 +16,7 @@ A Helm chart for starboard-exporter, which exposes Prometheus metrics from Aqua 
 | global.podSecurityStandards.enforced | bool | `true` |  |
 | pod.user.id | int | `1000` |  |
 | pod.group.id | int | `1000` |  |
+| architecture | string | `""` | CPU architecture of nodes to schedule on; empty means any. |
 | nodeSelector | object | `{}` |  |
 | tolerations | list | `[]` |  |
 | podLabels | object | `{}` |  |

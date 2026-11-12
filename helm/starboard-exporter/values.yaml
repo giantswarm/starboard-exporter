@@ -18,6 +18,10 @@ pod:
   group:
     id: 1000
 
+# @schema enum:["", amd64, arm64]
+# -- CPU architecture of nodes to schedule on; empty means any.
+architecture: ""
+
 nodeSelector: {}  # @schema additionalProperties: true
 tolerations: []
 
