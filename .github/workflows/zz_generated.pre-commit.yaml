@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/4f13495dbc91dbcfb36451fc1456c4ec1dca9342/pkg/gen/input/precommit/internal/file/pre-commit-action.yaml.template
+#    https://github.com/giantswarm/devctl/blob/33fe5e3ef909bce59be4aacce3690b125053acb8/pkg/gen/input/precommit/internal/file/pre-commit-action.yaml.template
 #
 name: pre-commit
 
@@ -65,7 +65,16 @@ jobs:
           binary: golangci-lint
           version: "2.15.0"
           download_url: "https://github.com/golangci/golangci-lint/releases/download/v${version}/${binary}-${version}-linux-amd64.tar.gz"
+      - name: Install pre-commit
+        run: python -m pip install pre-commit
+      - name: List installed Python packages
+        run: python -m pip freeze --local
+      - name: Restore pre-commit cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Execute pre-commit hooks
-        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+        run: pre-commit run --show-diff-on-failure --color=always --all-files
         env:
           GOGC: "20"
