@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/d01d7de9700b8090d285e0ccbe4afb8cc277e20c/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
+#    https://github.com/giantswarm/devctl/blob/8e0d7e0ee807bfa5f3e2709624024fd74ce247f6/pkg/gen/input/workflows/internal/file/auto_release.yaml.template
 #
 # yamllint disable rule:truthy
 # Push-based release tagger + release-page publisher.
@@ -525,6 +525,8 @@ jobs:
 
       # Mint just before publishing, after the release guards have passed.
       # With owner/repositories unset, the token is scoped to this repository.
+      # Tagging a candidate whose .github/workflows differ from the default
+      # branch's (an align-files commit landed after it) needs `workflows`.
       - name: Generate the giantswarm-release token
         id: release-token
         if: steps.decide.outputs.tag != ''
@@ -533,6 +535,7 @@ jobs:
           client-id: ${{ secrets.RELEASE_BOT_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
           permission-contents: write
+          permission-workflows: write
 
       # Create the tag AND the GitHub Release in one atomic API call. GitHub's
       # release-create endpoint accepts a tag_name + target_commitish and, if
@@ -636,6 +639,7 @@ jobs:
           private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
+          permission-workflows: write
       - name: Check out the catch-up head
         if: steps.catch-up.outputs.prepare == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
