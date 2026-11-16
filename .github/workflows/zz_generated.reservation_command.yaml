@@ -1,0 +1,70 @@
+# DO NOT EDIT. Generated with:
+#
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/f35703f9bc9bd432bf4703f6e7115facadecb11c/pkg/gen/input/workflows/internal/file/reservation_command.yaml.template
+#
+
+name: Reservation command
+
+on:
+  # The job checks out no code and runs no comment text; mc-reservations re-reads and checks it.
+  issue_comment: # zizmor: ignore[dangerous-triggers]
+    types: [created]
+  pull_request:
+    types: [closed]
+
+# Sends a `/deploy`, `/undeploy` or `/extend` comment on a pull request to
+# giantswarm/mc-reservations, which authorises the commenter and changes the
+# reservation. A closed pull request is sent too, so its reservations are
+# released. This workflow is a pure trigger: it holds no trust, checks nothing
+# and never checks out pull request code. mc-reservations re-reads everything
+# else from the GitHub API.
+
+permissions: {}
+
+jobs:
+  dispatch:
+    # Bot comments skip the run, so the answers of mc-reservations start nothing.
+    # A fork gets no secrets and holds no reservation, so its close is skipped.
+    if: >-
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       github.event.comment.user.type != 'Bot' &&
+       (contains(github.event.comment.body, '/deploy') ||
+        contains(github.event.comment.body, '/undeploy') ||
+        contains(github.event.comment.body, '/extend'))) ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-26.04
+    permissions: {}
+    steps:
+      - name: Mint the dispatch token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.MC_RESERVATIONS_DISPATCH_CLIENT_ID }}
+          private-key: ${{ secrets.MC_RESERVATIONS_DISPATCH_APP_KEY }}
+          owner: giantswarm
+          repositories: mc-reservations
+          # A repository dispatch needs Contents: write and nothing else.
+          permission-contents: write
+
+      - name: Send the event to mc-reservations
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          set -euo pipefail
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
+            payload="$(jq -n --arg repo "${REPO}" --arg pr "${PR_NUMBER}" \
+              '{event_type: "pull-request-closed", client_payload: {repo: $repo, pr_number: $pr}}')"
+          else
+            payload="$(jq -n --arg repo "${REPO}" --arg pr "${PR_NUMBER}" --arg comment "${COMMENT_ID}" \
+              '{event_type: "reservation-command", client_payload: {repo: $repo, pr_number: $pr, comment_id: $comment}}')"
+          fi
+          gh api -X POST /repos/giantswarm/mc-reservations/dispatches --input - <<<"${payload}"
+          echo "Sent. The result is in https://github.com/giantswarm/mc-reservations/actions and on this pull request."
