@@ -58,6 +58,10 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
+// apiDiscoveryInterval is how often the exporter checks whether a report API
+// resource which was missing at startup is served now.
+const apiDiscoveryInterval = 30 * time.Second
+
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
@@ -273,74 +277,41 @@ func main() {
 
 	discoveryClient := discovery.NewDiscoveryClientForConfigOrDie(cfg)
 	if configAuditEnabled {
-		supported, gvk, err := isObjectSupported(&aqua.ConfigAuditReport{}, mgr.GetScheme(), discoveryClient)
-		if err != nil {
-			setupLog.Error(err, "unable to discover API resource", "controller", "ConfigAuditReport")
-			os.Exit(1)
-		}
-
-		if supported {
-			if err = (&configauditreport.ConfigAuditReportReconciler{
+		setupWhenServed(mgr, discoveryClient, "ConfigAuditReport", &aqua.ConfigAuditReport{}, func() error {
+			return (&configauditreport.ConfigAuditReportReconciler{
 				Client:           mgr.GetClient(),
 				Log:              ctrl.Log.WithName("controllers").WithName("ConfigAuditReport"),
 				MaxJitterPercent: maxJitterPercent,
 				Scheme:           mgr.GetScheme(),
 				ShardHelper:      peerRing,
-			}).SetupWithManager(mgr); err != nil {
-				setupLog.Error(err, "unable to create controller", "controller", "ConfigAuditReport")
-				os.Exit(1)
-			}
-		} else {
-			setupLog.Info("requested API resource is not supported in this cluster, skipping controller", "controller", "ConfigAuditReport", "resource", gvk.String())
-		}
+			}).SetupWithManager(mgr)
+		})
 	}
 
 	if trivyVulnerabilityScansEnabled {
-		supported, gvk, err := isObjectSupported(&aqua.VulnerabilityReport{}, mgr.GetScheme(), discoveryClient)
-		if err != nil {
-			setupLog.Error(err, "unable to discover API resource", "controller", "TrivyVulnerabilityReport")
-			os.Exit(1)
-		}
-
-		if supported {
-			if err = (&vulnerabilityreport.TrivyVulnerabilityReportReconciler{
+		setupWhenServed(mgr, discoveryClient, "TrivyVulnerabilityReport", &aqua.VulnerabilityReport{}, func() error {
+			return (&vulnerabilityreport.TrivyVulnerabilityReportReconciler{
 				Client:           mgr.GetClient(),
 				Log:              ctrl.Log.WithName("controllers").WithName("TrivyVulnerabilityReport"),
 				MaxJitterPercent: maxJitterPercent,
 				Scheme:           mgr.GetScheme(),
 				ShardHelper:      peerRing,
 				TargetLabels:     targetLabels,
-			}).SetupWithManager(mgr); err != nil {
-				setupLog.Error(err, "unable to create controller", "controller", "TrivyVulnerabilityReport")
-				os.Exit(1)
-			}
-		} else {
-			setupLog.Info("requested API resource is not supported in this cluster, skipping controller", "controller", "TrivyVulnerabilityReport", "resource", gvk.String())
-		}
+			}).SetupWithManager(mgr)
+		})
 	}
 
 	if kubescapeVulnerabilityScansEnabled {
-		supported, gvk, err := isObjectSupported(&kubescape.VulnerabilityManifest{}, mgr.GetScheme(), discoveryClient)
-		if err != nil {
-			setupLog.Error(err, "unable to discover API resource", "controller", "KubescapeVulnerabilityReport")
-			os.Exit(1)
-		}
-
-		if supported {
-			if err = (&vulnerabilityreport.KubescapeVulnerabilityManifestReconciler{
+		setupWhenServed(mgr, discoveryClient, "KubescapeVulnerabilityReport", &kubescape.VulnerabilityManifest{}, func() error {
+			return (&vulnerabilityreport.KubescapeVulnerabilityManifestReconciler{
 				Client:           mgr.GetClient(),
 				Log:              ctrl.Log.WithName("controllers").WithName("KubescapeVulnerabilityReport"),
 				MaxJitterPercent: maxJitterPercent,
 				Scheme:           mgr.GetScheme(),
 				ShardHelper:      peerRing,
 				TargetLabels:     targetLabels,
-			}).SetupWithManager(mgr); err != nil {
-				setupLog.Error(err, "unable to create controller", "controller", "KubescapeVulnerabilityReport")
-				os.Exit(1)
-			}
-		} else {
-			setupLog.Info("requested API resource is not supported in this cluster, skipping controller", "controller", "KubescapeVulnerabilityReport", "resource", gvk.String())
-		}
+			}).SetupWithManager(mgr)
+		})
 	}
 
 	//+kubebuilder:scaffold:builder
@@ -373,6 +344,43 @@ func shutdownRequeue(c client.Client, log logr.Logger, podIP string) {
 
 	configauditreport.RequeueReportsForPod(c, log, podIP)
 
+}
+
+// setupWhenServed sets up a controller for obj if the cluster serves its API
+// resource. Otherwise it registers a DeferredSetup which sets the controller
+// up once the resource appears, e.g. when the CRD is installed after the
+// exporter started. A controller added to a running manager starts right away.
+func setupWhenServed(mgr ctrl.Manager, discoveryClient discovery.DiscoveryInterface, name string, obj runtime.Object, setup func() error) {
+	supported, gvk, err := isObjectSupported(obj, mgr.GetScheme(), discoveryClient)
+	if err != nil {
+		setupLog.Error(err, "unable to discover API resource", "controller", name)
+		os.Exit(1)
+	}
+
+	if supported {
+		if err := setup(); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", name)
+			os.Exit(1)
+		}
+		return
+	}
+
+	setupLog.Info("requested API resource is not served yet, starting controller once it is", "controller", name, "resource", gvk.String())
+
+	err = mgr.Add(&utils.DeferredSetup{
+		Name:     name,
+		Interval: apiDiscoveryInterval,
+		Log:      ctrl.Log.WithName("controllers").WithName(name),
+		IsServed: func() (bool, error) {
+			served, _, err := isObjectSupported(obj, mgr.GetScheme(), discoveryClient)
+			return served, err
+		},
+		Setup: setup,
+	})
+	if err != nil {
+		setupLog.Error(err, "unable to add deferred controller setup", "controller", name)
+		os.Exit(1)
+	}
 }
 
 func appendIfNotExists(base []vulnerabilityreport.VulnerabilityLabel, items []vulnerabilityreport.VulnerabilityLabel) []vulnerabilityreport.VulnerabilityLabel {
